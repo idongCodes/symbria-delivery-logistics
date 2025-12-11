@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,20 +26,12 @@ export default function LoginPage() {
     setLoginLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setLoginError(data.error || "Login failed");
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setLoginError(error.message || "Login failed");
         return;
       }
-
-      // Redirect to dashboard on success
+      // Successful sign-in
       router.push("/dashboard");
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : "An error occurred");
@@ -60,26 +53,19 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email: registerEmail,
-          password: registerPassword,
-          passwordConfirm: registerPasswordConfirm,
-        }),
+      const { data, error } = await supabase.auth.signUp({
+        email: registerEmail,
+        password: registerPassword,
+      }, {
+        data: { firstName, lastName }
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setRegisterError(data.error || "Registration failed");
+      if (error) {
+        setRegisterError(error.message || "Registration failed");
         return;
       }
 
-      setRegisterSuccess("Registration successful! Please log in.");
+      setRegisterSuccess("Registration successful! Check your email to confirm and then log in.");
       setFirstName("");
       setLastName("");
       setRegisterEmail("");
