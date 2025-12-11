@@ -5,102 +5,209 @@ import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [step, setStep] = useState<"PHONE" | "OTP">("PHONE");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState("");
+  const [registerError, setRegisterError] = useState("");
+  const [registerSuccess, setRegisterSuccess] = useState("");
+  const [registerLoading, setRegisterLoading] = useState(false);
 
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    setLoginLoading(true);
 
-  const [generatedCode, setGeneratedCode] = useState("");
+    try {
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-  const [otpInput, setOtpInput] = useState(["", "", "", "", "", ""]);
+      const data = await response.json();
 
-  const handleSendCode = (e?: React.FormEvent) => {
-    e?.preventDefault();
+      if (!response.ok) {
+        setLoginError(data.error || "Login failed");
+        return;
+      }
 
-    if (phoneNumber.length < 10) {
-      alert("Please enter a valid phone number");
+      // Redirect to dashboard on success
+      router.push("/dashboard");
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterError("");
+    setRegisterSuccess("");
+    setRegisterLoading(true);
+
+    if (registerPassword !== registerPasswordConfirm) {
+      setRegisterError("Passwords do not match");
+      setRegisterLoading(false);
       return;
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email: registerEmail,
+          password: registerPassword,
+          passwordConfirm: registerPasswordConfirm,
+        }),
+      });
 
-    setGeneratedCode(code);
+      const data = await response.json();
 
-    setStep("OTP");
-
-    alert(`DEMO SMS: Your code is ${ code }`);
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (isNaN(Number(value))) return;
-
-    const newOtp = [...otpInput];
-
-    newOtp[index] = value;
-
-    setOtpInput(newOtp);
-
-    const joinedCode = newOtp.join("");
-    if (joinedCode.length === 6) {
-      if (joinedCode === generatedCode) {
-        router.push("/dashboard");
-      } else {
-        if (newOtp.every(digit => digit !== "")) {
-          alert("Wrong code, try again.");
-	}
+      if (!response.ok) {
+        setRegisterError(data.error || "Registration failed");
+        return;
       }
+
+      setRegisterSuccess("Registration successful! Please log in.");
+      setFirstName("");
+      setLastName("");
+      setRegisterEmail("");
+      setRegisterPassword("");
+      setRegisterPasswordConfirm("");
+    } catch (error) {
+      setRegisterError(error instanceof Error ? error.message : "An error occurred");
+    } finally {
+      setRegisterLoading(false);
     }
   };
 
-  const handleBack = () => {
-    setStep("PHONE");
-    setOtpInput(["", "", "", "", "", ""]);
-    setGeneratedCode("");
-  }
-
   return (
-    <div style={{ padding: "50px", fontFamily: "sans-serif" }}>
-      {step === "PHONE" && (
-        <form onSubmit={ handleSendCode }>
-          <h2>Enter Mobile Number</h2>
-	  <input
-            type="tel"
-	    placeholder="Ex: 555-123-4567"
-	    value={phoneNumber}
-	    onChange={(e) => setPhoneNumber(e.target.value)} 
-	    style={{ padding: "10px", fontSize: "16px" }}
-	  />
-	  <br />
-	  <button type="submit" style={{ marginTop: "10px", padding: "10px 20px" }}>
-            Get Code
-	  </button>
-	</form>
-      )}
+    <div className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-100 gap-8">
+      {/* Login Card */}
+      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+          Login
+        </h1>
 
-      {step === "OTP" && (
-        <div>
-          <p>
-            A 6-digit code has been sent to the phone number ending in{" "}
-	    <strong>{phoneNumber.slice(-3)}</strong>
-	  </p>
+        {loginError && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {loginError}
+          </div>
+        )}
 
-	  <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-            {otpInput.map((digit, index) => (
-	      <input key={index} type="text" maxLength={1} value={digit} onChange={(e) => handleOtpChange(index, e.target.value)} style={{ width: "40px", height: "40px", textAlign: "center", fontSize: "20px" }} 
-	      />
-	    ))}
-	  </div>
+        <form onSubmit={handleLoginSubmit} className="space-y-4">
+          <input
+            type="email"
+            placeholder="Enter company email..."
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
 
-	  <div style={{ display: "flex", gap: "10px" }}>
-            <button onClick={handleBack}>
-              🔙 Back
-	    </button>
-	    <button onClick={() => alert(`Reminder: Code is ${generatedCode}`)}>
-              Resend Code
-	    </button>
-	  </div>
-	</div>
-      )}
+          <input
+            type="password"
+            placeholder="Enter password..."
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
+
+          <button
+            type="submit"
+            disabled={loginLoading}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:opacity-50"
+          >
+            {loginLoading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
+
+      {/* Register Card */}
+      <div className="bg-white p-10 rounded-2xl shadow-xl w-full max-w-md">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+          Register
+        </h1>
+
+        {registerError && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {registerError}
+          </div>
+        )}
+
+        {registerSuccess && (
+          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            {registerSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handleRegisterSubmit} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Enter first name..."
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
+
+          <input
+            type="text"
+            placeholder="Enter last name..."
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
+
+          <input
+            type="email"
+            placeholder="Enter Symbria email..."
+            value={registerEmail}
+            onChange={(e) => setRegisterEmail(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Enter password..."
+            value={registerPassword}
+            onChange={(e) => setRegisterPassword(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Confirm password..."
+            value={registerPasswordConfirm}
+            onChange={(e) => setRegisterPasswordConfirm(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600"
+            required
+          />
+
+          <button
+            type="submit"
+            disabled={registerLoading}
+            className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50"
+          >
+            {registerLoading ? "Registering..." : "Register"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
