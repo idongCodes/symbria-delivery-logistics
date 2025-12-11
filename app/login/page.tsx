@@ -56,8 +56,9 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signUp({
         email: registerEmail,
         password: registerPassword,
-      }, {
-        data: { firstName, lastName }
+        options: {
+          data: { firstName, lastName }
+        }
       });
 
       if (error) {
