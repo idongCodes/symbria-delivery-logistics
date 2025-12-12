@@ -26,7 +26,7 @@ export default function Nav() {
         mounted = false;
         listener?.subscription.unsubscribe();
       };
-    } catch (err) {
+    } catch {
       // If getSupabaseClient throws (server-side), just ignore — nav will render unauthenticated
       setLoggedIn(false);
     }
@@ -36,7 +36,7 @@ export default function Nav() {
     try {
       const supabase = getSupabaseClient();
       await supabase.auth.signOut();
-    } catch (err) {
+    } catch {
       // ignore
     } finally {
       setLoggedIn(false);
