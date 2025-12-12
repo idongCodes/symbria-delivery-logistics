@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client"; // Updated import
+import { createClient } from "@/lib/supabase/client";
 
 export default function Nav() {
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
-  const supabase = createClient(); // Initialize here
+  // Create client once
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     let mounted = true;
@@ -22,21 +23,18 @@ export default function Nav() {
     // Listen for changes (login/logout)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(Boolean(session));
-      if (!session && pathname === '/dashboard') {
-         router.push('/login');
-      }
     });
 
     return () => {
       mounted = false;
       listener?.subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]); // Fixed dependency array
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setLoggedIn(false);
-    router.push('/login'); // Redirect to login after logout
+    router.push('/login');
     router.refresh();
   };
 
