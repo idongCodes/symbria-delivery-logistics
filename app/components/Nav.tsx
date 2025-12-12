@@ -29,7 +29,7 @@ export default function Nav() {
       mounted = false;
       listener?.subscription.unsubscribe();
     };
-  }, [supabase]); // Fixed dependency array
+  }, [supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -42,8 +42,16 @@ export default function Nav() {
     <nav className="p-5 bg-white border-b border-gray-200 flex justify-between items-center">
       <div className="font-bold text-lg text-blue-600">🚗 Symbria Delivery Logistics</div>
       <div className="space-x-4 flex items-center">
-        <Link href="/" className="text-gray-600 hover:text-blue-500">Home</Link>
+        {/* Conditional Link: Dashboard if logged in, Home if not */}
+        <Link 
+          href={loggedIn ? "/dashboard" : "/"} 
+          className="text-gray-600 hover:text-blue-500"
+        >
+          {loggedIn ? "Dashboard" : "Home"}
+        </Link>
+        
         <Link href="/about" className="text-gray-600 hover:text-blue-500">About</Link>
+        
         {loggedIn && (
           <button
             onClick={handleLogout}
