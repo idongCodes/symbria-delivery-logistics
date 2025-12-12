@@ -19,9 +19,9 @@ export async function middleware(req: NextRequest) {
     try {
       // dynamic import so app still builds if package isn't installed yet
       const mod = await import('@supabase/auth-helpers-nextjs');
-      const { createMiddlewareClient } = mod;
+      const { createMiddlewareSupabaseClient } = mod;
       const res = NextResponse.next();
-      const supabase = createMiddlewareClient({ req, res });
+      const supabase = createMiddlewareSupabaseClient({ req, res });
       const { data } = await supabase.auth.getSession();
       if (!data?.session) {
         const url = req.nextUrl.clone();
@@ -29,7 +29,7 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(url);
       }
       return res;
-    } catch (err) {
+    } catch {
       // fallback cookie check
       const cookieCandidates = [
         req.cookies.get('sb-access-token'),
@@ -38,7 +38,7 @@ export async function middleware(req: NextRequest) {
         req.cookies.get('session'),
       ];
 
-      const hasToken = cookieCandidates.some((c) => Boolean(c && (c as any).value));
+      const hasToken = cookieCandidates.some((c) => Boolean(c?.value));
 
       if (!hasToken) {
         const url = req.nextUrl.clone();

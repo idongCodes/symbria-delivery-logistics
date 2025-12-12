@@ -28,7 +28,7 @@ export default function Dashboard() {
         });
 
         return () => listener?.subscription.unsubscribe();
-      } catch (err) {
+      } catch {
         // if client init failed, redirect to login
         router.replace('/login');
       }
