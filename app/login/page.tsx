@@ -8,7 +8,6 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   
-  // State to toggle between Login and Register views
   const [view, setView] = useState<'login' | 'register'>('login');
   
   const [email, setEmail] = useState("");
@@ -42,6 +41,20 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
+    // --- 🛡️ DOMAIN GUARD LOGIC 🛡️ ---
+    const lowerEmail = email.toLowerCase().trim();
+    const allowedUser = "idongesit_essien@ymail.com";
+    const allowedDomain = "@symbria.com";
+
+    const isAllowed = lowerEmail === allowedUser || lowerEmail.endsWith(allowedDomain);
+
+    if (!isAllowed) {
+      setMessage("Error: Registration is restricted to Symbria employees.");
+      setLoading(false);
+      return; // Stop execution here
+    }
+    // ----------------------------------
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -57,8 +70,6 @@ export default function LoginPage() {
       setMessage("Error: " + error.message);
     } else {
       setMessage("Success! Check your email for a confirmation link.");
-      // Optional: Switch back to login view after success
-      // setView('login'); 
     }
     setLoading(false);
   };
@@ -78,7 +89,6 @@ export default function LoginPage() {
 
         <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
           
-          {/* Extra fields for Registration */}
           {view === 'register' && (
             <div className="flex gap-2">
               <input
@@ -126,7 +136,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Toggle Button */}
         <div className="mt-6 text-center border-t pt-4">
           <p className="text-gray-600 text-sm mb-2">
             {view === 'login' ? "Don't have an account?" : "Already have an account?"}
@@ -134,7 +143,7 @@ export default function LoginPage() {
           <button 
             onClick={() => {
               setView(view === 'login' ? 'register' : 'login');
-              setMessage(""); // Clear errors when switching
+              setMessage(""); 
             }}
             className="text-blue-600 hover:underline font-medium"
           >
