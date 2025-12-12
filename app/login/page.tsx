@@ -2,14 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client"; // Importing the new client
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient(); // Initialize Supabase
+  const supabase = createClient();
+  
+  // State to toggle between Login and Register views
+  const [view, setView] = useState<'login' | 'register'>('login');
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -32,28 +37,38 @@ export default function LoginPage() {
     }
   };
 
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
     setLoading(true);
     setMessage("");
-    
-    // This sends a confirmation email by default
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+        },
+      },
     });
 
     if (error) {
       setMessage("Error: " + error.message);
     } else {
       setMessage("Success! Check your email for a confirmation link.");
+      // Optional: Switch back to login view after success
+      // setView('login'); 
     }
     setLoading(false);
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8 bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">Symbria Logistics</h1>
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          {view === 'login' ? 'Login' : 'Create Account'}
+        </h1>
         
         {message && (
           <div className={`p-3 mb-4 rounded text-sm ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
@@ -61,7 +76,30 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+        <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
+          
+          {/* Extra fields for Registration */}
+          {view === 'register' && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="border p-3 rounded text-black w-1/2"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="border p-3 rounded text-black w-1/2"
+                required
+              />
+            </div>
+          )}
+
           <input
             type="email"
             placeholder="Email"
@@ -82,19 +120,25 @@ export default function LoginPage() {
           <button 
             type="submit" 
             disabled={loading}
-            className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50"
+            className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2"
           >
-            {loading ? "Processing..." : "Login"}
+            {loading ? "Processing..." : (view === 'login' ? "Sign In" : "Sign Up")}
           </button>
         </form>
 
-        <div className="mt-4 text-center">
+        {/* Toggle Button */}
+        <div className="mt-6 text-center border-t pt-4">
+          <p className="text-gray-600 text-sm mb-2">
+            {view === 'login' ? "Don't have an account?" : "Already have an account?"}
+          </p>
           <button 
-            onClick={handleRegister}
-            disabled={loading}
-            className="text-sm text-gray-500 hover:text-blue-600 underline"
+            onClick={() => {
+              setView(view === 'login' ? 'register' : 'login');
+              setMessage(""); // Clear errors when switching
+            }}
+            className="text-blue-600 hover:underline font-medium"
           >
-            Need an account? Register here
+            {view === 'login' ? "Register here" : "Log in here"}
           </button>
         </div>
       </div>
