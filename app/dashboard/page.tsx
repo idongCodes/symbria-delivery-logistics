@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client"; // Updated import
+import { createClient } from "@/lib/supabase/client";
 
 export default function Dashboard() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
-  const supabase = createClient();
+  // Create client once to ensure stability
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     const check = async () => {
@@ -19,7 +20,7 @@ export default function Dashboard() {
       }
     };
     check();
-  }, [router]);
+  }, [router, supabase]); // Added dependencies to satisfy linter
 
   if (checking) {
     return (
