@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Here is a professional, structured `README.md` template tailored for your project. I have filled in the details based on what we saw in the repo (Next.js, TypeScript, NextAuth), but I left a few placeholders for you to customize.
 
-## Getting Started
+You can copy the code block below and paste it directly into your `README.md` file.
 
-First, run the development server:
+````markdown
+# Symbria Delivery Logistics
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+**Manage RX driver deliverables and logistics.**
+
+This application is a comprehensive logistics management platform designed to track pharmacy (RX) deliveries and driver schedules. It is built with modern web technologies to ensure performance, type safety, and scalability.
+
+## 🚀 Live Demo
+[View Deployed Application](https://symbria-delivery-logistics.vercel.app)
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Next.js](https://nextjs.org/) (App Router)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
+- **Styling:** CSS Modules / PostCSS
+- **Authentication:** [NextAuth.js](https://next-auth.js.org/) (Auth.js)
+- **Deployment:** [Vercel](https://vercel.com/)
+
+## ✨ Key Features
+
+* **Driver Management:** Track driver assignments and status.
+* **Delivery Tracking:** Real-time updates on RX deliverables.
+* **Secure Authentication:** User login and session management via NextAuth.
+* **Responsive UI:** Optimized for desktop and mobile use.
+
+---
+
+## ⚡ Getting Started
+
+Follow these steps to set up the project locally on your machine.
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm, yarn, or pnpm
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone [https://github.com/idongCodes/symbria-delivery-logistics.git](https://github.com/idongCodes/symbria-delivery-logistics.git)
+   cd symbria-delivery-logistics
+````
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    # or
+    yarn install
+    ```
+
+3.  **Configure Environment Variables:**
+    Rename `.env.example` to `.env.local` (or create a new `.env.local` file) and add the following keys:
+
+    ```bash
+    # Authentication Secrets
+    NEXTAUTH_SECRET=your_super_secret_key
+    NEXTAUTH_URL=http://localhost:3000
+
+    # Database (if applicable)
+    DATABASE_URL=your_database_connection_string
+    ```
+
+4.  **Run the development server:**
+
+    ```bash
+    npm run dev
+    ```
+
+5.  **Open the app:**
+    Visit [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.
+
+-----
+
+## 📂 Project Structure
+
+```text
+├── app/                # Main application routes (App Router)
+├── lib/                # Utility functions and shared logic
+├── pages/api/auth/     # NextAuth.js API routes
+├── public/             # Static assets (images, fonts)
+├── types/              # TypeScript type definitions
+└── ...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🤝 Contributing
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/your-feature`).
+3.  Commit your changes (`git commit -m 'Add some feature'`).
+4.  Push to the branch (`git push origin feature/your-feature`).
+5.  Open a Pull Request.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📄 License
 
-## Learn More
+This project is proprietary. All rights reserved.
 
-To learn more about Next.js, take a look at the following resources:
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 💡 Two things you should do after pasting this:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1.  **Check the Styling:** I listed "CSS Modules/PostCSS" under the Tech Stack. If you are using **Tailwind CSS**, change that line to:
+    `- **Styling:** [Tailwind CSS](https://tailwindcss.com/)`
+2.  **Environment Variables:** Since I saw `pages/api/auth` in your file structure, your app **will not work** locally without a `.env.local` file containing a `NEXTAUTH_SECRET`. Make sure to document which API keys are needed in that section.
+```
