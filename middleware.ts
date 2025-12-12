@@ -1,56 +1,46 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-// Attempt to use @supabase/auth-helpers-nextjs middleware client when available.
-// Fallback to simple cookie-name check if helpers aren't installed.
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/static') ||
-    pathname.match(/\.[a-zA-Z0-9]+$/)
-  ) {
-    return NextResponse.next();
-  }
-
-  if (pathname.startsWith('/dashboard')) {
-    try {
-      // dynamic import so app still builds if package isn't installed yet
-      const mod = await import('@supabase/auth-helpers-nextjs');
-      const { createMiddlewareSupabaseClient } = mod;
-      const res = NextResponse.next();
-      const supabase = createMiddlewareSupabaseClient({ req, res });
-      const { data } = await supabase.auth.getSession();
-      if (!data?.session) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
-      }
-      return res;
-    } catch {
-      // fallback cookie check
-      const cookieCandidates = [
-        req.cookies.get('sb-access-token'),
-        req.cookies.get('supabase-auth-token'),
-        req.cookies.get('sb:token'),
-        req.cookies.get('session'),
-      ];
-
-      const hasToken = cookieCandidates.some((c) => Boolean(c?.value));
-
-      if (!hasToken) {
-        const url = req.nextUrl.clone();
-        url.pathname = '/login';
-        return NextResponse.redirect(url);
-      }
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
     }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Protect the dashboard route
+  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  return NextResponse.next();
+  return response
 }
 
 export const config = {
-  matcher: ['/dashboard', '/dashboard/:path*'],
-};
+  matcher: ['/dashboard/:path*', '/login'],
+}

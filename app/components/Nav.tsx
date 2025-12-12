@@ -3,45 +3,41 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getSupabaseClient } from "@/lib/supabaseClient";
+import { createClient } from "@/lib/supabase/client"; // Updated import
 
 export default function Nav() {
   const router = useRouter();
   const [loggedIn, setLoggedIn] = useState(false);
+  const supabase = createClient(); // Initialize here
 
   useEffect(() => {
     let mounted = true;
-    try {
-      const supabase = getSupabaseClient();
-      supabase.auth.getSession().then(({ data }) => {
-        if (!mounted) return;
-        setLoggedIn(Boolean(data?.session));
-      });
+    
+    // Check initial session
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setLoggedIn(Boolean(data?.session));
+    });
 
-      const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-        setLoggedIn(Boolean(session));
-      });
+    // Listen for changes (login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(Boolean(session));
+      if (!session && pathname === '/dashboard') {
+         router.push('/login');
+      }
+    });
 
-      return () => {
-        mounted = false;
-        listener?.subscription.unsubscribe();
-      };
-    } catch {
-      // If getSupabaseClient throws (server-side), just ignore — nav will render unauthenticated
-      setLoggedIn(false);
-    }
+    return () => {
+      mounted = false;
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   const handleLogout = async () => {
-    try {
-      const supabase = getSupabaseClient();
-      await supabase.auth.signOut();
-    } catch {
-      // ignore
-    } finally {
-      setLoggedIn(false);
-      router.push('/');
-    }
+    await supabase.auth.signOut();
+    setLoggedIn(false);
+    router.push('/login'); // Redirect to login after logout
+    router.refresh();
   };
 
   return (
