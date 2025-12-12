@@ -1,8 +1,3 @@
-Here is a professional, structured `README.md` template tailored for your project. I have filled in the details based on what we saw in the repo (Next.js, TypeScript, NextAuth), but I left a few placeholders for you to customize.
-
-You can copy the code block below and paste it directly into your `README.md` file.
-
-````markdown
 # Symbria Delivery Logistics
 
 **Manage RX driver deliverables and logistics.**
@@ -76,8 +71,6 @@ Follow these steps to set up the project locally on your machine.
 
 5.  **Open the app:**
     Visit [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.
-
------
 
 ## 📂 Project Structure
 
