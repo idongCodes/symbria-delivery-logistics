@@ -41,7 +41,7 @@ Follow these steps to set up the project locally on your machine.
    ```bash
    git clone [https://github.com/idongCodes/symbria-delivery-logistics.git](https://github.com/idongCodes/symbria-delivery-logistics.git)
    cd symbria-delivery-logistics
-````
+   ````
 
 2.  **Install dependencies:**
 
@@ -95,11 +95,4 @@ Follow these steps to set up the project locally on your machine.
 
 This project is proprietary. All rights reserved.
 
-```
-
-### 💡 Two things you should do after pasting this:
-
-1.  **Check the Styling:** I listed "CSS Modules/PostCSS" under the Tech Stack. If you are using **Tailwind CSS**, change that line to:
-    `- **Styling:** [Tailwind CSS](https://tailwindcss.com/)`
-2.  **Environment Variables:** Since I saw `pages/api/auth` in your file structure, your app **will not work** locally without a `.env.local` file containing a `NEXTAUTH_SECRET`. Make sure to document which API keys are needed in that section.
 ```
