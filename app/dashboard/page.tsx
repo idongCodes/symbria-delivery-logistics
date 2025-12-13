@@ -341,7 +341,10 @@ export default function Dashboard() {
     setSubmitting(true); 
 
     try {
-      let imageUrls = editingLog?.images || { front: "", back: "", trunk: "" };
+      // FIX: Use 'const' and create a shallow copy using { ... } to avoid linter errors
+      const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
+
+      // Now we can modify properties on this new object without reassigning the variable
       if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
       if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
       if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
