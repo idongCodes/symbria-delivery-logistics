@@ -12,6 +12,8 @@ export default function LoginPage() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // New State
+  
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   
@@ -45,11 +47,17 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
+    // --- 🔐 PASSWORD MATCH CHECK ---
+    if (password !== confirmPassword) {
+      setMessage("Error: Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+    // -------------------------------
+
     const lowerEmail = email.toLowerCase().trim();
     
     // --- 🛡️ ROLE & DOMAIN GUARD LOGIC 🛡️ ---
-    
-    // 1. Define Lists
     const adminAllowlist = [
       "idongesit_essien@ymail.com", 
       "ressien1@symbria.com"
@@ -63,7 +71,7 @@ export default function LoginPage() {
     
     const generalDomain = "@symbria.com";
 
-    // 2. Validate ADMIN Role (Strict)
+    // Validate ADMIN Role (Strict)
     if (role === 'Admin') {
       if (!adminAllowlist.includes(lowerEmail)) {
         setMessage("Error: You are not authorized to register as an Admin.");
@@ -71,7 +79,7 @@ export default function LoginPage() {
         return;
       }
     } 
-    // 3. Validate MANAGEMENT Role
+    // Validate MANAGEMENT Role
     else if (role === 'Management') {
       if (!managementAllowlist.includes(lowerEmail)) {
         setMessage("Error: This email is not authorized for Management access.");
@@ -79,9 +87,8 @@ export default function LoginPage() {
         return;
       }
     }
-    // 4. Validate DRIVER Role (General Symbria Check)
+    // Validate DRIVER Role
     else {
-      // Allow general domain OR anyone on the management lists to test as driver
       const isAllowedDomain = lowerEmail.endsWith(generalDomain) || managementAllowlist.includes(lowerEmail);
       if (!isAllowedDomain) {
         setMessage("Error: Registration is restricted to Symbria employees.");
@@ -188,6 +195,7 @@ export default function LoginPage() {
             className="border p-3 rounded text-black"
             required
           />
+          
           <input
             type="password"
             placeholder="Password"
@@ -196,6 +204,20 @@ export default function LoginPage() {
             className="border p-3 rounded text-black"
             required
           />
+
+          {/* Confirm Password - Only visible during registration */}
+          {view === 'register' && (
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className={`border p-3 rounded text-black ${
+                confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50" : ""
+              }`}
+              required
+            />
+          )}
 
           <button 
             type="submit" 
@@ -214,6 +236,7 @@ export default function LoginPage() {
             onClick={() => {
               setView(view === 'login' ? 'register' : 'login');
               setMessage(""); 
+              setConfirmPassword(""); // Clear on toggle
             }}
             className="text-blue-600 hover:underline font-medium"
           >
