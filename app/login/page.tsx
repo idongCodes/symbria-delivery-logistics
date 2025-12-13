@@ -14,6 +14,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [role, setRole] = useState<'Driver' | 'Management'>("Driver"); // Default to Driver
+  
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -41,19 +43,38 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
-    // --- 🛡️ DOMAIN GUARD LOGIC 🛡️ ---
     const lowerEmail = email.toLowerCase().trim();
-    const allowedUser = "idongesit_essien@ymail.com";
-    const allowedDomain = "@symbria.com";
+    
+    // --- 🛡️ ROLE & DOMAIN GUARD LOGIC 🛡️ ---
+    
+    // 1. Define allowed lists
+    const managementAllowlist = [
+      "idongesit_essien@ymail.com", 
+      "ressien1@symbria.com", 
+      "lholden@symbria.com"
+    ];
+    
+    const generalDomain = "@symbria.com";
+    const devEmail = "idongesit_essien@ymail.com"; // Keep dev access for testing
 
-    const isAllowed = lowerEmail === allowedUser || lowerEmail.endsWith(allowedDomain);
-
-    if (!isAllowed) {
-      setMessage("Error: Registration is restricted to Symbria employees.");
-      setLoading(false);
-      return; // Stop execution here
+    // 2. Validate Management Role
+    if (role === 'Management') {
+      if (!managementAllowlist.includes(lowerEmail)) {
+        setMessage("Error: This email is not authorized for Management access.");
+        setLoading(false);
+        return;
+      }
+    } 
+    // 3. Validate Driver Role (General Symbria Check)
+    else {
+      const isAllowedDomain = lowerEmail.endsWith(generalDomain) || lowerEmail === devEmail;
+      if (!isAllowedDomain) {
+        setMessage("Error: Registration is restricted to Symbria employees.");
+        setLoading(false);
+        return;
+      }
     }
-    // ----------------------------------
+    // ------------------------------------------
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -62,6 +83,7 @@ export default function LoginPage() {
         data: {
           first_name: firstName,
           last_name: lastName,
+          role: role, // Save the role to the user's profile
         },
       },
     });
@@ -90,24 +112,55 @@ export default function LoginPage() {
         <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
           
           {view === 'register' && (
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="First Name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="border p-3 rounded text-black w-1/2"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Last Name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="border p-3 rounded text-black w-1/2"
-                required
-              />
-            </div>
+            <>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="First Name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="border p-3 rounded text-black w-1/2"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Last Name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="border p-3 rounded text-black w-1/2"
+                  required
+                />
+              </div>
+
+              {/* Role Selection */}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-gray-500 uppercase">I am a:</span>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer border p-3 rounded flex-1 hover:bg-gray-50">
+                    <input 
+                      type="radio" 
+                      name="role" 
+                      value="Driver"
+                      checked={role === 'Driver'}
+                      onChange={() => setRole('Driver')}
+                      className="accent-blue-600"
+                    />
+                    <span className="text-gray-700 font-medium">Driver</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer border p-3 rounded flex-1 hover:bg-gray-50">
+                    <input 
+                      type="radio" 
+                      name="role" 
+                      value="Management"
+                      checked={role === 'Management'}
+                      onChange={() => setRole('Management')}
+                      className="accent-blue-600"
+                    />
+                    <span className="text-gray-700 font-medium">Management</span>
+                  </label>
+                </div>
+              </div>
+            </>
           )}
 
           <input
