@@ -33,8 +33,12 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect the dashboard route
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  // --- 🔒 PROTECTED ROUTES ---
+  // If user tries to go to Dashboard OR Contacts without logging in -> Redirect to Login
+  if (
+    (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/contacts')) 
+    && !user
+  ) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -42,5 +46,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login'],
+  // Add '/contacts' to the matcher so middleware actually runs on that page
+  matcher: ['/dashboard/:path*', '/contacts', '/login'],
 }
