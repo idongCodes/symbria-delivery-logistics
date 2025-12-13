@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// --- CONFIGURATION: QUESTIONS LISTS ---
+// --- CONFIGURATION ---
 
 const PRE_TRIP_QUESTIONS = [
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
@@ -43,7 +43,6 @@ const DAMAGE_QUESTIONS = [
   "Dashboard warning lights on"
 ];
 
-// Define Trip Log Shape
 type TripLog = {
   id: number;
   created_at: string;
@@ -68,12 +67,19 @@ type UserProfile = {
   email: string;
 };
 
+// Shape for Dynamic Routes
+type RouteOption = {
+  id: number;
+  name: string;
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
   const [logs, setLogs] = useState<TripLog[]>([]);
+  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]); // Dynamic Routes
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
   const [loading, setLoading] = useState(true); 
@@ -96,7 +102,7 @@ export default function Dashboard() {
     trunk: File | null;
   }>({ front: null, back: null, trunk: null });
 
-  // --- LOGIC HELPERS ---
+  // --- HELPERS ---
 
   const requiresDescription = (question: string, answer: string) => {
     if (!answer) return false;
@@ -124,7 +130,6 @@ export default function Dashboard() {
     return false; 
   };
 
-  // --- EXPORT HELPERS ---
   const downloadCSV = (log: TripLog) => {
     const headers = [
       'Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Route', 'Odometer', 
@@ -195,14 +200,7 @@ export default function Dashboard() {
       const tPF = log.checklist?.["Tire Pressure (Passenger Front)"] || "-";
       const tDR = log.checklist?.["Tire Pressure (Driver Rear)"] || "-";
       const tPR = log.checklist?.["Tire Pressure (Passenger Rear)"] || "-";
-      
-      tireHtml = `
-        <h3>Tire Pressure (PSI)</h3>
-        <table style="width:100%; border:1px solid #ddd; margin-bottom:20px; text-align:center;">
-          <tr style="background:#f4f4f4;"><th>D-Front</th><th>P-Front</th><th>D-Rear</th><th>P-Rear</th></tr>
-          <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
-        </table>
-      `;
+      tireHtml = `<h3>Tire Pressure (PSI)</h3><table style="width:100%; border:1px solid #ddd; margin-bottom:20px; text-align:center;"><tr style="background:#f4f4f4;"><th>D-Front</th><th>P-Front</th><th>D-Rear</th><th>P-Rear</th></tr><tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr></table>`;
     }
 
     printWindow.document.write(`
@@ -226,9 +224,7 @@ export default function Dashboard() {
              ${log.images?.trunk ? `<div style="flex:1"><p>Trunk</p><img src="${log.images.trunk}" style="width:100%; border:1px solid #ddd;"/></div>` : ''}
           </div>
           <h3>Inspection Checklist</h3>
-          <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">
-            ${checklistRows}
-          </table>
+          <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">${checklistRows}</table>
           <p style="background:#f4f4f4;padding:15px;border:1px solid #ddd;"><strong>Notes:</strong><br/>${log.notes || "None"}</p>
           <script>window.onload=function(){window.print();}</script>
         </body>
@@ -291,13 +287,26 @@ export default function Dashboard() {
         role: metadata.role || "Driver",
       });
 
-      const { data, error } = await supabase
+      // Fetch Logs
+      const { data: logsData, error: logsError } = await supabase
         .from('trip_logs')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      if (logsError) throw logsError;
+      setLogs(logsData || []);
 
-      if (error) throw error;
-      setLogs(data || []);
+      // Fetch Dynamic Routes
+      const { data: routeData, error: routeError } = await supabase
+        .from('routes')
+        .select('id, name')
+        .eq('active', true)
+        .order('name');
+
+      if (!routeError && routeData) {
+        setRouteOptions(routeData);
+      }
+
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
@@ -307,25 +316,18 @@ export default function Dashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleChecklistChange = (question: string, value: string) => {
-    setChecklistData(prev => ({ ...prev, [question]: value }));
-  };
-  const handleCommentChange = (question: string, comment: string) => {
-    setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  };
-  const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => {
-    setImageFiles(prev => ({ ...prev, [key]: file }));
-  };
-  const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => {
-    setTirePressures(prev => ({ ...prev, [key]: value }));
-  };
+  // Handlers
+  const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
+  const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
+  const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
+  const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
 
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
     const filePath = `${userProfile?.id}/${fileName}`;
-    const { error: uploadError } = await supabase.storage.from('trip_logs').upload(filePath, file);
-    if (uploadError) throw uploadError;
+    const { error } = await supabase.storage.from('trip_logs').upload(filePath, file);
+    if (error) throw error;
     const { data } = supabase.storage.from('trip_logs').getPublicUrl(filePath);
     return data.publicUrl;
   };
@@ -340,10 +342,9 @@ export default function Dashboard() {
 
     try {
       let imageUrls = editingLog?.images || { front: "", back: "", trunk: "" };
-
-      if (imageFiles.front) { imageUrls = { ...imageUrls, front: await uploadImage(imageFiles.front) }; }
-      if (imageFiles.back) { imageUrls = { ...imageUrls, back: await uploadImage(imageFiles.back) }; }
-      if (imageFiles.trunk) { imageUrls = { ...imageUrls, trunk: await uploadImage(imageFiles.trunk) }; }
+      if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
+      if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
+      if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
 
       const finalChecklist = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
@@ -410,19 +411,19 @@ export default function Dashboard() {
     ? logs.filter(log => log.user_id === userProfile?.id) 
     : logs;
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
-
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
-      <header className="mb-8 flex justify-between items-start">
+      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Dashboard</h1>
           <p className="text-gray-500 text-sm mt-1">Welcome back, {userProfile?.firstName}</p>
         </div>
         {userProfile && (
-          <h3 className="text-gray-400 text-right font-medium">
+          <h3 className="text-gray-400 font-medium text-left md:text-right">
             {userProfile.firstName} {userProfile.lastName} <br />
             <span className={`uppercase text-xs tracking-wider border px-2 py-0.5 rounded-full mt-1 inline-block ${
               userProfile.role === 'Admin' ? 'border-red-300 text-red-600 bg-red-50' : 
@@ -435,52 +436,45 @@ export default function Dashboard() {
         )}
       </header>
 
-      <div className="flex border-b border-gray-300 mb-6 overflow-x-auto">
-        <button onClick={() => { setActiveTab('new'); setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); }} className={`px-6 py-3 font-medium ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+      <div className="flex border-b border-gray-300 mb-6 overflow-x-auto whitespace-nowrap pb-1">
+        <button onClick={() => { setActiveTab('new'); setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
-        <button onClick={() => { setActiveTab('history'); setEditingLog(null); }} className={`px-6 py-3 font-medium ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+        <button onClick={() => { setActiveTab('history'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
           My Logs
         </button>
         {(userProfile?.role === 'Management' || userProfile?.role === 'Admin') && (
-          <button onClick={() => { setActiveTab('all'); setEditingLog(null); }} className={`px-6 py-3 font-medium ${activeTab === 'all' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
             All Logs (Admin)
           </button>
         )}
       </div>
 
       {activeTab === 'new' && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-4xl">
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 max-w-4xl">
           <h2 className="text-xl font-semibold mb-2">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
           </h2>
-          <p className="text-sm text-gray-500 mb-6 italic">
-             Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.
-          </p>
+          <p className="text-sm text-gray-500 mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700">Trip Type</span>
-              <select 
-                name="trip_type" 
-                value={tripType}
-                onChange={(e) => setTripType(e.target.value)}
-                className="border p-3 rounded bg-white" 
-                required
-              >
+              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white" required>
                 <option value="Pre-Trip">Pre-Trip Inspection</option>
                 <option value="Post-Trip">Post-Trip Inspection</option>
               </select>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700">Select Route</span>
+              {/* DYNAMIC ROUTES */}
               <select name="route_id" defaultValue={editingLog?.route_id || ""} className="border p-3 rounded-lg bg-white" required>
                 <option value="" disabled>-- Choose a Route --</option>
-                <option value="R-101">Route 101 (North Shore)</option>
-                <option value="R-102">Route 102 (Metro West)</option>
-                <option value="R-103">Route 103 (South Shore)</option>
-                <option value="Unassigned">Unassigned / Float</option>
+                {routeOptions.length > 0 ? (
+                  routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)
+                ) : (
+                  <option disabled>Loading routes...</option>
+                )}
               </select>
             </div>
             <label className="flex flex-col gap-1">
@@ -492,7 +486,7 @@ export default function Dashboard() {
             
             <div>
                <h3 className="text-lg font-bold text-gray-800 mb-4">Inspection Checklist</h3>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {currentQuestions.map((question, index) => {
                    const answer = checklistData[question];
                    const showComment = requiresDescription(question, answer);
@@ -525,28 +519,15 @@ export default function Dashboard() {
 
             <hr className="border-gray-200" />
 
-            {/* --- TIRE PRESSURE: CONDITIONAL --- */}
             {tripType === 'Pre-Trip' && (
               <>
                 <div className="animate-in fade-in slide-in-from-top-2">
                   <h3 className="text-lg font-bold text-gray-800 mb-4">Tire Pressure (PSI) (Required)</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <label className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-gray-600">Driver Front</span>
-                      <input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded" required />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-gray-600">Passenger Front</span>
-                      <input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded" required />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-gray-600">Driver Rear</span>
-                      <input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded" required />
-                    </label>
-                    <label className="flex flex-col gap-1">
-                      <span className="text-xs font-semibold text-gray-600">Passenger Rear</span>
-                      <input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded" required />
-                    </label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded" required /></label>
                   </div>
                 </div>
                 <hr className="border-gray-200" />
@@ -556,21 +537,9 @@ export default function Dashboard() {
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4">Vehicle Photos (Required)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required={!editingLog?.images?.front} />
-                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required={!editingLog?.images?.back} />
-                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required={!editingLog?.images?.trunk} />
-                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
-                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200"><span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span><input type="file" accept="image/*" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.front} />{editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}</div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200"><span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span><input type="file" accept="image/*" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.back} />{editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}</div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200"><span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span><input type="file" accept="image/*" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.trunk} />{editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}</div>
               </div>
             </div>
 
@@ -581,33 +550,54 @@ export default function Dashboard() {
               <textarea name="notes" defaultValue={editingLog?.notes} className="border p-3 rounded" rows={3} placeholder="General notes..." />
             </label>
             
-            <button 
-              type="submit" 
-              disabled={submitting} 
-              className={`font-bold py-3 px-6 rounded text-white flex items-center gap-2 transition-all ${
-                submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')
-              }`}
-            >
-              {submitting ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Uploading Images...
-                </>
-              ) : (
-                editingLog ? "Update Log" : "Submit Log"
-              )}
+            <button type="submit" disabled={submitting} className={`font-bold py-3 px-6 rounded text-white flex items-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
+              {submitting ? ( <>Uploading Images...</> ) : ( editingLog ? "Update Log" : "Submit Log" )}
             </button>
-
           </form>
         </div>
       )}
 
       {(activeTab === 'history' || activeTab === 'all') && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
+          
+          {/* MOBILE CARD VIEW (Visible on small screens) */}
+          <div className="block md:hidden">
+            {visibleLogs.map((log) => {
+              const hasPermission = canEditOrDelete(log);
+              return (
+                <div key={log.id} className="p-4 border-b border-gray-100 flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{log.trip_type}</span>
+                      <p className="text-xs text-gray-500 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => printLog(log)} className="text-lg bg-gray-50 p-2 rounded">📄</button>
+                      <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 p-2 rounded">📊</button>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-800 font-medium">
+                    {activeTab === 'all' && <div className="text-purple-700 mb-1">{log.driver_name}</div>}
+                    <div>Route: {log.route_id || "N/A"}</div>
+                    <div>Odo: {log.odometer}</div>
+                  </div>
+
+                  {log.notes && <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded mt-1 italic">&quot;{log.notes}&quot;</div>}
+
+                  {hasPermission && (
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+                      <button onClick={() => handleEditClick(log)} className="flex-1 text-center bg-orange-50 text-orange-700 text-sm py-2 rounded font-semibold">Edit</button>
+                      <button onClick={() => handleDelete(log.id)} className="flex-1 text-center bg-red-50 text-red-700 text-sm py-2 rounded font-semibold">Delete</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* DESKTOP TABLE VIEW (Visible on medium+ screens) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
