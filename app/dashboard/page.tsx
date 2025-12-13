@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/client";
 type TripLog = {
   id: number;
   created_at: string;
+  updated_at: string; // New field
+  edit_count: number; // New field
   user_id: string; 
   vehicle_id: string;
   odometer: number;
@@ -29,30 +31,39 @@ export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   
-  // State for Tabs
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
-  
-  // State for Data
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // State for Editing
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
   // --- HELPERS ---
 
-  // Check if log is editable (created less than 30 mins ago)
-  const isEditable = (createdAt: string) => {
-    const created = new Date(createdAt).getTime();
+  // REVISED LOGIC: 15 mins initial, 5 mins grace for 2nd edit
+  const isEditable = (log: TripLog) => {
     const now = new Date().getTime();
-    const thirtyMins = 30 * 60 * 1000;
-    return (now - created) < thirtyMins;
+
+    // Condition 1: Never edited? 15 min window from Creation
+    if (log.edit_count === 0) {
+      const created = new Date(log.created_at).getTime();
+      const fifteenMins = 15 * 60 * 1000;
+      return (now - created) < fifteenMins;
+    }
+
+    // Condition 2: Edited once? 5 min window from Last Update
+    if (log.edit_count === 1) {
+      const updated = new Date(log.updated_at).getTime();
+      const fiveMins = 5 * 60 * 1000;
+      return (now - updated) < fiveMins;
+    }
+
+    // Condition 3: Edited twice or more? Locked.
+    return false;
   };
 
   // 1. Download as CSV
   const downloadCSV = (log: TripLog) => {
-    const headers = ['Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Vehicle ID', 'Odometer', 'Notes'];
+    const headers = ['Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Vehicle ID', 'Odometer', 'Notes', 'Edits'];
     const dateObj = new Date(log.created_at);
     
     const row = [
@@ -63,7 +74,8 @@ export default function Dashboard() {
       log.trip_type,
       log.vehicle_id,
       log.odometer,
-      `"${(log.notes || '').replace(/"/g, '""')}"`
+      `"${(log.notes || '').replace(/"/g, '""')}"`,
+      log.edit_count
     ];
 
     const csvContent = [headers.join(','), row.join(',')].join('\n');
@@ -106,6 +118,7 @@ export default function Dashboard() {
             <div class="label">Vehicle ID:</div><div>${log.vehicle_id}</div>
             <div class="label">Odometer:</div><div>${log.odometer}</div>
             <div class="label">Trip Type:</div><div>${log.trip_type}</div>
+            <div class="label">Revisions:</div><div>${log.edit_count}</div>
           </div>
           <div class="notes-box">
             <div class="label">Notes:</div>
@@ -122,15 +135,9 @@ export default function Dashboard() {
   // 3. Handle Delete
   const handleDelete = async (logId: number) => {
     if (!confirm("Are you sure you want to delete this log? This cannot be undone.")) return;
-
     const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
-
-    if (error) {
-      alert("Error: " + error.message);
-    } else {
-      alert("Log deleted successfully.");
-      fetchData();
-    }
+    if (error) alert("Error: " + error.message);
+    else { alert("Log deleted."); fetchData(); }
   };
 
   // 4. Handle Edit Click
@@ -143,10 +150,7 @@ export default function Dashboard() {
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.replace('/login');
-        return;
-      }
+      if (!session) { router.replace('/login'); return; }
 
       const { user } = session;
       const metadata = user.user_metadata || {};
@@ -173,9 +177,7 @@ export default function Dashboard() {
     }
   }, [supabase, router]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // --- SUBMIT / UPDATE ---
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -183,7 +185,9 @@ export default function Dashboard() {
     if (!userProfile) return;
 
     const formData = new FormData(e.currentTarget);
-    const logData = {
+    
+    // Base data
+    const baseData = {
       vehicle_id: formData.get('vehicle_id'),
       odometer: formData.get('odometer'),
       trip_type: formData.get('trip_type'),
@@ -197,14 +201,16 @@ export default function Dashboard() {
       // UPDATE EXISTING
       const response = await supabase
         .from('trip_logs')
-        .update(logData)
+        .update({
+          ...baseData,
+          edit_count: editingLog.edit_count + 1, // Increment count
+          updated_at: new Date().toISOString()   // Set new time base for 5 min window
+        })
         .eq('id', editingLog.id);
       error = response.error;
     } else {
       // INSERT NEW
-      const response = await supabase
-        .from('trip_logs')
-        .insert(logData);
+      const response = await supabase.from('trip_logs').insert(baseData);
       error = response.error;
     }
 
@@ -213,13 +219,12 @@ export default function Dashboard() {
     } else {
       alert(editingLog ? "Log updated successfully!" : "Success! Log submitted.");
       e.currentTarget.reset(); 
-      setEditingLog(null); // Clear edit mode
+      setEditingLog(null); 
       fetchData(); 
       setActiveTab('history'); 
     }
   }
 
-  // --- RENDER ---
   const visibleLogs = activeTab === 'history' 
     ? logs.filter(log => log.user_id === userProfile?.id) 
     : logs;
@@ -277,7 +282,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* FORM (NEW or EDIT) */}
+      {/* FORM */}
       {activeTab === 'new' && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-3xl">
           <div className="flex justify-between items-center mb-4">
@@ -285,12 +290,7 @@ export default function Dashboard() {
               {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Log"}
             </h2>
             {editingLog && (
-              <button 
-                onClick={() => { setEditingLog(null); }}
-                className="text-sm text-red-600 hover:underline"
-              >
-                Cancel Edit
-              </button>
+              <button onClick={() => { setEditingLog(null); }} className="text-sm text-red-600 hover:underline">Cancel Edit</button>
             )}
           </div>
           
@@ -317,7 +317,7 @@ export default function Dashboard() {
               <textarea name="notes" defaultValue={editingLog?.notes} placeholder="Notes..." className="border p-3 rounded-lg" rows={3} />
             </label>
             <button type="submit" className={`font-bold py-3 px-6 rounded-lg transition self-start text-white ${editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'}`}>
-              {editingLog ? "Update Log" : "Submit Log"}
+              {editingLog ? `Update Log (Attempt ${editingLog.edit_count + 1}/2)` : "Submit Log"}
             </button>
           </form>
         </div>
@@ -343,8 +343,6 @@ export default function Dashboard() {
                 <tbody className="divide-y divide-gray-100">
                   {visibleLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-gray-50 transition">
-                      
-                      {/* ACTIONS */}
                       <td className="p-4">
                         {activeTab === 'all' ? (
                           <div className="flex gap-2">
@@ -352,8 +350,8 @@ export default function Dashboard() {
                             <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 hover:bg-green-100 px-2 py-1 rounded">📊 CSV</button>
                           </div>
                         ) : (
-                          // History Tab Actions (Edit/Delete)
-                          isEditable(log.created_at) ? (
+                          // Logic Check for Buttons
+                          isEditable(log) ? (
                             <div className="flex gap-2">
                               <button onClick={() => handleEditClick(log)} className="text-xs bg-orange-100 hover:bg-orange-200 text-orange-800 px-2 py-1 rounded">✏️ Edit</button>
                               <button onClick={() => handleDelete(log.id)} className="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded">🗑️ Delete</button>
@@ -363,7 +361,6 @@ export default function Dashboard() {
                           )
                         )}
                       </td>
-
                       {activeTab === 'all' && <td className="p-4 font-medium text-gray-900">{log.driver_name || "Unknown"}</td>}
                       <td className="p-4 text-gray-600">{new Date(log.created_at).toLocaleDateString()} <br/><span className="text-xs text-gray-400">{new Date(log.created_at).toLocaleTimeString()}</span></td>
                       <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{log.trip_type}</span></td>
