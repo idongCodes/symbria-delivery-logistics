@@ -4,8 +4,9 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// --- CONFIGURATION: THE INSPECTION QUESTIONS ---
-const QUESTIONS = [
+// --- CONFIGURATION: QUESTIONS LISTS ---
+
+const PRE_TRIP_QUESTIONS = [
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
   "Fuel Tank Full",
   "Gas card in binder",
@@ -25,6 +26,16 @@ const QUESTIONS = [
   "Hazard lights working",
   "Fog lights working"
 ];
+
+const POST_TRIP_QUESTIONS = [
+  "Fuel Tank Full",
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Synchronize Scanner, End Route, Log Off",
+  "Scanner returned",
+  "Tackle boxes returned"
+];
+
+const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS]));
 
 const DAMAGE_QUESTIONS = [
   "Dings, dents, or other visible damage on interior/exterior",
@@ -65,16 +76,20 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
-  // Loading States
-  const [loading, setLoading] = useState(true); // Initial data load
-  const [submitting, setSubmitting] = useState(false); // New: Form submission state
+  const [loading, setLoading] = useState(true); 
+  const [submitting, setSubmitting] = useState(false); 
 
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
   // Form State
+  const [tripType, setTripType] = useState<string>("Pre-Trip"); 
   const [checklistData, setChecklistData] = useState<Record<string, string>>({});
   const [checklistComments, setChecklistComments] = useState<Record<string, string>>({});
   
+  const [tirePressures, setTirePressures] = useState({
+    df: "", pf: "", dr: "", pr: ""
+  });
+
   const [imageFiles, setImageFiles] = useState<{
     front: File | null;
     back: File | null;
@@ -112,12 +127,14 @@ export default function Dashboard() {
   // --- EXPORT HELPERS ---
   const downloadCSV = (log: TripLog) => {
     const headers = [
-      'Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Route', 'Odometer', 'Notes', 'Img Front', 'Img Back', 'Img Trunk', 'Edits', 
-      ...QUESTIONS 
+      'Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Route', 'Odometer', 
+      'Tire DF', 'Tire PF', 'Tire DR', 'Tire PR', 
+      'Notes', 'Img Front', 'Img Back', 'Img Trunk', 'Edits', 
+      ...ALL_QUESTIONS_MASTER 
     ];
     const dateObj = new Date(log.created_at);
     
-    const checklistValues = QUESTIONS.map(q => {
+    const checklistValues = ALL_QUESTIONS_MASTER.map(q => {
       const val = log.checklist?.[q] || "N/A";
       const comment = log.checklist?.[`${q}_COMMENT`];
       return comment ? `"${val}: ${comment}"` : val;
@@ -131,6 +148,10 @@ export default function Dashboard() {
       log.trip_type,
       log.route_id || 'N/A',
       log.odometer,
+      log.checklist?.["Tire Pressure (Driver Front)"] || "N/A",
+      log.checklist?.["Tire Pressure (Passenger Front)"] || "N/A",
+      log.checklist?.["Tire Pressure (Driver Rear)"] || "N/A",
+      log.checklist?.["Tire Pressure (Passenger Rear)"] || "N/A",
       `"${(log.notes || '').replace(/"/g, '""')}"`,
       log.images?.front || "N/A",
       log.images?.back || "N/A",
@@ -152,7 +173,9 @@ export default function Dashboard() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Please allow popups.");
 
-    const checklistRows = QUESTIONS.map(q => {
+    const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
+
+    const checklistRows = relevantQuestions.map(q => {
       const val = log.checklist?.[q] || "-";
       const comment = log.checklist?.[`${q}_COMMENT`];
       
@@ -166,6 +189,22 @@ export default function Dashboard() {
       return `<tr><td style="padding:5px;border-bottom:1px solid #eee;">${q}</td><td style="padding:5px;border-bottom:1px solid #eee;">${displayHtml}</td></tr>`;
     }).join('');
     
+    let tireHtml = "";
+    if (log.trip_type === 'Pre-Trip') {
+      const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
+      const tPF = log.checklist?.["Tire Pressure (Passenger Front)"] || "-";
+      const tDR = log.checklist?.["Tire Pressure (Driver Rear)"] || "-";
+      const tPR = log.checklist?.["Tire Pressure (Passenger Rear)"] || "-";
+      
+      tireHtml = `
+        <h3>Tire Pressure (PSI)</h3>
+        <table style="width:100%; border:1px solid #ddd; margin-bottom:20px; text-align:center;">
+          <tr style="background:#f4f4f4;"><th>D-Front</th><th>P-Front</th><th>D-Rear</th><th>P-Rear</th></tr>
+          <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
+        </table>
+      `;
+    }
+
     printWindow.document.write(`
       <html>
         <head><title>Log #${log.id}</title></head>
@@ -179,6 +218,7 @@ export default function Dashboard() {
              <div><strong>Route:</strong> ${log.route_id || "N/A"}</div>
              <div><strong>Odometer:</strong> ${log.odometer}</div>
           </div>
+          ${tireHtml}
           <h3>Photos</h3>
           <div style="display:flex; gap:10px; margin-bottom:20px;">
              ${log.images?.front ? `<div style="flex:1"><p>Front</p><img src="${log.images.front}" style="width:100%; border:1px solid #ddd;"/></div>` : ''}
@@ -206,13 +246,22 @@ export default function Dashboard() {
 
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
+    setTripType(log.trip_type);
     setImageFiles({ front: null, back: null, trunk: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
     
     if (log.checklist) {
+      setTirePressures({
+        df: log.checklist["Tire Pressure (Driver Front)"] || "",
+        pf: log.checklist["Tire Pressure (Passenger Front)"] || "",
+        dr: log.checklist["Tire Pressure (Driver Rear)"] || "",
+        pr: log.checklist["Tire Pressure (Passenger Rear)"] || "",
+      });
+
       Object.keys(log.checklist).forEach(key => {
+        if (key.includes("Tire Pressure")) return;
         if (key.endsWith('_COMMENT')) {
           const realKey = key.replace('_COMMENT', '');
           comments[realKey] = log.checklist[key];
@@ -267,54 +316,36 @@ export default function Dashboard() {
   const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => {
     setImageFiles(prev => ({ ...prev, [key]: file }));
   };
+  const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => {
+    setTirePressures(prev => ({ ...prev, [key]: value }));
+  };
 
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
     const filePath = `${userProfile?.id}/${fileName}`;
-    
-    const { error: uploadError } = await supabase.storage
-      .from('trip_logs')
-      .upload(filePath, file);
-
+    const { error: uploadError } = await supabase.storage.from('trip_logs').upload(filePath, file);
     if (uploadError) throw uploadError;
-
     const { data } = supabase.storage.from('trip_logs').getPublicUrl(filePath);
     return data.publicUrl;
   };
 
-  // --- SUBMIT / UPDATE ---
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!userProfile) return;
 
-    // <-- FIX: Capture form element immediately before any async/await calls
     const formElement = e.currentTarget; 
     const formData = new FormData(formElement);
-
-    setSubmitting(true); // START SPINNER
+    setSubmitting(true); 
 
     try {
-      // --- UPLOAD IMAGES ---
       let imageUrls = editingLog?.images || { front: "", back: "", trunk: "" };
 
-      if (imageFiles.front) {
-        const url = await uploadImage(imageFiles.front);
-        imageUrls = { ...imageUrls, front: url };
-      }
-      if (imageFiles.back) {
-        const url = await uploadImage(imageFiles.back);
-        imageUrls = { ...imageUrls, back: url };
-      }
-      if (imageFiles.trunk) {
-        const url = await uploadImage(imageFiles.trunk);
-        imageUrls = { ...imageUrls, trunk: url };
-      }
+      if (imageFiles.front) { imageUrls = { ...imageUrls, front: await uploadImage(imageFiles.front) }; }
+      if (imageFiles.back) { imageUrls = { ...imageUrls, back: await uploadImage(imageFiles.back) }; }
+      if (imageFiles.trunk) { imageUrls = { ...imageUrls, trunk: await uploadImage(imageFiles.trunk) }; }
 
-      // --- PREPARE DATA ---
-      // Note: We use the already captured 'formData' variable here
       const finalChecklist = { ...checklistData };
-      
       Object.keys(checklistComments).forEach(q => {
         const answer = checklistData[q];
         if (requiresDescription(q, answer) && checklistComments[q]) {
@@ -322,11 +353,18 @@ export default function Dashboard() {
         }
       });
 
+      if (tripType === 'Pre-Trip') {
+        finalChecklist["Tire Pressure (Driver Front)"] = tirePressures.df;
+        finalChecklist["Tire Pressure (Passenger Front)"] = tirePressures.pf;
+        finalChecklist["Tire Pressure (Driver Rear)"] = tirePressures.dr;
+        finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
+      }
+
       const baseData = {
         vehicle_id: "N/A", 
         route_id: formData.get('route_id'), 
         odometer: formData.get('odometer'),
-        trip_type: formData.get('trip_type'),
+        trip_type: tripType, 
         notes: formData.get('notes'),
         checklist: finalChecklist,
         images: imageUrls, 
@@ -334,16 +372,12 @@ export default function Dashboard() {
       };
 
       let error;
-
       if (editingLog) {
-        const response = await supabase
-          .from('trip_logs')
-          .update({
+        const response = await supabase.from('trip_logs').update({
             ...baseData,
             edit_count: editingLog.edit_count + 1,
             updated_at: new Date().toISOString()
-          })
-          .eq('id', editingLog.id);
+        }).eq('id', editingLog.id);
         error = response.error;
       } else {
         const response = await supabase.from('trip_logs').insert(baseData);
@@ -354,20 +388,21 @@ export default function Dashboard() {
         alert("Error: " + error.message);
       } else {
         alert(editingLog ? "Log updated!" : "Success! Log submitted.");
-        formElement.reset(); // Use the captured element to reset
+        formElement.reset();
         setChecklistData({}); 
         setChecklistComments({});
         setImageFiles({ front: null, back: null, trunk: null });
+        setTirePressures({ df: "", pf: "", dr: "", pr: "" });
+        setTripType("Pre-Trip"); 
         setEditingLog(null); 
         fetchData(); 
         setActiveTab('history'); 
       }
     } catch (err) {
-      // Cast err as Error to satisfy TypeScript
       const errorMessage = (err as Error).message || "An unknown error occurred";
       alert("Submission Failed: " + errorMessage);
     } finally {
-      setSubmitting(false); // STOP SPINNER
+      setSubmitting(false); 
     }
   }
 
@@ -376,6 +411,8 @@ export default function Dashboard() {
     : logs;
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+
+  const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
@@ -399,7 +436,7 @@ export default function Dashboard() {
       </header>
 
       <div className="flex border-b border-gray-300 mb-6 overflow-x-auto">
-        <button onClick={() => { setActiveTab('new'); setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); }} className={`px-6 py-3 font-medium ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+        <button onClick={() => { setActiveTab('new'); setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); }} className={`px-6 py-3 font-medium ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
         <button onClick={() => { setActiveTab('history'); setEditingLog(null); }} className={`px-6 py-3 font-medium ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
@@ -414,15 +451,24 @@ export default function Dashboard() {
 
       {activeTab === 'new' && (
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-4xl">
-          <h2 className="text-xl font-semibold mb-6">
+          <h2 className="text-xl font-semibold mb-2">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
           </h2>
+          <p className="text-sm text-gray-500 mb-6 italic">
+             Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.
+          </p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700">Trip Type</span>
-              <select name="trip_type" defaultValue={editingLog?.trip_type} className="border p-3 rounded bg-white" required>
+              <select 
+                name="trip_type" 
+                value={tripType}
+                onChange={(e) => setTripType(e.target.value)}
+                className="border p-3 rounded bg-white" 
+                required
+              >
                 <option value="Pre-Trip">Pre-Trip Inspection</option>
                 <option value="Post-Trip">Post-Trip Inspection</option>
               </select>
@@ -447,7 +493,7 @@ export default function Dashboard() {
             <div>
                <h3 className="text-lg font-bold text-gray-800 mb-4">Inspection Checklist</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                 {QUESTIONS.map((question, index) => {
+                 {currentQuestions.map((question, index) => {
                    const answer = checklistData[question];
                    const showComment = requiresDescription(question, answer);
                    const isBad = showComment;
@@ -479,6 +525,34 @@ export default function Dashboard() {
 
             <hr className="border-gray-200" />
 
+            {/* --- TIRE PRESSURE: CONDITIONAL --- */}
+            {tripType === 'Pre-Trip' && (
+              <>
+                <div className="animate-in fade-in slide-in-from-top-2">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Tire Pressure (PSI) (Required)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-gray-600">Driver Front</span>
+                      <input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded" required />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-gray-600">Passenger Front</span>
+                      <input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded" required />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-gray-600">Driver Rear</span>
+                      <input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded" required />
+                    </label>
+                    <label className="flex flex-col gap-1">
+                      <span className="text-xs font-semibold text-gray-600">Passenger Rear</span>
+                      <input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded" required />
+                    </label>
+                  </div>
+                </div>
+                <hr className="border-gray-200" />
+              </>
+            )}
+
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4">Vehicle Photos (Required)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -507,10 +581,9 @@ export default function Dashboard() {
               <textarea name="notes" defaultValue={editingLog?.notes} className="border p-3 rounded" rows={3} placeholder="General notes..." />
             </label>
             
-            {/* UPDATED SUBMIT BUTTON */}
             <button 
               type="submit" 
-              disabled={submitting} // DISABLE WHILE UPLOADING
+              disabled={submitting} 
               className={`font-bold py-3 px-6 rounded text-white flex items-center gap-2 transition-all ${
                 submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')
               }`}
