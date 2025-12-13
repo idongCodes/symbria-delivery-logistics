@@ -1,19 +1,62 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+type Profile = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  job_title: string;
+  phone: string;
+};
+
 export default function ContactsPage() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function getContacts() {
+      const { data } = await supabase.from('profiles').select('*');
+      if (data) setProfiles(data);
+      setLoading(false);
+    }
+    getContacts();
+  }, [supabase]);
+
+  // --- FILTERING LOGIC ---
+  const adminEmail = "ressien1@symbria.com";
+
+  // 1. Drivers List
+  const drivers = profiles.filter(p => 
+    p.job_title === "Delivery Driver" || 
+    p.role === "Driver" || 
+    p.email === adminEmail // Admin exception
+  );
+
+  // 2. Management List
+  const managers = profiles.filter(p => 
+    (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
+    p.email !== adminEmail // Avoid duplicates (Admin is hardcoded at top)
+  );
+
+  if (loading) return <div className="p-12 text-center text-gray-500">Loading contacts...</div>;
+
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-5xl mx-auto">
       <h2 className="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Important Numbers & Info</h2>
       
-      {/* --- SECTION 1: DEVELOPER & ADMIN --- */}
+      {/* --- SECTION 1: DEVELOPER & ADMIN (Hardcoded/Static) --- */}
       <div className="mb-10">
         <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
           <span className="bg-blue-100 text-blue-600 p-1 rounded text-sm">🛠️</span> Developer & Admin
         </h3>
-        
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center gap-6 hover:shadow-md transition-shadow">
           <div className="flex-shrink-0">
-            <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl shadow-sm">
-              👨‍💻
-            </div>
+            <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl shadow-sm">👨‍💻</div>
           </div>
           <div className="flex-grow">
             <h4 className="text-xl font-bold text-gray-900">Richard Essien</h4>
@@ -32,51 +75,71 @@ export default function ContactsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* --- SECTION 2: MANAGEMENT --- */}
+        {/* --- SECTION 2: MANAGEMENT (Dynamic) --- */}
         <div>
           <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
             <span className="bg-purple-100 text-purple-600 p-1 rounded text-sm">👔</span> Management
           </h3>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center flex-shrink-0">JS</div>
-                <div>
-                  <p className="font-bold text-gray-900">John Smith</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-wide">Operations Manager</p>
-                  <a href="tel:5551234567" className="text-sm text-blue-600 hover:underline block mt-1">(555) 123-4567</a>
-                </div>
-              </li>
-              {/* Add more managers here */}
-              <li className="pt-4 border-t border-gray-100 text-center text-gray-400 italic text-sm">
-                More contacts coming soon...
-              </li>
+              {managers.length === 0 ? (
+                <li className="text-gray-400 italic text-center">No managers found.</li>
+              ) : (
+                managers.map(manager => (
+                  <li key={manager.id} className="flex items-start gap-3 border-b border-gray-50 last:border-0 pb-3 last:pb-0">
+                    <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                      {manager.first_name[0]}{manager.last_name[0]}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{manager.first_name} {manager.last_name}</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">{manager.job_title}</p>
+                      <div className="mt-1 flex flex-col text-sm">
+                        <a href={`mailto:${manager.email}`} className="text-gray-600 hover:text-purple-600">{manager.email}</a>
+                        {manager.phone && (
+                          <a href={`tel:${manager.phone}`} className="text-blue-600 hover:underline">{manager.phone}</a>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </div>
 
-        {/* --- SECTION 3: DRIVERS --- */}
+        {/* --- SECTION 3: DRIVERS (Dynamic) --- */}
         <div>
           <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
             <span className="bg-green-100 text-green-600 p-1 rounded text-sm">🚚</span> Drivers
           </h3>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-full">
-            <p className="text-sm text-gray-500 mb-4">Primary contact list for active drivers.</p>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
+            <p className="text-sm text-gray-500 mb-4">Active driver roster.</p>
             <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium text-gray-700">Driver Dispatch</span>
-                <a href="tel:5559998888" className="text-sm bg-white border px-2 py-1 rounded text-blue-600 font-semibold hover:bg-blue-50">Call Dispatch</a>
-              </div>
-              <div className="text-center py-4 text-gray-400 text-sm italic">
-                Driver roster updating...
-              </div>
+              {drivers.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 text-sm italic">No drivers registered yet.</div>
+              ) : (
+                drivers.map(driver => (
+                  <div key={driver.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition">
+                    <div>
+                      <span className="font-medium text-gray-800 block">{driver.first_name} {driver.last_name}</span>
+                      <span className="text-xs text-gray-500">{driver.job_title}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {driver.phone && (
+                        <a href={`tel:${driver.phone}`} className="text-xs bg-white border px-2 py-1 rounded text-green-600 font-semibold hover:bg-green-100" title="Call">📞</a>
+                      )}
+                      <a href={`mailto:${driver.email}`} className="text-xs bg-white border px-2 py-1 rounded text-blue-600 font-semibold hover:bg-blue-100" title="Email">✉️</a>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* --- SECTION 4: ROUTES --- */}
+      {/* --- SECTION 4: ROUTES (Static) --- */}
       <div className="mt-10">
         <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
           <span className="bg-orange-100 text-orange-600 p-1 rounded text-sm">📍</span> Standard Routes
@@ -104,20 +167,10 @@ export default function ContactsPage() {
                 <td className="p-4 text-gray-600">Framingham, Natick, Wellesley</td>
                 <td className="p-4 text-gray-500">5.5 Hrs</td>
               </tr>
-              <tr className="hover:bg-gray-50">
-                <td className="p-4 font-medium text-blue-600">R-103</td>
-                <td className="p-4 text-gray-800">South Shore</td>
-                <td className="p-4 text-gray-600">Quincy, Braintree, Weymouth</td>
-                <td className="p-4 text-gray-500">4.5 Hrs</td>
-              </tr>
             </tbody>
           </table>
-          <div className="p-3 bg-gray-50 border-t border-gray-200 text-center text-xs text-gray-500">
-            * Routes subject to change based on traffic and volume.
-          </div>
         </div>
       </div>
-
     </div>
   );
 }
