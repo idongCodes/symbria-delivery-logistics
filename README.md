@@ -1,30 +1,47 @@
 # Symbria Delivery Logistics
 
-**Manage RX driver deliverables and logistics.**
+**Fleet Management & RX Delivery Inspection Platform.**
 
-This application is a comprehensive logistics management platform designed to track pharmacy (RX) deliveries and driver schedules. It is built with modern web technologies to ensure performance, type safety, and scalability.
+This application is a specialized logistics management platform designed to track pharmacy (RX) delivery driver inspections, route assignments, and vehicle conditions. It replaces paper logs with a digital, type-safe, and mobile-responsive solution.
 
 ## 🚀 Live Demo
+
 [View Deployed Application](https://symbria-delivery-logistics.vercel.app)
 
----
+-----
 
 ## 🛠️ Tech Stack
 
-- **Framework:** [Next.js](https://nextjs.org/) (App Router)
-- **Language:** [TypeScript](https://www.typescriptlang.org/)
-- **Styling:** CSS Modules / PostCSS
-- **Authentication:** [NextAuth.js](https://next-auth.js.org/) (Auth.js)
-- **Deployment:** [Vercel](https://vercel.com/)
+  - **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+  - **Language:** [TypeScript](https://www.typescriptlang.org/)
+  - **Styling:** [Tailwind CSS](https://tailwindcss.com/) (Responsive Mobile/Desktop)
+  - **Backend & Auth:** [Supabase](https://supabase.com/) (Postgres, Auth, Storage)
+  - **Deployment:** [Vercel](https://vercel.com/)
+
+-----
 
 ## ✨ Key Features
 
-* **Driver Management:** Track driver assignments and status.
-* **Delivery Tracking:** Real-time updates on RX deliverables.
-* **Secure Authentication:** User login and session management via NextAuth.
-* **Responsive UI:** Optimized for desktop and mobile use.
+### 🚛 Driver & Trip Management
 
----
+  * **Smart Inspection Forms:** Dynamic Pre-Trip and Post-Trip logic. Questions change based on the selected trip type.
+  * **Condition Reporting:** Conditional logic requires drivers to describe issues if "No" is selected on safety checks (or "Yes" on damage checks).
+  * **Photo Evidence:** Integrated file uploading for Front, Back, and Trunk vehicle photos (stored in Supabase Buckets).
+  * **Tire Pressure Logging:** Dedicated inputs for tire PSI during Pre-Trip inspections.
+  * **Dynamic Routes:** Route selection dropdown pulls live data from the database, allowing admins to update routes without code changes.
+
+### 🔐 Role-Based Access Control (RBAC)
+
+  * **Drivers:** Can only view and edit their own logs for a limited time window. Mobile-optimized "Card View" for easy use on phones.
+  * **Management:** Read-only access to all driver logs and exports.
+  * **Admins:** Full access to Edit/Delete any log, manage routes, and view global history.
+
+### 📊 Reporting & Contacts
+
+  * **One-Click Exports:** Generate PDF reports for individual inspections (including photos) or export data to CSV.
+  * **Live Contact Roster:** Auto-updating "Contacts" page that separates Drivers from Management based on registration titles.
+
+-----
 
 ## ⚡ Getting Started
 
@@ -32,35 +49,30 @@ Follow these steps to set up the project locally on your machine.
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm, yarn, or pnpm
+  - Node.js (v18 or higher)
+  - A Supabase project (for DB and Auth)
 
 ### Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/idongCodes/symbria-delivery-logistics.git](https://github.com/idongCodes/symbria-delivery-logistics.git)
-   cd symbria-delivery-logistics
-   ````
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/idongCodes/symbria-delivery-logistics.git
+    cd symbria-delivery-logistics
+    ```
 
 2.  **Install dependencies:**
 
     ```bash
     npm install
-    # or
-    yarn install
     ```
 
 3.  **Configure Environment Variables:**
-    Rename `.env.example` to `.env.local` (or create a new `.env.local` file) and add the following keys:
+    Create a `.env.local` file in the root directory and add your Supabase credentials:
 
     ```bash
-    # Authentication Secrets
-    NEXTAUTH_SECRET=your_super_secret_key
-    NEXTAUTH_URL=http://localhost:3000
-
-    # Database (if applicable)
-    DATABASE_URL=your_database_connection_string
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
     ```
 
 4.  **Run the development server:**
@@ -72,16 +84,19 @@ Follow these steps to set up the project locally on your machine.
 5.  **Open the app:**
     Visit [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.
 
-## 📂 Project Structure
+-----
 
-```text
-├── app/                # Main application routes (App Router)
-├── lib/                # Utility functions and shared logic
-├── pages/api/auth/     # NextAuth.js API routes
-├── public/             # Static assets (images, fonts)
-├── types/              # TypeScript type definitions
-└── ...
-```
+## 🗄️ Database Schema (Supabase)
+
+The application relies on the following key tables in Postgres:
+
+  * **`auth.users`**: Managed by Supabase Auth.
+  * **`public.profiles`**: Extends user data (Job Title, Phone, First/Last Name).
+  * **`public.trip_logs`**: Stores inspection data, JSON checklists, image URLs, and odometer readings.
+  * **`public.routes`**: Stores the list of active delivery routes.
+  * **`storage.buckets`**: 'trip\_logs' bucket stores vehicle images.
+
+-----
 
 ## 🤝 Contributing
 
