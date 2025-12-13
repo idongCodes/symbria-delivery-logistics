@@ -14,7 +14,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [role, setRole] = useState<'Driver' | 'Management'>("Driver"); // Default to Driver
+  
+  // Role State
+  const [role, setRole] = useState<'Driver' | 'Management' | 'Admin'>("Driver");
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -47,7 +49,12 @@ export default function LoginPage() {
     
     // --- 🛡️ ROLE & DOMAIN GUARD LOGIC 🛡️ ---
     
-    // 1. Define allowed lists
+    // 1. Define Lists
+    const adminAllowlist = [
+      "idongesit_essien@ymail.com", 
+      "ressien1@symbria.com"
+    ];
+
     const managementAllowlist = [
       "idongesit_essien@ymail.com", 
       "ressien1@symbria.com", 
@@ -55,19 +62,27 @@ export default function LoginPage() {
     ];
     
     const generalDomain = "@symbria.com";
-    const devEmail = "idongesit_essien@ymail.com"; // Keep dev access for testing
 
-    // 2. Validate Management Role
-    if (role === 'Management') {
+    // 2. Validate ADMIN Role (Strict)
+    if (role === 'Admin') {
+      if (!adminAllowlist.includes(lowerEmail)) {
+        setMessage("Error: You are not authorized to register as an Admin.");
+        setLoading(false);
+        return;
+      }
+    } 
+    // 3. Validate MANAGEMENT Role
+    else if (role === 'Management') {
       if (!managementAllowlist.includes(lowerEmail)) {
         setMessage("Error: This email is not authorized for Management access.");
         setLoading(false);
         return;
       }
-    } 
-    // 3. Validate Driver Role (General Symbria Check)
+    }
+    // 4. Validate DRIVER Role (General Symbria Check)
     else {
-      const isAllowedDomain = lowerEmail.endsWith(generalDomain) || lowerEmail === devEmail;
+      // Allow general domain OR anyone on the management lists to test as driver
+      const isAllowedDomain = lowerEmail.endsWith(generalDomain) || managementAllowlist.includes(lowerEmail);
       if (!isAllowedDomain) {
         setMessage("Error: Registration is restricted to Symbria employees.");
         setLoading(false);
@@ -83,7 +98,7 @@ export default function LoginPage() {
         data: {
           first_name: firstName,
           last_name: lastName,
-          role: role, // Save the role to the user's profile
+          role: role, 
         },
       },
     });
@@ -133,30 +148,32 @@ export default function LoginPage() {
               </div>
 
               {/* Role Selection */}
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2">
                 <span className="text-xs font-semibold text-gray-500 uppercase">I am a:</span>
-                <div className="flex gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer border p-3 rounded flex-1 hover:bg-gray-50">
+                <div className="flex gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
                     <input 
-                      type="radio" 
-                      name="role" 
-                      value="Driver"
-                      checked={role === 'Driver'}
-                      onChange={() => setRole('Driver')}
+                      type="radio" name="role" value="Driver"
+                      checked={role === 'Driver'} onChange={() => setRole('Driver')}
                       className="accent-blue-600"
                     />
-                    <span className="text-gray-700 font-medium">Driver</span>
+                    Driver
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer border p-3 rounded flex-1 hover:bg-gray-50">
+                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
                     <input 
-                      type="radio" 
-                      name="role" 
-                      value="Management"
-                      checked={role === 'Management'}
-                      onChange={() => setRole('Management')}
-                      className="accent-blue-600"
+                      type="radio" name="role" value="Management"
+                      checked={role === 'Management'} onChange={() => setRole('Management')}
+                      className="accent-purple-600"
                     />
-                    <span className="text-gray-700 font-medium">Management</span>
+                    Manager
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                    <input 
+                      type="radio" name="role" value="Admin"
+                      checked={role === 'Admin'} onChange={() => setRole('Admin')}
+                      className="accent-red-600"
+                    />
+                    Admin
                   </label>
                 </div>
               </div>
