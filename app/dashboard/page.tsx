@@ -362,8 +362,10 @@ export default function Dashboard() {
         fetchData(); 
         setActiveTab('history'); 
       }
-    } catch (err: any) {
-      alert("Submission Failed: " + err.message);
+    } catch (err) {
+      // Cast err as Error to satisfy TypeScript
+      const errorMessage = (err as Error).message || "An unknown error occurred";
+      alert("Submission Failed: " + errorMessage);
     } finally {
       setSubmitting(false); // STOP SPINNER
     }

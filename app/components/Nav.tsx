@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function Nav() {
   const router = useRouter();
-  const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
   const [supabase] = useState(() => createClient());
 
