@@ -34,13 +34,13 @@ export default function ContactsPage() {
   const drivers = profiles.filter(p => 
     p.job_title === "Delivery Driver" || 
     p.role === "Driver" || 
-    p.email === adminEmail // Admin exception
+    p.email === adminEmail 
   );
 
   // 2. Management List
   const managers = profiles.filter(p => 
     (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
-    p.email !== adminEmail // Avoid duplicates (Admin is hardcoded at top)
+    p.email !== adminEmail 
   );
 
   if (loading) return <div className="p-12 text-center text-gray-500">Loading contacts...</div>;
@@ -49,7 +49,7 @@ export default function ContactsPage() {
     <div className="p-8 max-w-5xl mx-auto">
       <h2 className="text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Important Numbers & Info</h2>
       
-      {/* --- SECTION 1: DEVELOPER & ADMIN (Hardcoded/Static) --- */}
+      {/* --- SECTION 1: DEVELOPER & ADMIN (Hardcoded) --- */}
       <div className="mb-10">
         <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
           <span className="bg-blue-100 text-blue-600 p-1 rounded text-sm">🛠️</span> Developer & Admin
@@ -115,8 +115,18 @@ export default function ContactsPage() {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
             <p className="text-sm text-gray-500 mb-4">Active driver roster.</p>
             <div className="space-y-3">
+              
+              {/* --- STATIC DISPATCH PLACEHOLDER --- */}
+              <div className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-100 rounded-lg">
+                <span className="font-bold text-gray-800">Driver Dispatch</span>
+                <a href="tel:5559998888" className="text-sm bg-white border border-yellow-200 px-3 py-1 rounded text-blue-600 font-semibold hover:bg-blue-50 hover:text-blue-700 transition">
+                  Call Dispatch
+                </a>
+              </div>
+
+              {/* Dynamic Driver List */}
               {drivers.length === 0 ? (
-                <div className="text-center py-4 text-gray-400 text-sm italic">No drivers registered yet.</div>
+                <div className="text-center py-4 text-gray-400 text-sm italic">No individual drivers registered yet.</div>
               ) : (
                 drivers.map(driver => (
                   <div key={driver.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition">
