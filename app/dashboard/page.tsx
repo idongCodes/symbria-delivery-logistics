@@ -109,7 +109,7 @@ export default function Dashboard() {
       <header className="mb-8 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Welcome back, {userProfile?.email}</p>
+          <p className="text-gray-500 text-sm mt-1">Welcome back, {userProfile?.firstName}</p>
         </div>
         
         {/* Requested User Info Display */}
