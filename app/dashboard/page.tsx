@@ -14,6 +14,14 @@ type TripLog = {
   notes: string;
 };
 
+// Define User Profile shape
+type UserProfile = {
+  firstName: string;
+  lastName: string;
+  role: string;
+  email: string;
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
@@ -23,21 +31,31 @@ export default function Dashboard() {
   
   // State for Data
   const [logs, setLogs] = useState<TripLog[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [userEmail, setUserEmail] = useState("");
 
   // Check Auth & Fetch Data
   const fetchData = useCallback(async () => {
     try {
-      // 1. Get User
+      // 1. Get User Session
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.replace('/login');
         return;
       }
-      setUserEmail(session.user.email || "");
 
-      // 2. Get History Logs
+      // 2. Extract Metadata (First Name, Last Name, Role)
+      const { user } = session;
+      const metadata = user.user_metadata || {};
+
+      setUserProfile({
+        email: user.email || "",
+        firstName: metadata.first_name || "",
+        lastName: metadata.last_name || "",
+        role: metadata.role || "Driver", // Default to Driver if missing
+      });
+
+      // 3. Get History Logs
       const { data, error } = await supabase
         .from('trip_logs')
         .select('*')
@@ -86,11 +104,23 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <header className="mb-8 flex justify-between items-end">
+      
+      {/* --- HEADER SECTION --- */}
+      <header className="mb-8 flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500">Welcome back, {userEmail}</p>
+          <p className="text-gray-500 text-sm mt-1">Welcome back, {userProfile?.email}</p>
         </div>
+        
+        {/* Requested User Info Display */}
+        {userProfile && (
+          <h3 className="text-gray-400 text-right font-medium">
+            {userProfile.firstName} {userProfile.lastName} <br />
+            <span className="uppercase text-xs tracking-wider border border-gray-300 px-2 py-0.5 rounded-full mt-1 inline-block">
+              {userProfile.role}
+            </span>
+          </h3>
+        )}
       </header>
 
       {/* --- TABS --- */}
