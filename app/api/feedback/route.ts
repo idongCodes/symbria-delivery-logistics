@@ -1,10 +1,7 @@
+// app/api/feedback/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma'; // Ensure you are using the helper we made
 import { Resend } from 'resend';
-
-// Ideally, instantiate Prisma outside the handler in a separate file (lib/prisma.ts)
-// to prevent "Too many connections" errors in development.
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
@@ -31,13 +28,12 @@ export async function POST(req: Request) {
     });
 
     // 3. Send Email Notification
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const loginLink = `${appUrl}/admin/feedback`; 
-
-    // Capture the response
+    // 👇 UPDATED: Hardcoded link to your production Vercel app
+    const loginLink = "https://symbria-delivery-logistics.vercel.app/admin/feedback"; 
+    
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', 
-      to: 'i.d.essien@gmail.com', 
+      to: 'i.d.essien@gmail.com', // Keep this as your test email for now
       subject: `New Feedback from ${name}`,
       html: `
         <h2>New Feedback Received</h2>
@@ -48,12 +44,11 @@ export async function POST(req: Request) {
         </blockquote>
         <br />
         <a href="${loginLink}" style="background-color: #0070f3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-          Login to Admin Dashboard
+          View in Admin Dashboard
         </a>
       `,
     });
 
-    // If Resend gave us an error, throw it so the catch block sees it.
     if (error) {
       console.error('Resend API Error:', error);
       return NextResponse.json(
@@ -62,7 +57,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // If we get here, both Database and Email succeeded
     return NextResponse.json(newFeedback, { status: 200 });
 
   } catch (error) {
