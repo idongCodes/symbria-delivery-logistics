@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-// --- CONFIGURATION ---
+// --- CONFIGURATION: QUESTIONS LISTS ---
 
 const PRE_TRIP_QUESTIONS = [
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
@@ -43,6 +43,7 @@ const DAMAGE_QUESTIONS = [
   "Dashboard warning lights on"
 ];
 
+// Define Trip Log Shape
 type TripLog = {
   id: number;
   created_at: string;
@@ -79,7 +80,7 @@ export default function Dashboard() {
   
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
   const [logs, setLogs] = useState<TripLog[]>([]);
-  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]); // Dynamic Routes
+  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]); 
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
   const [loading, setLoading] = useState(true); 
@@ -102,7 +103,7 @@ export default function Dashboard() {
     trunk: File | null;
   }>({ front: null, back: null, trunk: null });
 
-  // --- HELPERS ---
+  // --- LOGIC HELPERS ---
 
   const requiresDescription = (question: string, answer: string) => {
     if (!answer) return false;
@@ -316,7 +317,6 @@ export default function Dashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Handlers
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
   const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
@@ -341,14 +341,14 @@ export default function Dashboard() {
     setSubmitting(true); 
 
     try {
-      // FIX: Use 'const' and create a shallow copy using { ... } to avoid linter errors
+      // 1. Upload Images (shallow copy old list first)
       const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
 
-      // Now we can modify properties on this new object without reassigning the variable
       if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
       if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
       if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
 
+      // 2. Prepare Data
       const finalChecklist = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
         const answer = checklistData[q];
@@ -470,7 +470,6 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700">Select Route</span>
-              {/* DYNAMIC ROUTES */}
               <select name="route_id" defaultValue={editingLog?.route_id || ""} className="border p-3 rounded-lg bg-white" required>
                 <option value="" disabled>-- Choose a Route --</option>
                 {routeOptions.length > 0 ? (
@@ -540,9 +539,24 @@ export default function Dashboard() {
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4">Vehicle Photos (Required)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded border border-gray-200"><span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span><input type="file" accept="image/*" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.front} />{editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}</div>
-                <div className="bg-gray-50 p-4 rounded border border-gray-200"><span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span><input type="file" accept="image/*" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.back} />{editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}</div>
-                <div className="bg-gray-50 p-4 rounded border border-gray-200"><span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span><input type="file" accept="image/*" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.trunk} />{editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}</div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span>
+                  {/* UPDATED: capture='environment' added here */}
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.front} />
+                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span>
+                  {/* UPDATED: capture='environment' added here */}
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.back} />
+                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span>
+                  {/* UPDATED: capture='environment' added here */}
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.trunk} />
+                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                </div>
               </div>
             </div>
 
@@ -563,7 +577,7 @@ export default function Dashboard() {
       {(activeTab === 'history' || activeTab === 'all') && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           
-          {/* MOBILE CARD VIEW (Visible on small screens) */}
+          {/* MOBILE CARD VIEW */}
           <div className="block md:hidden">
             {visibleLogs.map((log) => {
               const hasPermission = canEditOrDelete(log);
@@ -599,7 +613,7 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* DESKTOP TABLE VIEW (Visible on medium+ screens) */}
+          {/* DESKTOP TABLE VIEW */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 border-b">
