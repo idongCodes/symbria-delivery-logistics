@@ -2,6 +2,8 @@
 import { prisma } from '@/lib/prisma';
 import FeedbackTable from './feedback-table';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminFeedbackPage() {
   // 1. Fetch data directly from the database
   const feedbackList = await prisma.feedback.findMany({
