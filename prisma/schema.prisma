@@ -4,8 +4,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("postgresql://postgres:kPkj_RW@8LFC$4J@db.fxgocjeistejzxgjdjhf.supabase.co:5432/postgres")
-  directUrl = env("postgresql://postgres:kPkj_RW@8LFC$4J@db.fxgocjeistejzxgjdjhf.supabase.co:5432/postgres")
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL")
 }
 
 model Feedback {
