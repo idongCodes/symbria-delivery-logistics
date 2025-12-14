@@ -15,7 +15,7 @@ export default function Home() {
             className="object-cover object-center" 
             priority
           />
-          {/* FADE 1: Image -> Blue (Kept this one to blend image into the header) */}
+          {/* FADE 1: Image -> Blue */}
           <div className="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-b from-transparent to-blue-900" />
         </div>
       </section>
@@ -46,7 +46,6 @@ export default function Home() {
             </Link>
           </div>
         </div>
-        {/* Removed the bottom fade here for a clean cut */}
       </section>
 
       {/* 3. BENEFITS SECTION (Bottom - Gray) */}
@@ -83,14 +82,14 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Card 3 */}
+            {/* Card 3 - FIX WAS APPLIED HERE */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600">
                 🧠
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-3">Smart Forms</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Dynamic checklists adapt to "Pre-Trip" or "Post-Trip" contexts and enforce descriptions for defects.
+                Dynamic checklists adapt to &quot;Pre-Trip&quot; or &quot;Post-Trip&quot; contexts and enforce descriptions for defects.
               </p>
             </div>
 
