@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { Resend } from 'resend';
 
+// Ideally, instantiate Prisma outside the handler in a separate file (lib/prisma.ts)
+// to prevent "Too many connections" errors in development.
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
@@ -11,6 +13,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { name, email, message } = body;
 
+    // 1. Validation
     if (!email || !email.endsWith('@symbria.com')) {
       return NextResponse.json(
         { error: 'Unauthorized: Only @symbria.com emails are allowed.' }, 
@@ -18,7 +21,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Save to Database
+    // 2. Save to Database
     const newFeedback = await prisma.feedback.create({
       data: {
         name,
@@ -27,14 +30,14 @@ export async function POST(req: Request) {
       },
     });
 
-    // 2. Send Email Notification to You
-    // Note: We use process.env.NEXT_PUBLIC_APP_URL for the link, or fallback to localhost
+    // 3. Send Email Notification
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    const loginLink = `${appUrl}/auth/login`; 
-    
-    await resend.emails.send({
-      from: 'onboarding@resend.dev', // Use this default until you verify your own domain
-      to: 'idongesit_essien@ymail.com', 
+    const loginLink = `${appUrl}/admin/feedback`; 
+
+    // Capture the response
+    const { data, error } = await resend.emails.send({
+      from: 'onboarding@resend.dev', 
+      to: 'i.d.essien@gmail.com', 
       subject: `New Feedback from ${name}`,
       html: `
         <h2>New Feedback Received</h2>
@@ -50,6 +53,16 @@ export async function POST(req: Request) {
       `,
     });
 
+    // If Resend gave us an error, throw it so the catch block sees it.
+    if (error) {
+      console.error('Resend API Error:', error);
+      return NextResponse.json(
+        { error: 'Feedback saved, but email failed to send.' }, 
+        { status: 500 }
+      );
+    }
+
+    // If we get here, both Database and Email succeeded
     return NextResponse.json(newFeedback, { status: 200 });
 
   } catch (error) {
