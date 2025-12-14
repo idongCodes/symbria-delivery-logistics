@@ -3,47 +3,62 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client"; // Import Supabase
 
 export default function Home() {
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false); // New loading state
+  const [loading, setLoading] = useState(false);
   
-  // State for form fields
+  // NEW: State for custom error messages
+  const [errorMsg, setErrorMsg] = useState("");
+
   const [formData, setFormData] = useState({
+    name: "",
+    email: "",
     subject: "General Suggestion",
     message: ""
   });
 
-  const supabase = createClient();
-
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(""); // Clear previous errors
 
-    // Send data to Supabase
-    const { error } = await supabase
-      .from('feedback')
-      .insert([
-        { 
-          subject: formData.subject, 
-          message: formData.message 
-        }
-      ]);
+    // --- VALIDATION: Check for @symbria.com ---
+    if (!formData.email.toLowerCase().endsWith('@symbria.com')) {
+      setErrorMsg("Please use a valid @symbria.com company email address.");
+      setLoading(false);
+      return; 
+    }
 
-    if (error) {
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      message: `[Subject: ${formData.subject}] \n\n${formData.message}`
+    };
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+        setLoading(false);
+        setErrorMsg(""); // Success, so clear errors
+        
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({ name: "", email: "", subject: "General Suggestion", message: "" });
+        }, 3000);
+      } else {
+        throw new Error('Failed to send');
+      }
+    } catch (error) {
       console.error('Error submitting feedback:', error);
-      alert("Something went wrong. Please try again.");
+      setErrorMsg("Something went wrong. Please try again.");
       setLoading(false);
-    } else {
-      setSubmitted(true);
-      setLoading(false);
-      
-      // Reset form after 3 seconds
-      setTimeout(() => {
-        setSubmitted(false);
-        setFormData({ subject: "General Suggestion", message: "" });
-      }, 3000);
     }
   };
 
@@ -77,7 +92,7 @@ export default function Home() {
             <Link href="/login" className="bg-white text-blue-900 font-bold px-10 py-4 rounded-full shadow-lg hover:bg-blue-50 transition transform hover:-translate-y-1">
               Driver Login
             </Link>
-            <Link href="/contacts" className="bg-transparent border-2 border-white text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition">
+            <Link href="#contact" className="bg-transparent border-2 border-white text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition">
               Contact Support
             </Link>
           </div>
@@ -92,7 +107,6 @@ export default function Home() {
               <p className="text-gray-500 max-w-2xl mx-auto">Replacing paper logs with this platform improves accuracy, accountability, and speed.</p>
            </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Cards (Content Unchanged) */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600">👁️</div>
               <h3 className="text-xl font-bold text-gray-800 mb-3">Instant Visibility</h3>
@@ -117,13 +131,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. FEEDBACK SECTION (Floating Card) */}
-      <section className="w-[90%] mx-auto bg-white rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20">
+      {/* 4. FEEDBACK SECTION */}
+      <section id="contact" className="w-[90%] mx-auto bg-white rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-800 mb-4">We Value Your Feedback</h2>
           <p className="text-gray-500 mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
           
           <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-left">
+            
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input 
+                id="name" 
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Your Name"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input 
+                id="email" 
+                type="email"
+                value={formData.email}
+                onChange={(e) => {
+                  setFormData({...formData, email: e.target.value});
+                  if (errorMsg) setErrorMsg(""); // Clear error as they type
+                }}
+                className={`w-full border p-3 rounded-lg focus:ring-2 outline-none ${
+                  errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+                placeholder="name@symbria.com"
+                required
+              />
+              {/* ERROR MESSAGE DISPLAY */}
+              {errorMsg && (
+                <p className="text-red-500 text-sm mt-1 animate-in slide-in-from-top-1">
+                  {errorMsg}
+                </p>
+              )}
+            </div>
+
             <div>
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
               <select 
