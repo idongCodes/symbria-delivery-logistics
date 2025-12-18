@@ -174,13 +174,15 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
+  // --- UPDATED PRINT FUNCTION (PROFESSIONAL PDF STYLE) ---
   const printLog = (log: TripLog) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Please allow popups.");
 
     const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-    const checklistRows = relevantQuestions.map(q => {
+    // Generate checklist rows with zebra striping and badges
+    const checklistRows = relevantQuestions.map((q, index) => {
       const val = log.checklist?.[q] || "-";
       const comment = log.checklist?.[`${q}_COMMENT`];
       
@@ -188,44 +190,177 @@ export default function Dashboard() {
       if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
       else isBad = (val === "No");
 
-      let displayHtml = `<span style="font-weight:bold;color:${isBad ? "red" : "green"}">${val}</span>`;
-      if (comment) displayHtml += `<br/><span style="font-size:11px; color:#c00;">Note: ${comment}</span>`;
-      return `<tr><td style="padding:5px;border-bottom:1px solid #eee;">${q}</td><td style="padding:5px;border-bottom:1px solid #eee;">${displayHtml}</td></tr>`;
+      // Status Badge Logic
+      const statusBadge = isBad 
+        ? `<span class="badge badge-error">ISSUE</span>` 
+        : `<span class="badge badge-success">OK</span>`;
+
+      // Alternate row background color
+      const rowClass = index % 2 === 0 ? 'bg-gray' : '';
+
+      return `
+        <tr class="${rowClass}">
+          <td class="q-col">${q}</td>
+          <td class="s-col">${statusBadge}</td>
+          <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '<span class="text-muted">-</span>'}</td>
+        </tr>
+      `;
     }).join('');
     
+    // Tire Pressure Table (Pre-Trip only)
     let tireHtml = "";
     if (log.trip_type === 'Pre-Trip') {
       const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
       const tPF = log.checklist?.["Tire Pressure (Passenger Front)"] || "-";
       const tDR = log.checklist?.["Tire Pressure (Driver Rear)"] || "-";
       const tPR = log.checklist?.["Tire Pressure (Passenger Rear)"] || "-";
-      tireHtml = `<h3>Tire Pressure (PSI)</h3><table style="width:100%; border:1px solid #ddd; margin-bottom:20px; text-align:center;"><tr style="background:#f4f4f4;"><th>D-Front</th><th>P-Front</th><th>D-Rear</th><th>P-Rear</th></tr><tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr></table>`;
+      tireHtml = `
+        <div class="section-box page-break-inside-avoid">
+            <h3>Tire Pressure (PSI)</h3>
+            <table class="tire-table">
+                <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
+                <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
+            </table>
+        </div>
+      `;
+    }
+
+    // Images Layout
+    const imgFront = log.images?.front ? `<div class="img-box"><p>Front Seat</p><img src="${log.images.front}" /></div>` : '';
+    const imgBack = log.images?.back ? `<div class="img-box"><p>Back Seat</p><img src="${log.images.back}" /></div>` : '';
+    const imgTrunk = log.images?.trunk ? `<div class="img-box"><p>Trunk</p><img src="${log.images.trunk}" /></div>` : '';
+    
+    let imagesHtml = "";
+    if (imgFront || imgBack || imgTrunk) {
+        imagesHtml = `
+            <div class="page-break-inside-avoid" style="margin-top: 20px;">
+                <h3>Vehicle Photos</h3>
+                <div class="images-container">
+                    ${imgFront}
+                    ${imgBack}
+                    ${imgTrunk}
+                </div>
+            </div>
+        `;
     }
 
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
-        <head><title>Log #${log.id}</title></head>
-        <body style="font-family:sans-serif;padding:40px;">
-          <h1 style="border-bottom:2px solid #333;">${log.trip_type} Report</h1>
-          <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <div><strong>Driver:</strong> ${log.driver_name || 'Unknown'}</div>
-            <div><strong>Date:</strong> ${new Date(log.created_at).toLocaleString()}</div>
+        <head>
+          <title>Log #${log.id}</title>
+          <style>
+            /* PRINT SETTINGS */
+            @media print {
+                @page { margin: 0.5cm; size: portrait; }
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+            
+            /* BASE STYLES */
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; color: #333; line-height: 1.4; max-width: 900px; margin: 0 auto; padding: 20px; }
+            
+            /* HEADER */
+            h1 { font-size: 22px; margin: 0 0 15px 0; color: #1e3a8a; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+            h3 { font-size: 14px; margin: 20px 0 10px 0; color: #444; text-transform: uppercase; background: #e2e8f0; padding: 8px; border-radius: 4px; font-weight: 700; }
+            
+            /* INFO GRID */
+            .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+            .info-item { background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
+            .info-label { display: block; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px;}
+            .info-value { font-size: 14px; font-weight: 700; color: #0f172a; }
+
+            /* TABLES */
+            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+            th { text-align: left; background: #f1f5f9; padding: 8px; border-bottom: 2px solid #e2e8f0; font-size: 10px; text-transform: uppercase; color: #475569; }
+            td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+            .bg-gray { background-color: #f8fafc; }
+            
+            /* COLUMNS */
+            .q-col { width: 50%; font-weight: 600; font-size: 11px; }
+            .s-col { width: 10%; text-align: center; }
+            .n-col { width: 40%; font-size: 11px; }
+
+            /* BADGES */
+            .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+            .badge-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+            .badge-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+            /* NOTES & COMMENTS */
+            .comment { color: #b91c1c; font-weight: 600; display: block; background: #fff5f5; padding: 4px; border-radius: 4px; border-left: 3px solid #ef4444; }
+            .text-muted { color: #cbd5e1; font-style: italic; }
+            .notes-box { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 4px; margin-top: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+            /* TIRE TABLE */
+            .tire-table th, .tire-table td { text-align: center; border: 1px solid #e2e8f0; font-size: 13px; padding: 10px; }
+            .tire-table th { background: #f8fafc; }
+            
+            /* IMAGES */
+            .images-container { display: flex; gap: 15px; margin-top: 10px; }
+            .img-box { flex: 1; border: 1px solid #cbd5e1; padding: 5px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+            .img-box p { margin: 0 0 5px 0; font-weight: bold; font-size: 10px; text-align: center; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+            .img-box img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
+
+            .page-break-inside-avoid { page-break-inside: avoid; }
+          </style>
+        </head>
+        <body>
+          <h1>
+            <span>Symbria RX Logistics</span>
+            <span style="font-size:14px; color:#64748b; font-weight:normal;">Trip Log #${log.id}</span>
+          </h1>
+          
+          <div class="header-grid">
+            <div class="info-item">
+                <span class="info-label">Driver</span>
+                <div class="info-value">${log.driver_name || 'Unknown'}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Inspection Type</span>
+                <div class="info-value" style="color:${log.trip_type === 'Pre-Trip' ? '#2563eb' : '#d97706'}">${log.trip_type}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date & Time</span>
+                <div class="info-value">${new Date(log.created_at).toLocaleString()}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Route / Odometer</span>
+                <div class="info-value">${log.route_id || 'N/A'} / ${log.odometer}</div>
+            </div>
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-             <div><strong>Route:</strong> ${log.route_id || "N/A"}</div>
-             <div><strong>Odometer:</strong> ${log.odometer}</div>
-          </div>
+
           ${tireHtml}
-          <h3>Photos</h3>
-          <div style="display:flex; gap:10px; margin-bottom:20px;">
-             ${log.images?.front ? `<div style="flex:1"><p>Front</p><img src="${log.images.front}" style="width:100%; border:1px solid #ddd;"/></div>` : ''}
-             ${log.images?.back ? `<div style="flex:1"><p>Back</p><img src="${log.images.back}" style="width:100%; border:1px solid #ddd;"/></div>` : ''}
-             ${log.images?.trunk ? `<div style="flex:1"><p>Trunk</p><img src="${log.images.trunk}" style="width:100%; border:1px solid #ddd;"/></div>` : ''}
-          </div>
+
           <h3>Inspection Checklist</h3>
-          <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;">${checklistRows}</table>
-          <p style="background:#f4f4f4;padding:15px;border:1px solid #ddd;"><strong>Notes:</strong><br/>${log.notes || "None"}</p>
-          <script>window.onload=function(){window.print();}</script>
+          <table>
+            <thead>
+                <tr>
+                    <th>Inspection Item</th>
+                    <th style="text-align:center;">Status</th>
+                    <th>Notes / Defects</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${checklistRows}
+            </tbody>
+          </table>
+
+          ${log.notes ? `
+            <div class="notes-box page-break-inside-avoid">
+                <span class="info-label" style="color:#92400e; margin-bottom:5px;">Additional Notes</span>
+                <div style="font-size:13px; color:#78350f; font-weight:500;">${log.notes}</div>
+            </div>
+          ` : ''}
+
+          ${imagesHtml}
+
+          <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 10px;">
+            <p>Certified by ${log.driver_name} on ${new Date(log.created_at).toLocaleDateString()}</p>
+            Symbria RX Logistics Digital Dashboard
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
         </body>
       </html>
     `);
@@ -361,9 +496,8 @@ export default function Dashboard() {
         finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
       }
 
-      // --- CRITICAL FIX: Add user_id to baseData ---
       const baseData = {
-        user_id: userProfile.id, // <--- THIS LINE WAS ADDED
+        user_id: userProfile.id, 
         vehicle_id: "N/A", 
         route_id: formData.get('route_id'), 
         odometer: formData.get('odometer'),
