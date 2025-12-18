@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     // 3. Send Email Notification
     // 👇 UPDATED: Hardcoded link to your production Vercel app
-    const loginLink = "https://symbria-delivery-logistics.vercel.app/admin/feedback"; 
+    const loginLink = "http://localhost:3000/admin/feedback"; 
     
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', 
