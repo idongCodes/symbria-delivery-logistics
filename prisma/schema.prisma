@@ -1,5 +1,7 @@
+// prisma/schema.prisma
+
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,6 +10,7 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// 1. Feedback (Existing)
 model Feedback {
   id        String   @id @default(cuid())
   name      String
@@ -15,4 +18,45 @@ model Feedback {
   message   String
   createdAt DateTime @default(now())
   read      Boolean  @default(false)
+}
+
+// 2. Trip Logs (Restoring for Dashboard)
+model TripLog {
+  id          Int      @id @default(autoincrement())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  edit_count  Int      @default(0)
+  user_id     String
+  vehicle_id  String?
+  route_id    String?
+  odometer    Decimal? 
+  trip_type   String
+  notes       String?
+  checklist   Json?    
+  images      Json?    
+  driver_name String?
+
+  @@map("trip_logs")
+}
+
+// 3. Profiles (Restoring for Contacts/Login)
+model Profile {
+  id         String   @id @default(uuid())
+  first_name String?
+  last_name  String?
+  email      String?
+  role       String?  @default("Driver")
+  job_title  String?
+  phone      String?
+  
+  @@map("profiles")
+}
+
+// 4. Routes (Restoring for Dashboard Dropdown)
+model Route {
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(true)
+
+  @@map("routes")
 }

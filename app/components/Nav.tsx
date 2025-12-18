@@ -29,7 +29,8 @@ export default function Nav() {
     await supabase.auth.signOut();
     setLoggedIn(false);
     setIsMenuOpen(false); 
-    router.push("/login");
+    // 👇 CHANGED: Redirect to "/" instead of "/login"
+    router.push("/");
     router.refresh();
   };
 
@@ -53,10 +54,7 @@ export default function Nav() {
           {loggedIn ? (
             <>
               <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
-              
-              {/* 👇 NEW FEEDBACK LINK ADDED HERE */}
               <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
-              
               <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
               <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 transition">
                 Logout
@@ -95,12 +93,9 @@ export default function Nav() {
               <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
                 Dashboard
               </Link>
-              
-              {/* 👇 NEW FEEDBACK LINK ADDED HERE TOO */}
               <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
                 Feedback
               </Link>
-              
               <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
                 Contacts
               </Link>

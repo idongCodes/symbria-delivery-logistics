@@ -49,7 +49,7 @@ type TripLog = {
   created_at: string;
   updated_at: string; 
   edit_count: number; 
-  user_id: string; 
+  user_id: string;
   vehicle_id: string;
   route_id: string; 
   odometer: number;
@@ -80,23 +80,21 @@ export default function Dashboard() {
   
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
   const [logs, setLogs] = useState<TripLog[]>([]);
-  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]); 
+  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
   const [loading, setLoading] = useState(true); 
-  const [submitting, setSubmitting] = useState(false); 
-
+  const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
   // Form State
-  const [tripType, setTripType] = useState<string>("Pre-Trip"); 
+  const [tripType, setTripType] = useState<string>("Pre-Trip");
   const [checklistData, setChecklistData] = useState<Record<string, string>>({});
   const [checklistComments, setChecklistComments] = useState<Record<string, string>>({});
-  
   const [tirePressures, setTirePressures] = useState({
     df: "", pf: "", dr: "", pr: ""
   });
-
+  
   const [imageFiles, setImageFiles] = useState<{
     front: File | null;
     back: File | null;
@@ -118,11 +116,11 @@ export default function Dashboard() {
     if (userProfile.role === 'Admin') return true;
     if (userProfile.role === 'Management') return false;
     if (log.user_id !== userProfile.id) return false;
-
+    
     const now = new Date().getTime();
     if (log.edit_count === 0) {
       const created = new Date(log.created_at).getTime();
-      return (now - created) < (15 * 60 * 1000); 
+      return (now - created) < (15 * 60 * 1000);
     }
     if (log.edit_count === 1) {
       const updated = new Date(log.updated_at).getTime();
@@ -138,6 +136,7 @@ export default function Dashboard() {
       'Notes', 'Img Front', 'Img Back', 'Img Trunk', 'Edits', 
       ...ALL_QUESTIONS_MASTER 
     ];
+
     const dateObj = new Date(log.created_at);
     
     const checklistValues = ALL_QUESTIONS_MASTER.map(q => {
@@ -191,7 +190,6 @@ export default function Dashboard() {
 
       let displayHtml = `<span style="font-weight:bold;color:${isBad ? "red" : "green"}">${val}</span>`;
       if (comment) displayHtml += `<br/><span style="font-size:11px; color:#c00;">Note: ${comment}</span>`;
-
       return `<tr><td style="padding:5px;border-bottom:1px solid #eee;">${q}</td><td style="padding:5px;border-bottom:1px solid #eee;">${displayHtml}</td></tr>`;
     }).join('');
     
@@ -272,6 +270,7 @@ export default function Dashboard() {
     setActiveTab('new');
   };
 
+  // --- UPDATED FETCH LOGIC (Routes First) ---
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -288,7 +287,17 @@ export default function Dashboard() {
         role: metadata.role || "Driver",
       });
 
-      // Fetch Logs
+      // 1. Fetch Routes FIRST to prevent dropdown blocking
+      const { data: routeData, error: routeError } = await supabase
+        .from('routes')
+        .select('id, name')
+        .eq('active', true)
+        .order('name');
+
+      if (routeError) console.error("Route Error:", routeError);
+      if (routeData) setRouteOptions(routeData);
+
+      // 2. Fetch Logs SECOND
       const { data: logsData, error: logsError } = await supabase
         .from('trip_logs')
         .select('*')
@@ -296,17 +305,6 @@ export default function Dashboard() {
       
       if (logsError) throw logsError;
       setLogs(logsData || []);
-
-      // Fetch Dynamic Routes
-      const { data: routeData, error: routeError } = await supabase
-        .from('routes')
-        .select('id, name')
-        .eq('active', true)
-        .order('name');
-
-      if (!routeError && routeData) {
-        setRouteOptions(routeData);
-      }
 
     } catch (error) {
       console.error("Error loading dashboard:", error);
@@ -321,7 +319,7 @@ export default function Dashboard() {
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
   const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
   const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
-
+  
   const uploadImage = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
@@ -338,12 +336,11 @@ export default function Dashboard() {
 
     const formElement = e.currentTarget; 
     const formData = new FormData(formElement);
-    setSubmitting(true); 
-
+    setSubmitting(true);
+    
     try {
       // 1. Upload Images (shallow copy old list first)
       const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
-
       if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
       if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
       if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
@@ -364,7 +361,9 @@ export default function Dashboard() {
         finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
       }
 
+      // --- CRITICAL FIX: Add user_id to baseData ---
       const baseData = {
+        user_id: userProfile.id, // <--- THIS LINE WAS ADDED
         vehicle_id: "N/A", 
         route_id: formData.get('route_id'), 
         odometer: formData.get('odometer'),
@@ -393,11 +392,11 @@ export default function Dashboard() {
       } else {
         alert(editingLog ? "Log updated!" : "Success! Log submitted.");
         formElement.reset();
-        setChecklistData({}); 
+        setChecklistData({});
         setChecklistComments({});
         setImageFiles({ front: null, back: null, trunk: null });
         setTirePressures({ df: "", pf: "", dr: "", pr: "" });
-        setTripType("Pre-Trip"); 
+        setTripType("Pre-Trip");
         setEditingLog(null); 
         fetchData(); 
         setActiveTab('history'); 
@@ -406,7 +405,7 @@ export default function Dashboard() {
       const errorMessage = (err as Error).message || "An unknown error occurred";
       alert("Submission Failed: " + errorMessage);
     } finally {
-      setSubmitting(false); 
+      setSubmitting(false);
     }
   }
 
@@ -440,10 +439,13 @@ export default function Dashboard() {
       </header>
 
       <div className="flex border-b border-gray-300 mb-6 overflow-x-auto whitespace-nowrap pb-1">
-        <button onClick={() => { setActiveTab('new'); setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+        <button onClick={() => { setActiveTab('new');
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip");
+        }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
-        <button onClick={() => { setActiveTab('history'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+        <button onClick={() => { setActiveTab('history');
+          setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
           My Logs
         </button>
         {(userProfile?.role === 'Management' || userProfile?.role === 'Admin') && (
@@ -541,19 +543,16 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                   <span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span>
-                  {/* UPDATED: capture='environment' added here */}
                   <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.front} />
                   {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                   <span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span>
-                  {/* UPDATED: capture='environment' added here */}
                   <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.back} />
                   {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 p-4 rounded border border-gray-200">
                   <span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span>
-                  {/* UPDATED: capture='environment' added here */}
                   <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.trunk} />
                   {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
                 </div>

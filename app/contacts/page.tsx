@@ -20,25 +20,37 @@ export default function ContactsPage() {
 
   useEffect(() => {
     async function getContacts() {
-      const { data } = await supabase.from('profiles').select('*');
-      if (data) setProfiles(data);
+      const { data, error } = await supabase.from('profiles').select('*');
+      
+      if (error) {
+        console.error("Supabase Error:", error.message);
+      } else if (data) {
+        setProfiles(data);
+      }
       setLoading(false);
     }
     getContacts();
   }, [supabase]);
 
   // --- FILTERING LOGIC ---
-  const adminEmail = "ressien1@symbria.com";
+  const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
+  const hiddenEmail = "idongesit_essien@ymail.com"; // This Admin should remain HIDDEN
 
   // 1. Drivers List
+  // Logic: Must NOT be the hidden email AND (is a driver OR is the allowed admin)
   const drivers = profiles.filter(p => 
-    p.job_title === "Delivery Driver" || 
-    p.role === "Driver" || 
-    p.email === adminEmail 
+    p.email !== hiddenEmail && 
+    (
+      p.job_title === "Delivery Driver" || 
+      p.role === "Driver" || 
+      p.email === adminEmail 
+    )
   );
 
   // 2. Management List
+  // Logic: Must NOT be the hidden email AND (is NOT a driver) AND (is NOT the allowed admin)
   const managers = profiles.filter(p => 
+    p.email !== hiddenEmail && 
     (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
     p.email !== adminEmail 
   );
@@ -88,7 +100,7 @@ export default function ContactsPage() {
                 managers.map(manager => (
                   <li key={manager.id} className="flex items-start gap-3 border-b border-gray-50 last:border-0 pb-3 last:pb-0">
                     <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs">
-                      {manager.first_name[0]}{manager.last_name[0]}
+                      {manager.first_name?.[0]}{manager.last_name?.[0]}
                     </div>
                     <div>
                       <p className="font-bold text-gray-900">{manager.first_name} {manager.last_name}</p>
@@ -114,6 +126,7 @@ export default function ContactsPage() {
           </h3>
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
             <p className="text-sm text-gray-500 mb-4">Active driver roster.</p>
+            
             <div className="space-y-3">
               
               {/* --- STATIC DISPATCH PLACEHOLDER --- */}
