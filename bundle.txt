@@ -1410,8 +1410,8 @@ export default function ContactsPage() {
   }, [supabase]);
 
   // --- FILTERING LOGIC ---
-  const adminEmail = "ressien1@symbria.com";        
-  const hiddenEmail = "idongesit_essien@ymail.com"; 
+  const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
+  const hiddenEmail = "idongesit_essien@ymail.com"; // This Admin should remain HIDDEN
 
   // 1. Drivers List
   const drivers = profiles.filter(p => 
@@ -1502,12 +1502,21 @@ export default function ContactsPage() {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
             <p className="text-sm text-gray-500 mb-4">Active driver roster.</p>
             <div className="space-y-3">
+              
+              {/* --- STATIC DISPATCH --- */}
               <div className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-100 rounded-lg">
                 <span className="font-bold text-gray-800">Driver Dispatch</span>
-                <a href="tel:5559998888" className="text-sm bg-white border border-yellow-200 px-3 py-1 rounded text-blue-600 font-semibold hover:bg-blue-50 hover:text-blue-700 transition">
-                  Call Dispatch
-                </a>
+                <div className="flex flex-col items-end gap-1">
+                  {/* 👇 UPDATED NUMBER */}
+                  <a href="tel:8775090620" className="text-sm bg-white border border-yellow-200 px-3 py-1 rounded text-blue-600 font-semibold hover:bg-blue-50 hover:text-blue-700 transition">
+                    Call Dispatch
+                  </a>
+                  {/* 👇 ADDED NOTE */}
+                  <span className="text-[10px] text-gray-600 font-medium">for dispatch press option 4</span>
+                </div>
               </div>
+
+              {/* Dynamic Driver List */}
               {drivers.length === 0 ? (
                 <div className="text-center py-4 text-gray-400 text-sm italic">No individual drivers registered yet.</div>
               ) : (
@@ -1622,7 +1631,6 @@ export default function ContactsPage() {
     </div>
   );
 }
-
 
 ==================================================
 FILE: ./app/dashboard/page.tsx
