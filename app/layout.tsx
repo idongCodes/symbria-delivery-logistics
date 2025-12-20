@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer"; // Import the new Footer
+import AutoLogout from "./components/AutoLogout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,8 @@ export default function RootLayout({
         allowing 'mt-auto' in the Footer to push it to the very bottom.
       */}
       <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900`}>
+
+        <AutoLogout />
         
         {/* Navigation stays at the top */}
         <Nav />
