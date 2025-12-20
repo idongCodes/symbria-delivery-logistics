@@ -1,0 +1,2565 @@
+
+==================================================
+FILE: ./middleware.ts
+==================================================
+
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // --- 🔒 PROTECTED ROUTES ---
+  // If user tries to go to Dashboard OR Contacts without logging in -> Redirect to Home ("/")
+  if (
+    (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/contacts')) 
+    && !user
+  ) {
+    // 👇 CHANGED: Redirect to "/" instead of "/login"
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/contacts', '/login'],
+}
+
+
+==================================================
+FILE: ./.env.local
+==================================================
+
+NEXT_PUBLIC_SUPABASE_URL=https://fxgocjeistejzxgjdjhf.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ4Z29jamVpc3Rlanp4Z2pkamhmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0ODI4NzIsImV4cCI6MjA4MTA1ODg3Mn0.sjmWK25PEeLIPAHyAA-Z9wlGViXFVnGezxrY7iCPryA
+
+
+==================================================
+FILE: ./tsconfig.json
+==================================================
+
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
+
+
+==================================================
+FILE: ./README.md
+==================================================
+
+# Symbria Delivery Logistics
+
+**Fleet Management & RX Delivery Inspection Platform.**
+
+This application is a specialized logistics management platform designed to track pharmacy (RX) delivery driver inspections, route assignments, and vehicle conditions. It replaces paper logs with a digital, type-safe, and mobile-responsive solution.
+
+## 🚀 Live Demo
+
+[View Deployed Application](https://symbria-delivery-logistics.vercel.app)
+
+-----
+
+## 🛠️ Tech Stack
+
+  - **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+  - **Language:** [TypeScript](https://www.typescriptlang.org/)
+  - **Styling:** [Tailwind CSS](https://tailwindcss.com/) (Responsive Mobile/Desktop)
+  - **Backend & Auth:** [Supabase](https://supabase.com/) (Postgres, Auth, Storage)
+  - **Deployment:** [Vercel](https://vercel.com/)
+
+-----
+
+## ✨ Key Features
+
+### 🚛 Driver & Trip Management
+
+  * **Smart Inspection Forms:** Dynamic Pre-Trip and Post-Trip logic. Questions change based on the selected trip type.
+  * **Condition Reporting:** Conditional logic requires drivers to describe issues if "No" is selected on safety checks (or "Yes" on damage checks).
+  * **Photo Evidence:** Integrated file uploading for Front, Back, and Trunk vehicle photos (stored in Supabase Buckets).
+  * **Tire Pressure Logging:** Dedicated inputs for tire PSI during Pre-Trip inspections.
+  * **Dynamic Routes:** Route selection dropdown pulls live data from the database, allowing admins to update routes without code changes.
+
+### 🔐 Role-Based Access Control (RBAC)
+
+  * **Drivers:** Can only view and edit their own logs for a limited time window. Mobile-optimized "Card View" for easy use on phones.
+  * **Management:** Read-only access to all driver logs and exports.
+  * **Admins:** Full access to Edit/Delete any log, manage routes, and view global history.
+
+### 📊 Reporting & Contacts
+
+  * **One-Click Exports:** Generate PDF reports for individual inspections (including photos) or export data to CSV.
+  * **Live Contact Roster:** Auto-updating "Contacts" page that separates Drivers from Management based on registration titles.
+
+-----
+
+## ⚡ Getting Started
+
+Follow these steps to set up the project locally on your machine.
+
+### Prerequisites
+
+  - Node.js (v18 or higher)
+  - A Supabase project (for DB and Auth)
+
+### Installation
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/idongCodes/symbria-delivery-logistics.git
+    cd symbria-delivery-logistics
+    ```
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment Variables:**
+    Create a `.env.local` file in the root directory and add your Supabase credentials:
+
+    ```bash
+    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    ```
+
+4.  **Run the development server:**
+
+    ```bash
+    npm run dev
+    ```
+
+5.  **Open the app:**
+    Visit [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.
+
+-----
+
+## 🗄️ Database Schema (Supabase)
+
+The application relies on the following key tables in Postgres:
+
+  * **`auth.users`**: Managed by Supabase Auth.
+  * **`public.profiles`**: Extends user data (Job Title, Phone, First/Last Name).
+  * **`public.trip_logs`**: Stores inspection data, JSON checklists, image URLs, and odometer readings.
+  * **`public.routes`**: Stores the list of active delivery routes.
+  * **`storage.buckets`**: 'trip\_logs' bucket stores vehicle images.
+
+-----
+
+## 🤝 Contributing
+
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/your-feature`).
+3.  Commit your changes (`git commit -m 'Add some feature'`).
+4.  Push to the branch (`git push origin feature/your-feature`).
+5.  Open a Pull Request.
+
+## 📄 License
+
+This project is proprietary. All rights reserved.
+
+
+==================================================
+FILE: ./package.json
+==================================================
+
+{
+  "name": "symbria-delivery-logistics",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.35.0",
+    "dotenv": "^17.2.3",
+    "next": "^16.0.10",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "resend": "^6.6.0"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.19.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "^16.0.10",
+    "prisma": "^6.19.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+
+
+==================================================
+FILE: ./next.config.ts
+==================================================
+
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  reactCompiler: true,
+};
+
+export default nextConfig;
+
+
+==================================================
+FILE: ./next-env.d.ts
+==================================================
+
+/// <reference types="next" />
+/// <reference types="next/image-types/global" />
+import "./.next/dev/types/routes.d.ts";
+
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+
+
+==================================================
+FILE: ./app/globals.css
+==================================================
+
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+
+==================================================
+FILE: ./app/layout.tsx
+==================================================
+
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import Nav from "./components/Nav";
+import Footer from "./components/Footer"; // Import the new Footer
+
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Symbria Delivery Logistics",
+  description: "Delivery and Trip Logging System",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      {/* flex flex-col min-h-screen:
+        These classes force the body to take up at least 100% of the screen height,
+        allowing 'mt-auto' in the Footer to push it to the very bottom.
+      */}
+      <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900`}>
+        
+        {/* Navigation stays at the top */}
+        <Nav />
+        
+        {/* Main Content grows to fill available space */}
+        <main className="flex-grow w-full">
+          {children}
+        </main>
+        
+        {/* Footer stays at the bottom */}
+        <Footer />
+        
+      </body>
+    </html>
+  );
+}
+
+
+==================================================
+FILE: ./app/page.tsx
+==================================================
+
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
+
+export default function Home() {
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // NEW: State for custom error messages
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "General Suggestion",
+    message: ""
+  });
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(""); // Clear previous errors
+
+    // --- VALIDATION: Check for @symbria.com ---
+    if (!formData.email.toLowerCase().endsWith('@symbria.com')) {
+      setErrorMsg("Please use a valid @symbria.com company email address.");
+      setLoading(false);
+      return; 
+    }
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      message: `[Subject: ${formData.subject}] \n\n${formData.message}`
+    };
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+        setLoading(false);
+        setErrorMsg(""); // Success, so clear errors
+        
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({ name: "", email: "", subject: "General Suggestion", message: "" });
+        }, 3000);
+      } else {
+        throw new Error('Failed to send');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setErrorMsg("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      
+      {/* 1. HERO IMAGE SECTION */}
+      <section className="relative w-full bg-gray-900">
+        <div className="relative w-full h-[55vh] md:h-[65vh]">
+          <Image 
+            src="/images/Gemini_Generated_Image_hero_img.png" 
+            alt="Driver filling out inspection form" 
+            fill 
+            className="object-cover object-center" 
+            priority
+          />
+          <div className="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-b from-transparent to-blue-900" />
+        </div>
+      </section>
+
+      {/* 2. MAIN CONTENT SECTION */}
+      <section className="relative bg-blue-900 text-white pt-6 pb-20 px-6 shadow-xl z-10 -mt-1">
+        <div className="max-w-4xl mx-auto text-center space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-700">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            Streamline Your <br/> RX Logistics.
+          </h1>
+          <p className="text-blue-100 text-lg md:text-2xl max-w-2xl mx-auto leading-relaxed font-light">
+            Quick and easy Pre/Post-Trip Inspection management.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-5 justify-center pt-8 pb-4">
+            {/* 👇 UPDATED TEXT */}
+            <Link href="/login" className="bg-white text-blue-900 font-bold px-10 py-4 rounded-full shadow-lg hover:bg-blue-50 transition transform hover:-translate-y-1">
+              Login or Register
+            </Link>
+            <Link href="#contact" className="bg-transparent border-2 border-white text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition">
+              Contact Support
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. BENEFITS SECTION */}
+      <section className="bg-gray-50 py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+           <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">Why Go Digital?</h2>
+              <p className="text-gray-500 max-w-2xl mx-auto">Replacing paper logs with this platform improves accuracy, accountability, and speed.</p>
+           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600">👁️</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Instant Visibility</h3>
+              <p className="text-gray-600 text-base leading-relaxed">Admins see inspection status in real-time. No waiting for paper logs at the end of the shift.</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600">📸</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Photo Evidence</h3>
+              <p className="text-gray-600 text-base leading-relaxed">Mandatory photo uploads for vehicle conditions create an indisputable history of the fleet.</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600">🧠</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Smart Forms</h3>
+              <p className="text-gray-600 text-base leading-relaxed">Dynamic checklists adapt to &quot;Pre-Trip&quot; or &quot;Post-Trip&quot; contexts and enforce descriptions for defects.</p>
+            </div>
+            <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600">🔒</div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">Secure Records</h3>
+              <p className="text-gray-600 text-base leading-relaxed">Role-based access ensures data integrity. Search, filter, and export PDF reports instantly.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. FEEDBACK SECTION */}
+      <section id="contact" className="w-[90%] mx-auto bg-white rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">We Value Your Feedback</h2>
+          <p className="text-gray-500 mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
+          
+          <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-left">
+            
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <input 
+                id="name" 
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Your Name"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input 
+                id="email" 
+                type="email"
+                value={formData.email}
+                onChange={(e) => {
+                  setFormData({...formData, email: e.target.value});
+                  if (errorMsg) setErrorMsg(""); // Clear error as they type
+                }}
+                className={`w-full border p-3 rounded-lg focus:ring-2 outline-none ${
+                  errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+                placeholder="name@symbria.com"
+                required
+              />
+              {/* ERROR MESSAGE DISPLAY */}
+              {errorMsg && (
+                <p className="text-red-500 text-sm mt-1 animate-in slide-in-from-top-1">
+                  {errorMsg}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+              <select 
+                id="subject" 
+                value={formData.subject}
+                onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                <option>General Suggestion</option>
+                <option>Report a Bug</option>
+                <option>Feature Request</option>
+                <option>Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+              <textarea 
+                id="message" 
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                rows={4} 
+                className="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Type your feedback here..."
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading || submitted}
+              className={`w-full font-bold py-4 rounded-lg transition duration-300 ${
+                submitted 
+                  ? "bg-green-600 text-white cursor-default" 
+                  : loading 
+                    ? "bg-gray-400 text-white cursor-wait" 
+                    : "bg-blue-900 text-white hover:bg-blue-800"
+              }`}
+            >
+              {loading ? "Sending..." : submitted ? "Thank You! Feedback Sent." : "Submit Feedback"}
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+  );
+}
+
+
+==================================================
+FILE: ./app/components/Nav.tsx
+==================================================
+
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+export default function Nav() {
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setLoggedIn(!!session);
+    };
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setLoggedIn(false);
+    setIsMenuOpen(false); 
+    // 👇 CHANGED: Redirect to "/" instead of "/login"
+    router.push("/");
+    router.refresh();
+  };
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  return (
+    <nav className="bg-blue-800 text-white shadow-md relative z-50">
+      <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
+        
+        {/* LOGO - Always redirects to Home */}
+        <Link 
+          href="/" 
+          className="font-bold text-xl tracking-tight hover:text-blue-200 transition" 
+          onClick={closeMenu}
+        >
+          Symbria RX Logistics
+        </Link>
+        
+        {/* --- DESKTOP MENU --- */}
+        <div className="hidden md:flex gap-6 text-sm font-medium items-center">
+          {loggedIn ? (
+            <>
+              <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
+              <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
+              <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
+              <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 transition">
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 transition">
+              Login
+            </Link>
+          )}
+        </div>
+
+        {/* --- MOBILE HAMBURGER BUTTON --- */}
+        <button 
+          className="md:hidden p-2 text-white focus:outline-none"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle menu"
+        >
+          {isMenuOpen ? (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
+      </div>
+
+      {/* --- MOBILE MENU DROPDOWN --- */}
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 border-t border-blue-700 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
+          {loggedIn ? (
+            <>
+              <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+                Dashboard
+              </Link>
+              <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+                Feedback
+              </Link>
+              <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+                Contacts
+              </Link>
+              <button 
+                onClick={handleLogout} 
+                className="block w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link 
+              href="/login" 
+              onClick={closeMenu} 
+              className="block w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100"
+            >
+              Login
+            </Link>
+          )}
+        </div>
+      )}
+    </nav>
+  );
+}
+
+
+==================================================
+FILE: ./app/components/Footer.tsx
+==================================================
+
+"use client";
+
+import { useState } from "react";
+
+export default function Footer() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <>
+      <footer className="w-full py-6 text-center text-sm text-gray-400 border-t border-gray-200 bg-white mt-auto">
+        <p>
+          &copy; {currentYear}{" "}
+          {/* Clickable Name Trigger */}
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="font-medium text-gray-500 hover:text-blue-600 underline decoration-dotted underline-offset-4 transition-colors focus:outline-none"
+          >
+            Richard Essien
+          </button>
+          . All rights reserved.
+        </p>
+      </footer>
+
+      {/* --- POPUP MODAL --- */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          {/* Modal Box */}
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            
+            {/* Close 'X' Button */}
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+            >
+              ✕
+            </button>
+
+            {/* Modal Content */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
+                👨‍💻
+              </div>
+              <h3 className="text-xl font-bold text-gray-800">Richard Essien</h3>
+              <p className="text-sm text-gray-500">Developer & Admin</p>
+            </div>
+
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Email</span>
+                <a href="mailto:ressien1@symbria.com" className="text-blue-600 font-medium hover:underline">
+                  ressien1@symbria.com
+                </a>
+              </div>
+              
+              <div className="flex flex-col border-t border-gray-200 pt-3">
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Phone</span>
+                <a href="tel:+17743126471" className="text-blue-600 font-medium hover:underline">
+                  +1 (774) 312-6471
+                </a>
+              </div>
+            </div>
+
+            {/* Close Button Bottom */}
+            <button 
+              onClick={() => setIsModalOpen(false)}
+              className="w-full mt-6 bg-gray-900 text-white py-2 rounded-lg hover:bg-black transition-colors font-medium"
+            >
+              Close
+            </button>
+
+          </div>
+          
+          {/* Backdrop Click to Close */}
+          <div 
+            className="absolute inset-0 -z-10" 
+            onClick={() => setIsModalOpen(false)}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+
+==================================================
+FILE: ./app/login/page.tsx
+==================================================
+
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const supabase = createClient();
+  
+  const [view, setView] = useState<'login' | 'register'>('login');
+  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  
+  // Job Title State
+  const [jobTitle, setJobTitle] = useState("Delivery Driver");
+  
+  // Role State
+  const [role, setRole] = useState<'Driver' | 'Management' | 'Admin'>("Driver");
+  
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setMessage("Error: " + error.message);
+      setLoading(false);
+    } else {
+      router.push("/dashboard");
+      router.refresh();
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    // --- 🔐 PASSWORD MATCH CHECK ---
+    if (password !== confirmPassword) {
+      setMessage("Error: Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
+    const lowerEmail = email.toLowerCase().trim();
+    
+    // --- 🛡️ ROLE & DOMAIN GUARD LOGIC ---
+    const adminAllowlist = ["idongesit_essien@ymail.com", "ressien1@symbria.com"];
+    const managementAllowlist = [...adminAllowlist, "lholden@symbria.com"];
+    const generalDomain = "@symbria.com";
+
+    if (role === 'Admin' && !adminAllowlist.includes(lowerEmail)) {
+      setMessage("Error: You are not authorized to register as an Admin.");
+      setLoading(false); return;
+    } 
+    else if (role === 'Management' && !managementAllowlist.includes(lowerEmail)) {
+      setMessage("Error: This email is not authorized for Management access.");
+      setLoading(false); return;
+    }
+    else if (role === 'Driver') {
+      const isAllowed = lowerEmail.endsWith(generalDomain) || managementAllowlist.includes(lowerEmail);
+      if (!isAllowed) {
+        setMessage("Error: Registration is restricted to Symbria employees.");
+        setLoading(false); return;
+      }
+    }
+    // ------------------------------------
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone,          // Save Phone
+          job_title: jobTitle,   // Save Title
+          role: role, 
+        },
+      },
+    });
+
+    if (error) {
+      setMessage("Error: " + error.message);
+    } else {
+      setMessage("Success! Check your email for a confirmation link.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50">
+      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+          {view === 'login' ? 'Login' : 'Create Account'}
+        </h1>
+        
+        {message && (
+          <div className={`p-3 mb-4 rounded text-sm ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
+          
+          {view === 'register' && (
+            <>
+              {/* Names */}
+              <div className="flex gap-2">
+                <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded text-black w-1/2" required />
+                <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded text-black w-1/2" required />
+              </div>
+
+              {/* Phone */}
+              <input type="tel" placeholder="Phone Number (Ex: 555-123-4567)" value={phone} onChange={(e) => setPhone(e.target.value)} className="border p-3 rounded text-black" required />
+
+              {/* Job Title Dropdown */}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-semibold text-gray-500 uppercase">Title:</span>
+                <select 
+                  value={jobTitle} 
+                  onChange={(e) => setJobTitle(e.target.value)} 
+                  className="border p-3 rounded bg-white text-black"
+                >
+                  <option value="Delivery Driver">Delivery Driver</option>
+                  <option value="Logistics Lead">Logistics Lead</option>
+                  <option value="Logistics Manager">Logistics Manager</option>
+                  <option value="Regional Logistics Manager">Regional Logistics Manager</option>
+                </select>
+              </div>
+
+              {/* Role Selection */}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase">System Role:</span>
+                <div className="flex gap-2">
+                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                    <input type="radio" name="role" value="Driver" checked={role === 'Driver'} onChange={() => setRole('Driver')} className="accent-blue-600" />
+                    Driver
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                    <input type="radio" name="role" value="Management" checked={role === 'Management'} onChange={() => setRole('Management')} className="accent-purple-600" />
+                    Manager
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                    <input type="radio" name="role" value="Admin" checked={role === 'Admin'} onChange={() => setRole('Admin')} className="accent-red-600" />
+                    Admin
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
+
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black" required />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black" required />
+          
+          {view === 'register' && (
+            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50" : ""}`} required />
+          )}
+
+          <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2">
+            {loading ? "Processing..." : (view === 'login' ? "Sign In" : "Sign Up")}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center border-t pt-4">
+          <p className="text-gray-600 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
+          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 hover:underline font-medium">
+            {view === 'login' ? "Register here" : "Log in here"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+==================================================
+FILE: ./app/admin/feedback/feedback-table.tsx
+==================================================
+
+// app/admin/feedback/feedback-table.tsx
+'use client';
+
+import { useState } from 'react';
+// Use direct imports to avoid "Element type is invalid" errors
+import TrashIcon from '@heroicons/react/24/outline/TrashIcon';
+import EnvelopeOpenIcon from '@heroicons/react/24/outline/EnvelopeOpenIcon';
+import EnvelopeIcon from '@heroicons/react/24/outline/EnvelopeIcon';
+
+import { deleteFeedback, markAsRead } from './actions';
+
+type FeedbackItem = {
+  id: string;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: Date;
+  read: boolean;
+};
+
+export default function FeedbackTable({ initialData }: { initialData: FeedbackItem[] }) {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isPending, setIsPending] = useState(false);
+
+  // --- HANDLERS ---
+  const toggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((item) => item !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === initialData.length) {
+      setSelectedIds([]); 
+    } else {
+      setSelectedIds(initialData.map((item) => item.id)); 
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm('Are you sure you want to delete the selected items?')) return;
+    setIsPending(true);
+    await deleteFeedback(selectedIds);
+    setSelectedIds([]); 
+    setIsPending(false);
+  };
+
+  const handleBulkRead = async (status: boolean) => {
+    setIsPending(true);
+    await markAsRead(selectedIds, status);
+    setSelectedIds([]);
+    setIsPending(false);
+  };
+
+  const handleDeleteSingle = async (id: string) => {
+    if (!confirm('Delete this message?')) return;
+    setIsPending(true);
+    await deleteFeedback([id]);
+    setIsPending(false);
+  };
+
+  return (
+    <div className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200 relative">
+      
+      {/* LOADING OVERLAY */}
+      {isPending && (
+        <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+
+      {/* BULK ACTIONS TOOLBAR */}
+      {selectedIds.length > 0 && (
+        <div className="bg-blue-50 p-4 flex flex-wrap gap-4 items-center border-b border-blue-100 animate-in fade-in slide-in-from-top-2 sticky top-0 z-20">
+          <span className="text-sm font-semibold text-blue-800">
+            {selectedIds.length} selected
+          </span>
+          
+          <div className="flex gap-2 ml-auto">
+            <button 
+              onClick={() => handleBulkRead(true)}
+              className="flex items-center gap-1 text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50 text-gray-700 shadow-sm"
+            >
+              <EnvelopeOpenIcon className="w-4 h-4" /> <span className="hidden sm:inline">Read</span>
+            </button>
+            
+            <button 
+              onClick={() => handleBulkRead(false)}
+              className="flex items-center gap-1 text-xs bg-white border border-gray-300 px-3 py-1.5 rounded hover:bg-gray-50 text-gray-700 shadow-sm"
+            >
+              <EnvelopeIcon className="w-4 h-4" /> <span className="hidden sm:inline">Unread</span>
+            </button>
+            
+            <button 
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1 text-xs bg-red-50 border border-red-200 text-red-600 px-3 py-1.5 rounded hover:bg-red-100 shadow-sm"
+            >
+              <TrashIcon className="w-4 h-4" /> <span className="hidden sm:inline">Delete</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* --- DESKTOP VIEW (Table) --- */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left w-10">
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.length === initialData.length && initialData.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                />
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {initialData.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                  No feedback received yet.
+                </td>
+              </tr>
+            ) : (
+              initialData.map((item) => (
+                <tr 
+                  key={item.id} 
+                  className={`hover:bg-gray-50 transition-colors ${!item.read ? 'bg-blue-50/30' : ''}`}
+                >
+                  <td className="px-6 py-4">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(item.createdAt).toLocaleDateString()}
+                    <br />
+                    <span className="text-xs text-gray-400">
+                      {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                    <div className="text-sm text-gray-500">{item.email}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm text-gray-900 line-clamp-2 max-w-prose">
+                      {item.message}
+                    </p>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${item.read ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                        {item.read ? 'Read' : 'New'}
+                      </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <button onClick={() => handleDeleteSingle(item.id)} className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50">
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* --- MOBILE VIEW (Cards) --- */}
+      <div className="md:hidden">
+        {initialData.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No feedback received yet.</div>
+        ) : (
+          <ul className="divide-y divide-gray-200">
+            {initialData.map((item) => (
+              <li key={item.id} className={`p-4 ${!item.read ? 'bg-blue-50/40' : 'bg-white'}`}>
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(item.id)}
+                      onChange={() => toggleSelect(item.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
+                    />
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900">{item.name}</h3>
+                      <p className="text-xs text-gray-500">{item.email}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className={`px-2 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${item.read ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                      {item.read ? 'Read' : 'New'}
+                    </span>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-gray-700 mt-2 mb-3 bg-gray-50 p-2 rounded border border-gray-100">
+                  {item.message}
+                </p>
+                
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-400">
+                    {new Date(item.createdAt).toLocaleDateString()} at {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <button 
+                    onClick={() => handleDeleteSingle(item.id)}
+                    className="text-gray-400 hover:text-red-600 p-1"
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
+
+==================================================
+FILE: ./app/admin/feedback/page.tsx
+==================================================
+
+// app/admin/feedback/page.tsx
+import { prisma } from '@/lib/prisma';
+import FeedbackTable from './feedback-table';
+
+export const dynamic = 'force-dynamic';
+
+export default async function AdminFeedbackPage() {
+  // 1. Fetch data directly from the database
+  const feedbackList = await prisma.feedback.findMany({
+    orderBy: {
+      createdAt: 'desc', // Newest first
+    },
+  });
+
+  return (
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">User Feedback</h1>
+        <span className="bg-blue-100 text-blue-800 text-sm font-medium px-4 py-2 rounded-full">
+          {feedbackList.length} Messages
+        </span>
+      </div>
+
+      {/* 2. Render the interactive table */}
+      <FeedbackTable initialData={feedbackList} />
+    </div>
+  );
+}
+
+
+==================================================
+FILE: ./app/admin/feedback/actions.ts
+==================================================
+
+// app/admin/feedback/actions.ts
+'use server';
+
+import { prisma } from '@/lib/prisma';
+import { revalidatePath } from 'next/cache';
+
+export async function deleteFeedback(ids: string[]) {
+  await prisma.feedback.deleteMany({
+    where: {
+      id: { in: ids },
+    },
+  });
+  revalidatePath('/admin/feedback'); // Refresh the page automatically
+}
+
+export async function markAsRead(ids: string[], isRead: boolean) {
+  await prisma.feedback.updateMany({
+    where: {
+      id: { in: ids },
+    },
+    data: {
+      read: isRead,
+    },
+  });
+  revalidatePath('/admin/feedback');
+}
+
+
+==================================================
+FILE: ./app/contacts/page.tsx
+==================================================
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+
+// --- CONFIGURATION: ROUTE DATA ---
+const ROUTE_DATA = [
+  {
+    id: "001",
+    region: "North East (NE)",
+    regionColor: "text-blue-600",
+    scannerPhone: "331-219-9534",
+    duration: "9 Hrs", // Updated: 5h Drive + 2h40m Stops + 1h Break
+    stops: [
+      { name: "Sherrill House", address: "135 S Huntington Ave, Boston, MA 02130", phone: "617-731-2400" },
+      { name: "South Cove Manor", address: "288 Washington St, Quincy, MA 02169", phone: "617-423-0590" },
+      { name: "Dwyer Home", address: "25 Stonehaven Dr, Weymouth, MA 02190", phone: "781-660-5050" },
+      { name: "Lasell Village", address: "120 Seminary Ave, Auburndale, MA 02466", phone: "617-663-7100" },
+      { name: "Holy Trinity", address: "300 Barber Ave, Worcester, MA 01606", phone: "508-852-1000" },
+      { name: "Knollwood", address: "87 Briarwood Cir, Worcester, MA 01606", phone: "508-853-6910" },
+      { name: "Newbury Court", address: "100 Newbury Ct, Concord, MA 01742", phone: "978-402-8261" },
+      { name: "Edgewood Meadows", address: "575 Osgood St, North Andover, MA 01845", phone: "978-725-4121" },
+    ]
+  },
+  {
+    id: "002",
+    region: "West (W)",
+    regionColor: "text-purple-600",
+    scannerPhone: "331-329-2166",
+    duration: "4.5 Hrs", // Updated: 2.5h Drive + 1h Stops + 1h Break
+    stops: [
+      { name: "The Overlook", address: "88 Masonic Home rd, Charlton, MA 01507", phone: "508-202-4090" },
+      { name: "Livewell", address: "1261 S Main St, Plantsville, CT 06479", phone: "508-628-9000" },
+      { name: "St. Joseph", address: "14 Club Rd, Windham, CT 06280", phone: "860-456-1107" },
+    ]
+  },
+  {
+    id: "003",
+    region: "South East (SE)",
+    regionColor: "text-green-600",
+    scannerPhone: "847-269-4380",
+    duration: "5 Hrs", // Updated: 2h Drive + 1h40m Stops + 1h Break
+    stops: [
+      { name: "Catholic Memorial", address: "2446 Highland Ave, Fall River, MA 02720", phone: "508-679-0011" },
+      { name: "Sacred Heart", address: "359 Summer St, New Bedford, MA 02740", phone: "508-996-6751" },
+      { name: "Marian Manor", address: "33 Summer St, Taunton, MA 02780", phone: "508-822-4885" },
+      { name: "Madonna Manor", address: "85 N Washington St, North Attleboro, MA 02760", phone: "617-731-2400" },
+      { name: "Our Lady's Haven", address: "71 Center St, Fairhaven, MA 02719", phone: "508-999-4561" },
+    ]
+  }
+];
+
+type Profile = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  role: string;
+  job_title: string;
+  phone: string;
+};
+
+export default function ContactsPage() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function getContacts() {
+      const { data, error } = await supabase.from('profiles').select('*');
+      
+      if (error) {
+        console.error("Supabase Error:", error.message);
+      } else if (data) {
+        setProfiles(data);
+      }
+      setLoading(false);
+    }
+    getContacts();
+  }, [supabase]);
+
+  // --- FILTERING LOGIC ---
+  const adminEmail = "ressien1@symbria.com";        
+  const hiddenEmail = "idongesit_essien@ymail.com"; 
+
+  // 1. Drivers List
+  const drivers = profiles.filter(p => 
+    p.email !== hiddenEmail && 
+    (
+      p.job_title === "Delivery Driver" || 
+      p.role === "Driver" || 
+      p.email === adminEmail 
+    )
+  );
+
+  // 2. Management List
+  const managers = profiles.filter(p => 
+    p.email !== hiddenEmail && 
+    (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
+    p.email !== adminEmail 
+  );
+
+  if (loading) return <div className="p-12 text-center text-gray-500">Loading contacts...</div>;
+
+  return (
+    <div className="p-4 md:p-8 max-w-5xl mx-auto">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Important Numbers & Info</h2>
+      
+      {/* --- SECTION 1: DEVELOPER & ADMIN --- */}
+      <div className="mb-10">
+        <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
+          <span className="bg-blue-100 text-blue-600 p-1 rounded text-sm">🛠️</span> Developer & Admin
+        </h3>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center gap-6">
+          <div className="flex-shrink-0">
+            <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl shadow-sm">👨‍💻</div>
+          </div>
+          <div className="flex-grow">
+            <h4 className="text-xl font-bold text-gray-900">Richard Essien</h4>
+            <p className="text-blue-600 font-medium mb-3">Developer / Admin / Driver</p>
+            <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600">
+              <a href="mailto:ressien1@symbria.com" className="flex items-center gap-2 hover:text-blue-600 transition">
+                <span className="bg-gray-100 p-1.5 rounded">✉️</span> ressien1@symbria.com
+              </a>
+              <a href="tel:+17743126471" className="flex items-center gap-2 hover:text-blue-600 transition">
+                <span className="bg-gray-100 p-1.5 rounded">📞</span> +1 (774) 312-6471
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        {/* --- SECTION 2: MANAGEMENT --- */}
+        <div>
+          <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <span className="bg-purple-100 text-purple-600 p-1 rounded text-sm">👔</span> Management
+          </h3>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
+            <ul className="space-y-4">
+              {managers.length === 0 ? (
+                <li className="text-gray-400 italic text-center">No managers found.</li>
+              ) : (
+                managers.map(manager => (
+                  <li key={manager.id} className="flex items-start gap-3 border-b border-gray-50 last:border-0 pb-3 last:pb-0">
+                    <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                      {manager.first_name?.[0]}{manager.last_name?.[0]}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{manager.first_name} {manager.last_name}</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">{manager.job_title}</p>
+                      <div className="mt-1 flex flex-col text-sm">
+                        <a href={`mailto:${manager.email}`} className="text-gray-600 hover:text-purple-600">{manager.email}</a>
+                        {manager.phone && (
+                          <a href={`tel:${manager.phone}`} className="text-blue-600 hover:underline">{manager.phone}</a>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        </div>
+
+        {/* --- SECTION 3: DRIVERS --- */}
+        <div>
+          <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
+            <span className="bg-green-100 text-green-600 p-1 rounded text-sm">🚚</span> Drivers
+          </h3>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
+            <p className="text-sm text-gray-500 mb-4">Active driver roster.</p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-100 rounded-lg">
+                <span className="font-bold text-gray-800">Driver Dispatch</span>
+                <a href="tel:5559998888" className="text-sm bg-white border border-yellow-200 px-3 py-1 rounded text-blue-600 font-semibold hover:bg-blue-50 hover:text-blue-700 transition">
+                  Call Dispatch
+                </a>
+              </div>
+              {drivers.length === 0 ? (
+                <div className="text-center py-4 text-gray-400 text-sm italic">No individual drivers registered yet.</div>
+              ) : (
+                drivers.map(driver => (
+                  <div key={driver.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition">
+                    <div>
+                      <span className="font-medium text-gray-800 block">{driver.first_name} {driver.last_name}</span>
+                      <span className="text-xs text-gray-500">{driver.job_title}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      {driver.phone && (
+                        <a href={`tel:${driver.phone}`} className="text-xs bg-white border px-2 py-1 rounded text-green-600 font-semibold hover:bg-green-100" title="Call">📞</a>
+                      )}
+                      <a href={`mailto:${driver.email}`} className="text-xs bg-white border px-2 py-1 rounded text-blue-600 font-semibold hover:bg-blue-100" title="Email">✉️</a>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- SECTION 4: ROUTES INFO --- */}
+      <div className="mt-10">
+        <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
+          <span className="bg-orange-100 text-orange-600 p-1 rounded text-sm">📍</span> Routes Info
+        </h3>
+        
+        {/* --- MOBILE VIEW (CARDS) --- */}
+        <div className="block md:hidden space-y-4">
+          {ROUTE_DATA.map((route) => (
+            <div key={route.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
+                <div>
+                   <h4 className={`text-lg font-bold ${route.regionColor}`}>{route.region}</h4>
+                   <span className="text-sm font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">ID: {route.id}</span>
+                </div>
+                <div className="text-right">
+                  <span className="block text-xs text-gray-500 font-semibold uppercase">Est. Time</span>
+                  <span className="text-sm font-medium text-gray-800">{route.duration}</span>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                 <span className="text-xs text-gray-500 font-semibold uppercase block mb-1">Scanner Phone</span>
+                 <a href={`tel:${route.scannerPhone.replace(/-/g, '')}`} className="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded-lg font-medium justify-center">
+                    📞 {route.scannerPhone}
+                 </a>
+              </div>
+
+              <div>
+                <span className="text-xs text-gray-500 font-semibold uppercase block mb-2">Locations ({route.stops.length})</span>
+                <div className="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                  {route.stops.map((stop, idx) => (
+                    <div key={idx} className="pb-2 mb-2 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0">
+                      <p className="font-bold text-gray-800 text-sm">{stop.name}</p>
+                      <p className="text-xs text-gray-600 mb-1">{stop.address}</p>
+                      <a href={`tel:${stop.phone.replace(/-/g, '')}`} className="text-xs text-blue-600 font-medium hover:underline">
+                        {stop.phone}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* --- DESKTOP VIEW (TABLE) --- */}
+        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="p-4 font-semibold text-gray-700">Route ID</th>
+                <th className="p-4 font-semibold text-gray-700">Region</th>
+                <th className="p-4 font-semibold text-gray-700">Scanner Ph. No.</th>
+                <th className="p-4 font-semibold text-gray-700">Locations Info</th>
+                <th className="p-4 font-semibold text-gray-700">Est. Duration</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {ROUTE_DATA.map((route) => (
+                <tr key={route.id} className="hover:bg-gray-50 align-top">
+                  <td className="p-4 font-medium text-red-600">{route.id}</td>
+                  <td className={`p-4 font-bold ${route.regionColor}`}>{route.region}</td>
+                  <td className="p-4 text-gray-800">
+                    <a href={`tel:${route.scannerPhone.replace(/-/g, '')}`} className="hover:text-blue-600 hover:underline">
+                      {route.scannerPhone}
+                    </a>
+                  </td>
+                  <td className="p-4 text-gray-600">
+                    <div className="space-y-4">
+                      {route.stops.map((stop, idx) => (
+                        <div key={idx}>
+                          <span className="font-bold text-gray-800 block">{stop.name}</span>
+                          <span className="text-xs block">{stop.address}</span>
+                          <a href={`tel:${stop.phone.replace(/-/g, '')}`} className="text-xs text-blue-600 hover:underline">
+                            {stop.phone}
+                          </a>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="p-4 text-gray-500">{route.duration}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+==================================================
+FILE: ./app/dashboard/page.tsx
+==================================================
+
+"use client";
+
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+// --- CONFIGURATION: QUESTIONS LISTS ---
+
+const PRE_TRIP_QUESTIONS = [
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Fuel Tank Full",
+  "Gas card in binder",
+  "Dashboard warning lights on",
+  "Horn works",
+  "HVAC systems working",
+  "Info/Entertainment systems working",
+  "All doors working",
+  "Interior lights working",
+  "Driver/Passenger seat and belts working",
+  "Windshield wipers working",
+  "Cracks/chips on any windows",
+  "Dings, dents, or other visible damage on interior/exterior",
+  "Headlights working",
+  "Brake lights working",
+  "Turn signals working",
+  "Hazard lights working",
+  "Fog lights working"
+];
+
+const POST_TRIP_QUESTIONS = [
+  "Fuel Tank Full",
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Synchronize Scanner, End Route, Log Off",
+  "Scanner returned",
+  "Tackle boxes returned"
+];
+
+const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS]));
+
+const DAMAGE_QUESTIONS = [
+  "Dings, dents, or other visible damage on interior/exterior",
+  "Cracks/chips on any windows",
+  "Dashboard warning lights on"
+];
+
+// Define Trip Log Shape
+type TripLog = {
+  id: number;
+  created_at: string;
+  updated_at: string; 
+  edit_count: number; 
+  user_id: string;
+  vehicle_id: string;
+  route_id: string; 
+  odometer: number;
+  trip_type: string;
+  notes: string;
+  checklist: Record<string, string>; 
+  images: Record<string, string>; 
+  driver_name?: string; 
+};
+
+type UserProfile = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  role: 'Driver' | 'Management' | 'Admin';
+  email: string;
+};
+
+// Shape for Dynamic Routes
+type RouteOption = {
+  id: number;
+  name: string;
+};
+
+export default function Dashboard() {
+  const router = useRouter();
+  const [supabase] = useState(() => createClient());
+  
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
+  const [logs, setLogs] = useState<TripLog[]>([]);
+  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  
+  const [loading, setLoading] = useState(true); 
+  const [submitting, setSubmitting] = useState(false);
+  const [editingLog, setEditingLog] = useState<TripLog | null>(null);
+
+  // Form State
+  const [tripType, setTripType] = useState<string>("Pre-Trip");
+  const [checklistData, setChecklistData] = useState<Record<string, string>>({});
+  const [checklistComments, setChecklistComments] = useState<Record<string, string>>({});
+  const [tirePressures, setTirePressures] = useState({
+    df: "", pf: "", dr: "", pr: ""
+  });
+  
+  const [imageFiles, setImageFiles] = useState<{
+    front: File | null;
+    back: File | null;
+    trunk: File | null;
+  }>({ front: null, back: null, trunk: null });
+
+  // --- LOGIC HELPERS ---
+
+  const requiresDescription = (question: string, answer: string) => {
+    if (!answer) return false;
+    if (DAMAGE_QUESTIONS.includes(question)) {
+      return answer === "Yes";
+    }
+    return answer === "No";
+  };
+
+  const canEditOrDelete = (log: TripLog) => {
+    if (!userProfile) return false;
+    if (userProfile.role === 'Admin') return true;
+    if (userProfile.role === 'Management') return false;
+    if (log.user_id !== userProfile.id) return false;
+    
+    const now = new Date().getTime();
+    if (log.edit_count === 0) {
+      const created = new Date(log.created_at).getTime();
+      return (now - created) < (15 * 60 * 1000);
+    }
+    if (log.edit_count === 1) {
+      const updated = new Date(log.updated_at).getTime();
+      return (now - updated) < (5 * 60 * 1000); 
+    }
+    return false; 
+  };
+
+  const downloadCSV = (log: TripLog) => {
+    const headers = [
+      'Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Route', 'Odometer', 
+      'Tire DF', 'Tire PF', 'Tire DR', 'Tire PR', 
+      'Notes', 'Img Front', 'Img Back', 'Img Trunk', 'Edits', 
+      ...ALL_QUESTIONS_MASTER 
+    ];
+
+    const dateObj = new Date(log.created_at);
+    
+    const checklistValues = ALL_QUESTIONS_MASTER.map(q => {
+      const val = log.checklist?.[q] || "N/A";
+      const comment = log.checklist?.[`${q}_COMMENT`];
+      return comment ? `"${val}: ${comment}"` : val;
+    });
+
+    const row = [
+      log.id,
+      dateObj.toLocaleDateString(),
+      dateObj.toLocaleTimeString(),
+      `"${log.driver_name || 'Unknown'}"`,
+      log.trip_type,
+      log.route_id || 'N/A',
+      log.odometer,
+      log.checklist?.["Tire Pressure (Driver Front)"] || "N/A",
+      log.checklist?.["Tire Pressure (Passenger Front)"] || "N/A",
+      log.checklist?.["Tire Pressure (Driver Rear)"] || "N/A",
+      log.checklist?.["Tire Pressure (Passenger Rear)"] || "N/A",
+      `"${(log.notes || '').replace(/"/g, '""')}"`,
+      log.images?.front || "N/A",
+      log.images?.back || "N/A",
+      log.images?.trunk || "N/A",
+      log.edit_count,
+      ...checklistValues
+    ];
+
+    const blob = new Blob([[headers.join(','), row.join(',')].join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `trip_log_${log.id}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // --- UPDATED PRINT FUNCTION (PROFESSIONAL PDF STYLE) ---
+  const printLog = (log: TripLog) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return alert("Please allow popups.");
+
+    const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
+
+    // Generate checklist rows with zebra striping and badges
+    const checklistRows = relevantQuestions.map((q, index) => {
+      const val = log.checklist?.[q] || "-";
+      const comment = log.checklist?.[`${q}_COMMENT`];
+      
+      let isBad = false;
+      if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
+      else isBad = (val === "No");
+
+      // Status Badge Logic
+      const statusBadge = isBad 
+        ? `<span class="badge badge-error">ISSUE</span>` 
+        : `<span class="badge badge-success">OK</span>`;
+
+      // Alternate row background color
+      const rowClass = index % 2 === 0 ? 'bg-gray' : '';
+
+      return `
+        <tr class="${rowClass}">
+          <td class="q-col">${q}</td>
+          <td class="s-col">${statusBadge}</td>
+          <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '<span class="text-muted">-</span>'}</td>
+        </tr>
+      `;
+    }).join('');
+    
+    // Tire Pressure Table (Pre-Trip only)
+    let tireHtml = "";
+    if (log.trip_type === 'Pre-Trip') {
+      const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
+      const tPF = log.checklist?.["Tire Pressure (Passenger Front)"] || "-";
+      const tDR = log.checklist?.["Tire Pressure (Driver Rear)"] || "-";
+      const tPR = log.checklist?.["Tire Pressure (Passenger Rear)"] || "-";
+      tireHtml = `
+        <div class="section-box page-break-inside-avoid">
+            <h3>Tire Pressure (PSI)</h3>
+            <table class="tire-table">
+                <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
+                <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
+            </table>
+        </div>
+      `;
+    }
+
+    // Images Layout
+    const imgFront = log.images?.front ? `<div class="img-box"><p>Front Seat</p><img src="${log.images.front}" /></div>` : '';
+    const imgBack = log.images?.back ? `<div class="img-box"><p>Back Seat</p><img src="${log.images.back}" /></div>` : '';
+    const imgTrunk = log.images?.trunk ? `<div class="img-box"><p>Trunk</p><img src="${log.images.trunk}" /></div>` : '';
+    
+    let imagesHtml = "";
+    if (imgFront || imgBack || imgTrunk) {
+        imagesHtml = `
+            <div class="page-break-inside-avoid" style="margin-top: 20px;">
+                <h3>Vehicle Photos</h3>
+                <div class="images-container">
+                    ${imgFront}
+                    ${imgBack}
+                    ${imgTrunk}
+                </div>
+            </div>
+        `;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Log #${log.id}</title>
+          <style>
+            /* PRINT SETTINGS */
+            @media print {
+                @page { margin: 0.5cm; size: portrait; }
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+            
+            /* BASE STYLES */
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; color: #333; line-height: 1.4; max-width: 900px; margin: 0 auto; padding: 20px; }
+            
+            /* HEADER */
+            h1 { font-size: 22px; margin: 0 0 15px 0; color: #1e3a8a; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+            h3 { font-size: 14px; margin: 20px 0 10px 0; color: #444; text-transform: uppercase; background: #e2e8f0; padding: 8px; border-radius: 4px; font-weight: 700; }
+            
+            /* INFO GRID */
+            .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+            .info-item { background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
+            .info-label { display: block; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px;}
+            .info-value { font-size: 14px; font-weight: 700; color: #0f172a; }
+
+            /* TABLES */
+            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+            th { text-align: left; background: #f1f5f9; padding: 8px; border-bottom: 2px solid #e2e8f0; font-size: 10px; text-transform: uppercase; color: #475569; }
+            td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+            .bg-gray { background-color: #f8fafc; }
+            
+            /* COLUMNS */
+            .q-col { width: 50%; font-weight: 600; font-size: 11px; }
+            .s-col { width: 10%; text-align: center; }
+            .n-col { width: 40%; font-size: 11px; }
+
+            /* BADGES */
+            .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+            .badge-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+            .badge-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+            /* NOTES & COMMENTS */
+            .comment { color: #b91c1c; font-weight: 600; display: block; background: #fff5f5; padding: 4px; border-radius: 4px; border-left: 3px solid #ef4444; }
+            .text-muted { color: #cbd5e1; font-style: italic; }
+            .notes-box { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 4px; margin-top: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+            /* TIRE TABLE */
+            .tire-table th, .tire-table td { text-align: center; border: 1px solid #e2e8f0; font-size: 13px; padding: 10px; }
+            .tire-table th { background: #f8fafc; }
+            
+            /* IMAGES */
+            .images-container { display: flex; gap: 15px; margin-top: 10px; }
+            .img-box { flex: 1; border: 1px solid #cbd5e1; padding: 5px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+            .img-box p { margin: 0 0 5px 0; font-weight: bold; font-size: 10px; text-align: center; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+            .img-box img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
+
+            .page-break-inside-avoid { page-break-inside: avoid; }
+          </style>
+        </head>
+        <body>
+          <h1>
+            <span>Symbria RX Logistics</span>
+            <span style="font-size:14px; color:#64748b; font-weight:normal;">Trip Log #${log.id}</span>
+          </h1>
+          
+          <div class="header-grid">
+            <div class="info-item">
+                <span class="info-label">Driver</span>
+                <div class="info-value">${log.driver_name || 'Unknown'}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Inspection Type</span>
+                <div class="info-value" style="color:${log.trip_type === 'Pre-Trip' ? '#2563eb' : '#d97706'}">${log.trip_type}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date & Time</span>
+                <div class="info-value">${new Date(log.created_at).toLocaleString()}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Route / Odometer</span>
+                <div class="info-value">${log.route_id || 'N/A'} / ${log.odometer}</div>
+            </div>
+          </div>
+
+          ${tireHtml}
+
+          <h3>Inspection Checklist</h3>
+          <table>
+            <thead>
+                <tr>
+                    <th>Inspection Item</th>
+                    <th style="text-align:center;">Status</th>
+                    <th>Notes / Defects</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${checklistRows}
+            </tbody>
+          </table>
+
+          ${log.notes ? `
+            <div class="notes-box page-break-inside-avoid">
+                <span class="info-label" style="color:#92400e; margin-bottom:5px;">Additional Notes</span>
+                <div style="font-size:13px; color:#78350f; font-weight:500;">${log.notes}</div>
+            </div>
+          ` : ''}
+
+          ${imagesHtml}
+
+          <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 10px;">
+            <p>Certified by ${log.driver_name} on ${new Date(log.created_at).toLocaleDateString()}</p>
+            Symbria RX Logistics Digital Dashboard
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDelete = async (logId: number) => {
+    if (!confirm("Are you sure? This cannot be undone.")) return;
+    const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
+    if (error) alert("Error: " + error.message);
+    else { alert("Log deleted."); fetchData(); }
+  };
+
+  const handleEditClick = (log: TripLog) => {
+    setEditingLog(log);
+    setTripType(log.trip_type);
+    setImageFiles({ front: null, back: null, trunk: null });
+
+    const answers: Record<string, string> = {};
+    const comments: Record<string, string> = {};
+    
+    if (log.checklist) {
+      setTirePressures({
+        df: log.checklist["Tire Pressure (Driver Front)"] || "",
+        pf: log.checklist["Tire Pressure (Passenger Front)"] || "",
+        dr: log.checklist["Tire Pressure (Driver Rear)"] || "",
+        pr: log.checklist["Tire Pressure (Passenger Rear)"] || "",
+      });
+
+      Object.keys(log.checklist).forEach(key => {
+        if (key.includes("Tire Pressure")) return;
+        if (key.endsWith('_COMMENT')) {
+          const realKey = key.replace('_COMMENT', '');
+          comments[realKey] = log.checklist[key];
+        } else {
+          answers[key] = log.checklist[key];
+        }
+      });
+    }
+    setChecklistData(answers);
+    setChecklistComments(comments);
+    setActiveTab('new');
+  };
+
+  // --- UPDATED FETCH LOGIC (Routes First) ---
+  const fetchData = useCallback(async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { router.replace('/login'); return; }
+
+      const { user } = session;
+      const metadata = user.user_metadata || {};
+
+      setUserProfile({
+        id: user.id,
+        email: user.email || "",
+        firstName: metadata.first_name || "",
+        lastName: metadata.last_name || "",
+        role: metadata.role || "Driver",
+      });
+
+      // 1. Fetch Routes FIRST to prevent dropdown blocking
+      const { data: routeData, error: routeError } = await supabase
+        .from('routes')
+        .select('id, name')
+        .eq('active', true)
+        .order('name');
+
+      if (routeError) console.error("Route Error:", routeError);
+      if (routeData) setRouteOptions(routeData);
+
+      // 2. Fetch Logs SECOND
+      const { data: logsData, error: logsError } = await supabase
+        .from('trip_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (logsError) throw logsError;
+      setLogs(logsData || []);
+
+    } catch (error) {
+      console.error("Error loading dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase, router]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
+  const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
+  const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
+  const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
+  
+  const uploadImage = async (file: File) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
+    const filePath = `${userProfile?.id}/${fileName}`;
+    const { error } = await supabase.storage.from('trip_logs').upload(filePath, file);
+    if (error) throw error;
+    const { data } = supabase.storage.from('trip_logs').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!userProfile) return;
+
+    const formElement = e.currentTarget; 
+    const formData = new FormData(formElement);
+    setSubmitting(true);
+    
+    try {
+      // 1. Upload Images (shallow copy old list first)
+      const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
+      if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
+      if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
+      if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
+
+      // 2. Prepare Data
+      const finalChecklist = { ...checklistData };
+      Object.keys(checklistComments).forEach(q => {
+        const answer = checklistData[q];
+        if (requiresDescription(q, answer) && checklistComments[q]) {
+          finalChecklist[`${q}_COMMENT`] = checklistComments[q];
+        }
+      });
+
+      if (tripType === 'Pre-Trip') {
+        finalChecklist["Tire Pressure (Driver Front)"] = tirePressures.df;
+        finalChecklist["Tire Pressure (Passenger Front)"] = tirePressures.pf;
+        finalChecklist["Tire Pressure (Driver Rear)"] = tirePressures.dr;
+        finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
+      }
+
+      const baseData = {
+        user_id: userProfile.id, 
+        vehicle_id: "N/A", 
+        route_id: formData.get('route_id'), 
+        odometer: formData.get('odometer'),
+        trip_type: tripType, 
+        notes: formData.get('notes'),
+        checklist: finalChecklist,
+        images: imageUrls, 
+        driver_name: `${userProfile.firstName} ${userProfile.lastName}`
+      };
+
+      let error;
+      if (editingLog) {
+        const response = await supabase.from('trip_logs').update({
+            ...baseData,
+            edit_count: editingLog.edit_count + 1,
+            updated_at: new Date().toISOString()
+        }).eq('id', editingLog.id);
+        error = response.error;
+      } else {
+        const response = await supabase.from('trip_logs').insert(baseData);
+        error = response.error;
+      }
+
+      if (error) {
+        alert("Error: " + error.message);
+      } else {
+        alert(editingLog ? "Log updated!" : "Success! Log submitted.");
+        formElement.reset();
+        setChecklistData({});
+        setChecklistComments({});
+        setImageFiles({ front: null, back: null, trunk: null });
+        setTirePressures({ df: "", pf: "", dr: "", pr: "" });
+        setTripType("Pre-Trip");
+        setEditingLog(null); 
+        fetchData(); 
+        setActiveTab('history'); 
+      }
+    } catch (err) {
+      const errorMessage = (err as Error).message || "An unknown error occurred";
+      alert("Submission Failed: " + errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const visibleLogs = (activeTab === 'history')
+    ? logs.filter(log => log.user_id === userProfile?.id) 
+    : logs;
+
+  const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+
+  return (
+    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+      <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-500 text-sm mt-1">Welcome back, {userProfile?.firstName}</p>
+        </div>
+        {userProfile && (
+          <h3 className="text-gray-400 font-medium text-left md:text-right">
+            {userProfile.firstName} {userProfile.lastName} <br />
+            <span className={`uppercase text-xs tracking-wider border px-2 py-0.5 rounded-full mt-1 inline-block ${
+              userProfile.role === 'Admin' ? 'border-red-300 text-red-600 bg-red-50' : 
+              userProfile.role === 'Management' ? 'border-purple-300 text-purple-600 bg-purple-50' : 
+              'border-gray-300'
+            }`}>
+              {userProfile.role}
+            </span>
+          </h3>
+        )}
+      </header>
+
+      <div className="flex border-b border-gray-300 mb-6 overflow-x-auto whitespace-nowrap pb-1">
+        <button onClick={() => { setActiveTab('new');
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip");
+        }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+          {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
+        </button>
+        <button onClick={() => { setActiveTab('history');
+          setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+          My Logs
+        </button>
+        {(userProfile?.role === 'Management' || userProfile?.role === 'Admin') && (
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
+            All Logs (Admin)
+          </button>
+        )}
+      </div>
+
+      {activeTab === 'new' && (
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 max-w-4xl">
+          <h2 className="text-xl font-semibold mb-2">
+            {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
+          
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-gray-700">Trip Type</span>
+              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white" required>
+                <option value="Pre-Trip">Pre-Trip Inspection</option>
+                <option value="Post-Trip">Post-Trip Inspection</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-gray-700">Select Route</span>
+              <select name="route_id" defaultValue={editingLog?.route_id || ""} className="border p-3 rounded-lg bg-white" required>
+                <option value="" disabled>-- Choose a Route --</option>
+                {routeOptions.length > 0 ? (
+                  routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)
+                ) : (
+                  <option disabled>Loading routes...</option>
+                )}
+              </select>
+            </div>
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-gray-700">Odometer</span>
+              <input name="odometer" type="number" defaultValue={editingLog?.odometer} className="border p-3 rounded" required />
+            </label>
+
+            <hr className="border-gray-200" />
+            
+            <div>
+               <h3 className="text-lg font-bold text-gray-800 mb-4">Inspection Checklist</h3>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 {currentQuestions.map((question, index) => {
+                   const answer = checklistData[question];
+                   const showComment = requiresDescription(question, answer);
+                   const isBad = showComment;
+                   return (
+                     <div key={index} className={`flex flex-col bg-gray-50 p-3 rounded border ${isBad ? 'border-red-200 bg-red-50' : 'border-gray-100'}`}>
+                       <div className="flex justify-between items-start mb-2">
+                         <span className="text-sm text-gray-700 font-medium max-w-[70%]">{question}</span>
+                         <div className="flex gap-4">
+                           <label className="flex items-center gap-1 cursor-pointer">
+                             <input type="radio" name={`q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
+                             <span className="text-sm">Yes</span>
+                           </label>
+                           <label className="flex items-center gap-1 cursor-pointer">
+                             <input type="radio" name={`q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
+                             <span className="text-sm">No</span>
+                           </label>
+                         </div>
+                       </div>
+                       {showComment && (
+                         <div className="mt-1 animate-in fade-in slide-in-from-top-1">
+                           <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700 placeholder-red-300 bg-white" required />
+                         </div>
+                       )}
+                     </div>
+                   );
+                 })}
+               </div>
+            </div>
+
+            <hr className="border-gray-200" />
+
+            {tripType === 'Pre-Trip' && (
+              <>
+                <div className="animate-in fade-in slide-in-from-top-2">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">Tire Pressure (PSI) (Required)</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded" required /></label>
+                  </div>
+                </div>
+                <hr className="border-gray-200" />
+              </>
+            )}
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Vehicle Photos (Required)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.front} />
+                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.back} />
+                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 p-4 rounded border border-gray-200">
+                  <span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.trunk} />
+                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-gray-200" />
+            
+            <label className="flex flex-col gap-1">
+              <span className="text-sm font-semibold text-gray-700">Additional Notes / Defects</span>
+              <textarea name="notes" defaultValue={editingLog?.notes} className="border p-3 rounded" rows={3} placeholder="General notes..." />
+            </label>
+            
+            <button type="submit" disabled={submitting} className={`font-bold py-3 px-6 rounded text-white flex items-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
+              {submitting ? ( <>Uploading Images...</> ) : ( editingLog ? "Update Log" : "Submit Log" )}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {(activeTab === 'history' || activeTab === 'all') && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          
+          {/* MOBILE CARD VIEW */}
+          <div className="block md:hidden">
+            {visibleLogs.map((log) => {
+              const hasPermission = canEditOrDelete(log);
+              return (
+                <div key={log.id} className="p-4 border-b border-gray-100 flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{log.trip_type}</span>
+                      <p className="text-xs text-gray-500 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => printLog(log)} className="text-lg bg-gray-50 p-2 rounded">📄</button>
+                      <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 p-2 rounded">📊</button>
+                    </div>
+                  </div>
+                  
+                  <div className="text-sm text-gray-800 font-medium">
+                    {activeTab === 'all' && <div className="text-purple-700 mb-1">{log.driver_name}</div>}
+                    <div>Route: {log.route_id || "N/A"}</div>
+                    <div>Odo: {log.odometer}</div>
+                  </div>
+
+                  {log.notes && <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded mt-1 italic">&quot;{log.notes}&quot;</div>}
+
+                  {hasPermission && (
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+                      <button onClick={() => handleEditClick(log)} className="flex-1 text-center bg-orange-50 text-orange-700 text-sm py-2 rounded font-semibold">Edit</button>
+                      <button onClick={() => handleDelete(log.id)} className="flex-1 text-center bg-red-50 text-red-700 text-sm py-2 rounded font-semibold">Delete</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* DESKTOP TABLE VIEW */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="p-4 font-semibold text-gray-700">Actions</th>
+                  {activeTab === 'all' && <th className="p-4 font-semibold text-gray-700">Driver</th>}
+                  <th className="p-4 font-semibold text-gray-700">Date</th>
+                  <th className="p-4 font-semibold text-gray-700">Route</th>
+                  <th className="p-4 font-semibold text-gray-700">Type</th>
+                  <th className="p-4 font-semibold text-gray-700">Odo</th>
+                  <th className="p-4 font-semibold text-gray-700">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {visibleLogs.map((log) => {
+                  const hasPermission = canEditOrDelete(log);
+                  return (
+                    <tr key={log.id} className="hover:bg-gray-50">
+                      <td className="p-4 flex gap-2">
+                        <button onClick={() => printLog(log)} className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">📄</button>
+                        <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 hover:bg-green-100 px-2 py-1 rounded">📊</button>
+                        {hasPermission && (
+                          <>
+                            <div className="w-px h-4 bg-gray-300 mx-1 self-center"></div>
+                            <button onClick={() => handleEditClick(log)} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">✏️</button>
+                            <button onClick={() => handleDelete(log.id)} className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">🗑️</button>
+                          </>
+                        )}
+                      </td>
+                      {activeTab === 'all' && <td className="p-4 font-medium">{log.driver_name}</td>}
+                      <td className="p-4 text-gray-600">{new Date(log.created_at).toLocaleDateString()}</td>
+                      <td className="p-4 font-medium text-gray-800">{log.route_id || "-"}</td>
+                      <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{log.trip_type}</span></td>
+                      <td className="p-4">{log.odometer}</td>
+                      <td className="p-4 text-gray-500 truncate max-w-xs">{log.notes || "-"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+==================================================
+FILE: ./app/api/feedback/route.ts
+==================================================
+
+// app/api/feedback/route.ts
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma'; // Ensure you are using the helper we made
+import { Resend } from 'resend';
+
+export async function POST(req: Request) {
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
+    const body = await req.json();
+    const { name, email, message } = body;
+
+    // 1. Validation
+    if (!email || !email.endsWith('@symbria.com')) {
+      return NextResponse.json(
+        { error: 'Unauthorized: Only @symbria.com emails are allowed.' }, 
+        { status: 400 }
+      );
+    }
+
+    // 2. Save to Database
+    const newFeedback = await prisma.feedback.create({
+      data: {
+        name,
+        email,
+        message,
+      },
+    });
+
+    // 3. Send Email Notification
+    // 👇 UPDATED: Hardcoded link to your production Vercel app
+    const loginLink = "http://localhost:3000/admin/feedback"; 
+    
+    const { data, error } = await resend.emails.send({
+      from: 'onboarding@resend.dev', 
+      to: 'i.d.essien@gmail.com', // Keep this as your test email for now
+      subject: `New Feedback from ${name}`,
+      html: `
+        <h2>New Feedback Received</h2>
+        <p><strong>From:</strong> ${name} (${email})</p>
+        <p><strong>Message:</strong></p>
+        <blockquote style="background: #f9f9f9; padding: 10px; border-left: 5px solid #ccc;">
+          ${message}
+        </blockquote>
+        <br />
+        <a href="${loginLink}" style="background-color: #0070f3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+          View in Admin Dashboard
+        </a>
+      `,
+    });
+
+    if (error) {
+      console.error('Resend API Error:', error);
+      return NextResponse.json(
+        { error: 'Feedback saved, but email failed to send.' }, 
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(newFeedback, { status: 200 });
+
+  } catch (error) {
+    console.error('Feedback error:', error);
+    return NextResponse.json({ error: 'Error submitting feedback' }, { status: 500 });
+  }
+}
+
+
+==================================================
+FILE: ./lib/prisma.ts
+==================================================
+
+// lib/prisma.ts
+import { PrismaClient } from '@prisma/client';
+
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: ['query'],
+  });
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+
+==================================================
+FILE: ./lib/supabase/server.ts
+==================================================
+
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
+
+export async function createClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    }
+  )
+}
+
+
+==================================================
+FILE: ./lib/supabase/client.ts
+==================================================
+
+import { createBrowserClient } from '@supabase/ssr'
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
+
