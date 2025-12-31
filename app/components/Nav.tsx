@@ -29,7 +29,6 @@ export default function Nav() {
     await supabase.auth.signOut();
     setLoggedIn(false);
     setIsMenuOpen(false); 
-    // 👇 CHANGED: Redirect to "/" instead of "/login"
     router.push("/");
     router.refresh();
   };
@@ -37,7 +36,7 @@ export default function Nav() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="bg-blue-800 text-white shadow-md relative z-50">
+    <nav className="bg-blue-800 dark:bg-blue-950 text-white shadow-md relative z-50 transition-colors">
       <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
         
         {/* LOGO - Always redirects to Home */}
@@ -54,14 +53,17 @@ export default function Nav() {
           {loggedIn ? (
             <>
               <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
+              
+              {/* NEW FEEDBACK LINK ADDED HERE */}
               <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
+              
               <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
-              <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 transition">
+              <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
                 Logout
               </button>
             </>
           ) : (
-            <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 transition">
+            <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
               Login
             </Link>
           )}
@@ -74,11 +76,11 @@ export default function Nav() {
           aria-label="Toggle menu"
         >
           {isMenuOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           )}
@@ -87,21 +89,24 @@ export default function Nav() {
 
       {/* --- MOBILE MENU DROPDOWN --- */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 border-t border-blue-700 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 dark:bg-blue-950 border-t border-blue-700 dark:border-blue-900 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
           {loggedIn ? (
             <>
-              <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+              <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
                 Dashboard
               </Link>
-              <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+              
+              {/* NEW FEEDBACK LINK ADDED HERE TOO */}
+              <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
                 Feedback
               </Link>
-              <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+              
+              <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
                 Contacts
               </Link>
               <button 
                 onClick={handleLogout} 
-                className="block w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100"
+                className="block w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
               >
                 Logout
               </button>
@@ -110,7 +115,7 @@ export default function Nav() {
             <Link 
               href="/login" 
               onClick={closeMenu} 
-              className="block w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100"
+              className="block w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
             >
               Login
             </Link>

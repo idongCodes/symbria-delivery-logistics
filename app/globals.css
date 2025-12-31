@@ -12,10 +12,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Ensure dark mode sets the correct base colors */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a; /* Dark Slate 900 */
+    --foreground: #f8fafc; /* Slate 50 */
   }
 }
 
