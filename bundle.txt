@@ -231,6 +231,19 @@ This project is proprietary. All rights reserved.
 
 
 ==================================================
+FILE: ./postcss.config.mjs
+==================================================
+
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+
+
+==================================================
 FILE: ./package.json
 ==================================================
 
@@ -297,6 +310,30 @@ import "./.next/dev/types/routes.d.ts";
 
 
 ==================================================
+FILE: ./eslint.config.mjs
+==================================================
+
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+
+
+==================================================
 FILE: ./app/globals.css
 ==================================================
 
@@ -314,10 +351,11 @@ FILE: ./app/globals.css
   --font-mono: var(--font-geist-mono);
 }
 
+/* Ensure dark mode sets the correct base colors */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0f172a; /* Dark Slate 900 */
+    --foreground: #f8fafc; /* Slate 50 */
   }
 }
 
@@ -327,7 +365,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-
 ==================================================
 FILE: ./app/layout.tsx
 ==================================================
@@ -336,7 +373,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Nav from "./components/Nav";
-import Footer from "./components/Footer"; // Import the new Footer
+import Footer from "./components/Footer";
+import AutoLogout from "./components/AutoLogout"; // 👈 1. Import this
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -352,28 +390,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* flex flex-col min-h-screen:
-        These classes force the body to take up at least 100% of the screen height,
-        allowing 'mt-auto' in the Footer to push it to the very bottom.
-      */}
       <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900`}>
         
-        {/* Navigation stays at the top */}
+        <AutoLogout /> {/* 👈 2. Add the component here */}
+        
         <Nav />
         
-        {/* Main Content grows to fill available space */}
         <main className="flex-grow w-full">
           {children}
         </main>
         
-        {/* Footer stays at the bottom */}
         <Footer />
         
       </body>
     </html>
   );
 }
-
 
 ==================================================
 FILE: ./app/page.tsx
@@ -609,6 +641,46 @@ export default function Home() {
 
 
 ==================================================
+FILE: ./app/components/AutoLogout.tsx
+==================================================
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+const TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
+
+export default function AutoLogout() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [lastActivity, setLastActivity] = useState(Date.now());
+
+  useEffect(() => {
+    const updateActivity = () => setLastActivity(Date.now());
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
+    
+    events.forEach((event) => window.addEventListener(event, updateActivity));
+
+    const intervalId = setInterval(async () => {
+      if (Date.now() - lastActivity >= TIMEOUT_MS) {
+        await supabase.auth.signOut();
+        router.push("/");
+        router.refresh();
+      }
+    }, 60 * 1000);
+
+    return () => {
+      events.forEach((event) => window.removeEventListener(event, updateActivity));
+      clearInterval(intervalId);
+    };
+  }, [lastActivity, router, supabase]);
+
+  return null;
+}
+
+==================================================
 FILE: ./app/components/Nav.tsx
 ==================================================
 
@@ -643,7 +715,6 @@ export default function Nav() {
     await supabase.auth.signOut();
     setLoggedIn(false);
     setIsMenuOpen(false); 
-    // 👇 CHANGED: Redirect to "/" instead of "/login"
     router.push("/");
     router.refresh();
   };
@@ -651,7 +722,7 @@ export default function Nav() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <nav className="bg-blue-800 text-white shadow-md relative z-50">
+    <nav className="bg-blue-800 dark:bg-blue-950 text-white shadow-md relative z-50 transition-colors">
       <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
         
         {/* LOGO - Always redirects to Home */}
@@ -668,14 +739,17 @@ export default function Nav() {
           {loggedIn ? (
             <>
               <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
+              
+              {/* NEW FEEDBACK LINK ADDED HERE */}
               <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
+              
               <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
-              <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 transition">
+              <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
                 Logout
               </button>
             </>
           ) : (
-            <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 transition">
+            <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
               Login
             </Link>
           )}
@@ -688,11 +762,11 @@ export default function Nav() {
           aria-label="Toggle menu"
         >
           {isMenuOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           )}
@@ -701,21 +775,24 @@ export default function Nav() {
 
       {/* --- MOBILE MENU DROPDOWN --- */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 border-t border-blue-700 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 dark:bg-blue-950 border-t border-blue-700 dark:border-blue-900 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
           {loggedIn ? (
             <>
-              <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+              <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
                 Dashboard
               </Link>
-              <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+              
+              {/* NEW FEEDBACK LINK ADDED HERE TOO */}
+              <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
                 Feedback
               </Link>
-              <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 rounded transition">
+              
+              <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
                 Contacts
               </Link>
               <button 
                 onClick={handleLogout} 
-                className="block w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100"
+                className="block w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
               >
                 Logout
               </button>
@@ -724,7 +801,7 @@ export default function Nav() {
             <Link 
               href="/login" 
               onClick={closeMenu} 
-              className="block w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100"
+              className="block w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
             >
               Login
             </Link>
@@ -734,7 +811,6 @@ export default function Nav() {
     </nav>
   );
 }
-
 
 ==================================================
 FILE: ./app/components/Footer.tsx
@@ -936,14 +1012,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-950 transition-colors">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300 border border-gray-200 dark:border-gray-700">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
           {view === 'login' ? 'Login' : 'Create Account'}
         </h1>
         
         {message && (
-          <div className={`p-3 mb-4 rounded text-sm ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+          <div className={`p-3 mb-4 rounded text-sm ${message.includes("Error") ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200" : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"}`}>
             {message}
           </div>
         )}
@@ -954,20 +1030,20 @@ export default function LoginPage() {
             <>
               {/* Names */}
               <div className="flex gap-2">
-                <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded text-black w-1/2" required />
-                <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded text-black w-1/2" required />
+                <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 w-1/2 focus:ring-2 focus:ring-blue-500 outline-none" required />
+                <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 w-1/2 focus:ring-2 focus:ring-blue-500 outline-none" required />
               </div>
 
               {/* Phone */}
-              <input type="tel" placeholder="Phone Number (Ex: 555-123-4567)" value={phone} onChange={(e) => setPhone(e.target.value)} className="border p-3 rounded text-black" required />
+              <input type="tel" placeholder="Phone Number (Ex: 555-123-4567)" value={phone} onChange={(e) => setPhone(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
 
               {/* Job Title Dropdown */}
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Title:</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Title:</span>
                 <select 
                   value={jobTitle} 
                   onChange={(e) => setJobTitle(e.target.value)} 
-                  className="border p-3 rounded bg-white text-black"
+                  className="border p-3 rounded bg-white dark:bg-gray-700 text-black dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   <option value="Delivery Driver">Delivery Driver</option>
                   <option value="Logistics Lead">Logistics Lead</option>
@@ -978,17 +1054,17 @@ export default function LoginPage() {
 
               {/* Role Selection */}
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase">System Role:</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">System Role:</span>
                 <div className="flex gap-2">
-                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer border dark:border-gray-600 p-2 rounded flex-1 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
                     <input type="radio" name="role" value="Driver" checked={role === 'Driver'} onChange={() => setRole('Driver')} className="accent-blue-600" />
                     Driver
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer border dark:border-gray-600 p-2 rounded flex-1 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
                     <input type="radio" name="role" value="Management" checked={role === 'Management'} onChange={() => setRole('Management')} className="accent-purple-600" />
                     Manager
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer border dark:border-gray-600 p-2 rounded flex-1 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
                     <input type="radio" name="role" value="Admin" checked={role === 'Admin'} onChange={() => setRole('Admin')} className="accent-red-600" />
                     Admin
                   </label>
@@ -997,21 +1073,21 @@ export default function LoginPage() {
             </>
           )}
 
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black" required />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black" required />
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
           
           {view === 'register' && (
-            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50" : ""}`} required />
+            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} required />
           )}
 
-          <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2">
+          <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2 transition-colors">
             {loading ? "Processing..." : (view === 'login' ? "Sign In" : "Sign Up")}
           </button>
         </form>
 
-        <div className="mt-6 text-center border-t pt-4">
-          <p className="text-gray-600 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
-          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 hover:underline font-medium">
+        <div className="mt-6 text-center border-t border-gray-100 dark:border-gray-700 pt-4">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
+          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
             {view === 'login' ? "Register here" : "Log in here"}
           </button>
         </div>
@@ -1019,7 +1095,6 @@ export default function LoginPage() {
     </div>
   );
 }
-
 
 ==================================================
 FILE: ./app/admin/feedback/feedback-table.tsx
@@ -1338,7 +1413,7 @@ const ROUTE_DATA = [
   {
     id: "001",
     region: "North East (NE)",
-    regionColor: "text-blue-600",
+    regionColor: "text-blue-600 dark:text-blue-400",
     scannerPhone: "331-219-9534",
     duration: "9 Hrs", // Updated: 5h Drive + 2h40m Stops + 1h Break
     stops: [
@@ -1355,7 +1430,7 @@ const ROUTE_DATA = [
   {
     id: "002",
     region: "West (W)",
-    regionColor: "text-purple-600",
+    regionColor: "text-purple-600 dark:text-purple-400",
     scannerPhone: "331-329-2166",
     duration: "4.5 Hrs", // Updated: 2.5h Drive + 1h Stops + 1h Break
     stops: [
@@ -1367,7 +1442,7 @@ const ROUTE_DATA = [
   {
     id: "003",
     region: "South East (SE)",
-    regionColor: "text-green-600",
+    regionColor: "text-green-600 dark:text-green-400",
     scannerPhone: "847-269-4380",
     duration: "5 Hrs", // Updated: 2h Drive + 1h40m Stops + 1h Break
     stops: [
@@ -1430,30 +1505,30 @@ export default function ContactsPage() {
     p.email !== adminEmail 
   );
 
-  if (loading) return <div className="p-12 text-center text-gray-500">Loading contacts...</div>;
+  if (loading) return <div className="p-12 text-center text-gray-500 dark:text-gray-400">Loading contacts...</div>;
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto">
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8 border-b pb-4">Important Numbers & Info</h2>
+    <div className="p-8 max-w-5xl mx-auto bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors">
+      <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-8 border-b dark:border-gray-700 pb-4">Important Numbers & Info</h2>
       
-      {/* --- SECTION 1: DEVELOPER & ADMIN --- */}
+      {/* --- SECTION 1: DEVELOPER & ADMIN (Hardcoded) --- */}
       <div className="mb-10">
-        <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <span className="bg-blue-100 text-blue-600 p-1 rounded text-sm">🛠️</span> Developer & Admin
+        <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+          <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-1 rounded text-sm">🛠️</span> Developer & Admin
         </h3>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row md:items-center gap-6">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center gap-6 hover:shadow-md transition-shadow">
           <div className="flex-shrink-0">
             <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl shadow-sm">👨‍💻</div>
           </div>
           <div className="flex-grow">
-            <h4 className="text-xl font-bold text-gray-900">Richard Essien</h4>
-            <p className="text-blue-600 font-medium mb-3">Developer / Admin / Driver</p>
-            <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600">
-              <a href="mailto:ressien1@symbria.com" className="flex items-center gap-2 hover:text-blue-600 transition">
-                <span className="bg-gray-100 p-1.5 rounded">✉️</span> ressien1@symbria.com
+            <h4 className="text-xl font-bold text-gray-900 dark:text-white">Richard Essien</h4>
+            <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">Developer / Admin / Driver</p>
+            <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600 dark:text-gray-300">
+              <a href="mailto:ressien1@symbria.com" className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                <span className="bg-gray-100 dark:bg-gray-700 p-1.5 rounded">✉️</span> ressien1@symbria.com
               </a>
-              <a href="tel:+17743126471" className="flex items-center gap-2 hover:text-blue-600 transition">
-                <span className="bg-gray-100 p-1.5 rounded">📞</span> +1 (774) 312-6471
+              <a href="tel:+17743126471" className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition">
+                <span className="bg-gray-100 dark:bg-gray-700 p-1.5 rounded">📞</span> +1 (774) 312-6471
               </a>
             </div>
           </div>
@@ -1462,28 +1537,28 @@ export default function ContactsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* --- SECTION 2: MANAGEMENT --- */}
+        {/* --- SECTION 2: MANAGEMENT (Dynamic) --- */}
         <div>
-          <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-            <span className="bg-purple-100 text-purple-600 p-1 rounded text-sm">👔</span> Management
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+            <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 p-1 rounded text-sm">👔</span> Management
           </h3>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 min-h-[200px]">
             <ul className="space-y-4">
               {managers.length === 0 ? (
                 <li className="text-gray-400 italic text-center">No managers found.</li>
               ) : (
                 managers.map(manager => (
-                  <li key={manager.id} className="flex items-start gap-3 border-b border-gray-50 last:border-0 pb-3 last:pb-0">
-                    <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                  <li key={manager.id} className="flex items-start gap-3 border-b border-gray-50 dark:border-gray-700 last:border-0 pb-3 last:pb-0">
+                    <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-xs">
                       {manager.first_name?.[0]}{manager.last_name?.[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900">{manager.first_name} {manager.last_name}</p>
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">{manager.job_title}</p>
+                      <p className="font-bold text-gray-900 dark:text-gray-100">{manager.first_name} {manager.last_name}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{manager.job_title}</p>
                       <div className="mt-1 flex flex-col text-sm">
-                        <a href={`mailto:${manager.email}`} className="text-gray-600 hover:text-purple-600">{manager.email}</a>
+                        <a href={`mailto:${manager.email}`} className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400">{manager.email}</a>
                         {manager.phone && (
-                          <a href={`tel:${manager.phone}`} className="text-blue-600 hover:underline">{manager.phone}</a>
+                          <a href={`tel:${manager.phone}`} className="text-blue-600 dark:text-blue-400 hover:underline">{manager.phone}</a>
                         )}
                       </div>
                     </div>
@@ -1494,25 +1569,24 @@ export default function ContactsPage() {
           </div>
         </div>
 
-        {/* --- SECTION 3: DRIVERS --- */}
+        {/* --- SECTION 3: DRIVERS (Dynamic) --- */}
         <div>
-          <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-            <span className="bg-green-100 text-green-600 p-1 rounded text-sm">🚚</span> Drivers
+          <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+            <span className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-1 rounded text-sm">🚚</span> Drivers
           </h3>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 min-h-[200px]">
-            <p className="text-sm text-gray-500 mb-4">Active driver roster.</p>
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 min-h-[200px]">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Active driver roster.</p>
+            
             <div className="space-y-3">
               
-              {/* --- STATIC DISPATCH --- */}
-              <div className="flex justify-between items-center p-3 bg-yellow-50 border border-yellow-100 rounded-lg">
-                <span className="font-bold text-gray-800">Driver Dispatch</span>
+              {/* --- STATIC DISPATCH PLACEHOLDER --- */}
+              <div className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg">
+                <span className="font-bold text-gray-800 dark:text-gray-200">Driver Dispatch</span>
                 <div className="flex flex-col items-end gap-1">
-                  {/* 👇 UPDATED NUMBER */}
-                  <a href="tel:8775090620" className="text-sm bg-white border border-yellow-200 px-3 py-1 rounded text-blue-600 font-semibold hover:bg-blue-50 hover:text-blue-700 transition">
+                  <a href="tel:8775090620" className="text-sm bg-white dark:bg-gray-700 border border-yellow-200 dark:border-yellow-700 px-3 py-1 rounded text-blue-600 dark:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-600 transition">
                     Call Dispatch
                   </a>
-                  {/* 👇 ADDED NOTE */}
-                  <span className="text-[10px] text-gray-600 font-medium">for dispatch press option 4</span>
+                  <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">for dispatch press option 4</span>
                 </div>
               </div>
 
@@ -1521,16 +1595,16 @@ export default function ContactsPage() {
                 <div className="text-center py-4 text-gray-400 text-sm italic">No individual drivers registered yet.</div>
               ) : (
                 drivers.map(driver => (
-                  <div key={driver.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition">
+                  <div key={driver.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition">
                     <div>
-                      <span className="font-medium text-gray-800 block">{driver.first_name} {driver.last_name}</span>
-                      <span className="text-xs text-gray-500">{driver.job_title}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200 block">{driver.first_name} {driver.last_name}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{driver.job_title}</span>
                     </div>
                     <div className="flex gap-2">
                       {driver.phone && (
-                        <a href={`tel:${driver.phone}`} className="text-xs bg-white border px-2 py-1 rounded text-green-600 font-semibold hover:bg-green-100" title="Call">📞</a>
+                        <a href={`tel:${driver.phone}`} className="text-xs bg-white dark:bg-gray-600 border dark:border-gray-500 px-2 py-1 rounded text-green-600 dark:text-green-400 font-semibold hover:bg-green-100 dark:hover:bg-green-900/30" title="Call">📞</a>
                       )}
-                      <a href={`mailto:${driver.email}`} className="text-xs bg-white border px-2 py-1 rounded text-blue-600 font-semibold hover:bg-blue-100" title="Email">✉️</a>
+                      <a href={`mailto:${driver.email}`} className="text-xs bg-white dark:bg-gray-600 border dark:border-gray-500 px-2 py-1 rounded text-blue-600 dark:text-blue-400 font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/30" title="Email">✉️</a>
                     </div>
                   </div>
                 ))
@@ -1538,94 +1612,97 @@ export default function ContactsPage() {
             </div>
           </div>
         </div>
+
       </div>
 
-      {/* --- SECTION 4: ROUTES INFO --- */}
+      {/* --- SECTION 4: ROUTES (Static) --- */}
       <div className="mt-10">
-        <h3 className="text-xl font-bold text-gray-700 mb-4 flex items-center gap-2">
-          <span className="bg-orange-100 text-orange-600 p-1 rounded text-sm">📍</span> Routes Info
+        <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+          <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 p-1 rounded text-sm">📍</span> Routes Info
         </h3>
-        
-        {/* --- MOBILE VIEW (CARDS) --- */}
-        <div className="block md:hidden space-y-4">
-          {ROUTE_DATA.map((route) => (
-            <div key={route.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-              <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          
+          {/* --- MOBILE VIEW (CARDS) --- */}
+          <div className="block md:hidden space-y-4 p-4">
+            {ROUTE_DATA.map((route) => (
+              <div key={route.id} className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100 dark:border-gray-700">
+                  <div>
+                     <h4 className={`text-lg font-bold ${route.regionColor}`}>{route.region}</h4>
+                     <span className="text-sm font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded">ID: {route.id}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Est. Time</span>
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{route.duration}</span>
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                   <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase block mb-1">Scanner Phone</span>
+                   <a href={`tel:${route.scannerPhone.replace(/-/g, '')}`} className="flex items-center gap-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded-lg font-medium justify-center">
+                      📞 {route.scannerPhone}
+                   </a>
+                </div>
+
                 <div>
-                   <h4 className={`text-lg font-bold ${route.regionColor}`}>{route.region}</h4>
-                   <span className="text-sm font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">ID: {route.id}</span>
-                </div>
-                <div className="text-right">
-                  <span className="block text-xs text-gray-500 font-semibold uppercase">Est. Time</span>
-                  <span className="text-sm font-medium text-gray-800">{route.duration}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase block mb-2">Locations ({route.stops.length})</span>
+                  <div className="space-y-3 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                    {route.stops.map((stop, idx) => (
+                      <div key={idx} className="pb-2 mb-2 border-b border-gray-200 dark:border-gray-600 last:border-0 last:mb-0 last:pb-0">
+                        <p className="font-bold text-gray-800 dark:text-gray-200 text-sm">{stop.name}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">{stop.address}</p>
+                        <a href={`tel:${stop.phone.replace(/-/g, '')}`} className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline">
+                          {stop.phone}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              
-              <div className="mb-4">
-                 <span className="text-xs text-gray-500 font-semibold uppercase block mb-1">Scanner Phone</span>
-                 <a href={`tel:${route.scannerPhone.replace(/-/g, '')}`} className="flex items-center gap-2 text-blue-600 bg-blue-50 p-2 rounded-lg font-medium justify-center">
-                    📞 {route.scannerPhone}
-                 </a>
-              </div>
+            ))}
+          </div>
 
-              <div>
-                <span className="text-xs text-gray-500 font-semibold uppercase block mb-2">Locations ({route.stops.length})</span>
-                <div className="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  {route.stops.map((stop, idx) => (
-                    <div key={idx} className="pb-2 mb-2 border-b border-gray-200 last:border-0 last:mb-0 last:pb-0">
-                      <p className="font-bold text-gray-800 text-sm">{stop.name}</p>
-                      <p className="text-xs text-gray-600 mb-1">{stop.address}</p>
-                      <a href={`tel:${stop.phone.replace(/-/g, '')}`} className="text-xs text-blue-600 font-medium hover:underline">
-                        {stop.phone}
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* --- DESKTOP VIEW (TABLE) --- */}
-        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="p-4 font-semibold text-gray-700">Route ID</th>
-                <th className="p-4 font-semibold text-gray-700">Region</th>
-                <th className="p-4 font-semibold text-gray-700">Scanner Ph. No.</th>
-                <th className="p-4 font-semibold text-gray-700">Locations Info</th>
-                <th className="p-4 font-semibold text-gray-700">Est. Duration</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {ROUTE_DATA.map((route) => (
-                <tr key={route.id} className="hover:bg-gray-50 align-top">
-                  <td className="p-4 font-medium text-red-600">{route.id}</td>
-                  <td className={`p-4 font-bold ${route.regionColor}`}>{route.region}</td>
-                  <td className="p-4 text-gray-800">
-                    <a href={`tel:${route.scannerPhone.replace(/-/g, '')}`} className="hover:text-blue-600 hover:underline">
-                      {route.scannerPhone}
-                    </a>
-                  </td>
-                  <td className="p-4 text-gray-600">
-                    <div className="space-y-4">
-                      {route.stops.map((stop, idx) => (
-                        <div key={idx}>
-                          <span className="font-bold text-gray-800 block">{stop.name}</span>
-                          <span className="text-xs block">{stop.address}</span>
-                          <a href={`tel:${stop.phone.replace(/-/g, '')}`} className="text-xs text-blue-600 hover:underline">
-                            {stop.phone}
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-4 text-gray-500">{route.duration}</td>
+          {/* --- DESKTOP VIEW (TABLE) --- */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                <tr>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-200">Route ID</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-200">Region</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-200">Scanner Ph. No.</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-200">Locations Info</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-200">Est. Duration</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {ROUTE_DATA.map((route) => (
+                  <tr key={route.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 align-top transition-colors">
+                    <td className="p-4 font-medium text-red-600 dark:text-red-400">{route.id}</td>
+                    <td className={`p-4 font-bold ${route.regionColor}`}>{route.region}</td>
+                    <td className="p-4 text-gray-800 dark:text-gray-300">
+                      <a href={`tel:${route.scannerPhone.replace(/-/g, '')}`} className="hover:text-blue-600 dark:hover:text-blue-400 hover:underline">
+                        {route.scannerPhone}
+                      </a>
+                    </td>
+                    <td className="p-4 text-gray-600 dark:text-gray-400">
+                      <div className="space-y-4">
+                        {route.stops.map((stop, idx) => (
+                          <div key={idx}>
+                            <span className="font-bold text-gray-800 dark:text-gray-200 block">{stop.name}</span>
+                            <span className="text-xs block">{stop.address}</span>
+                            <a href={`tel:${stop.phone.replace(/-/g, '')}`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                              {stop.phone}
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-4 text-gray-500 dark:text-gray-400">{route.duration}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -1687,7 +1764,7 @@ type TripLog = {
   created_at: string;
   updated_at: string; 
   edit_count: number; 
-  user_id: string;
+  user_id: string; 
   vehicle_id: string;
   route_id: string; 
   odometer: number;
@@ -1812,7 +1889,6 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  // --- UPDATED PRINT FUNCTION (PROFESSIONAL PDF STYLE) ---
   const printLog = (log: TripLog) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Please allow popups.");
@@ -1888,56 +1964,36 @@ export default function Dashboard() {
         <head>
           <title>Log #${log.id}</title>
           <style>
-            /* PRINT SETTINGS */
             @media print {
                 @page { margin: 0.5cm; size: portrait; }
                 body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
-            
-            /* BASE STYLES */
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; color: #333; line-height: 1.4; max-width: 900px; margin: 0 auto; padding: 20px; }
-            
-            /* HEADER */
             h1 { font-size: 22px; margin: 0 0 15px 0; color: #1e3a8a; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
             h3 { font-size: 14px; margin: 20px 0 10px 0; color: #444; text-transform: uppercase; background: #e2e8f0; padding: 8px; border-radius: 4px; font-weight: 700; }
-            
-            /* INFO GRID */
             .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
             .info-item { background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
             .info-label { display: block; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px;}
             .info-value { font-size: 14px; font-weight: 700; color: #0f172a; }
-
-            /* TABLES */
             table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #e2e8f0; }
             th { text-align: left; background: #f1f5f9; padding: 8px; border-bottom: 2px solid #e2e8f0; font-size: 10px; text-transform: uppercase; color: #475569; }
             td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
             .bg-gray { background-color: #f8fafc; }
-            
-            /* COLUMNS */
             .q-col { width: 50%; font-weight: 600; font-size: 11px; }
             .s-col { width: 10%; text-align: center; }
             .n-col { width: 40%; font-size: 11px; }
-
-            /* BADGES */
             .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
             .badge-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
             .badge-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-
-            /* NOTES & COMMENTS */
             .comment { color: #b91c1c; font-weight: 600; display: block; background: #fff5f5; padding: 4px; border-radius: 4px; border-left: 3px solid #ef4444; }
             .text-muted { color: #cbd5e1; font-style: italic; }
             .notes-box { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 4px; margin-top: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-
-            /* TIRE TABLE */
             .tire-table th, .tire-table td { text-align: center; border: 1px solid #e2e8f0; font-size: 13px; padding: 10px; }
             .tire-table th { background: #f8fafc; }
-            
-            /* IMAGES */
             .images-container { display: flex; gap: 15px; margin-top: 10px; }
             .img-box { flex: 1; border: 1px solid #cbd5e1; padding: 5px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
             .img-box p { margin: 0 0 5px 0; font-weight: bold; font-size: 10px; text-align: center; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
             .img-box img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
-
             .page-break-inside-avoid { page-break-inside: avoid; }
           </style>
         </head>
@@ -2043,7 +2099,6 @@ export default function Dashboard() {
     setActiveTab('new');
   };
 
-  // --- UPDATED FETCH LOGIC (Routes First) ---
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -2135,7 +2190,7 @@ export default function Dashboard() {
       }
 
       const baseData = {
-        user_id: userProfile.id, 
+        user_id: userProfile.id, // <--- User ID added here
         vehicle_id: "N/A", 
         route_id: formData.get('route_id'), 
         odometer: formData.get('odometer'),
@@ -2187,22 +2242,22 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-  if (loading) return <div className="p-8 text-center text-gray-500">Loading...</div>;
+  if (loading) return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors">
       <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500 text-sm mt-1">Welcome back, {userProfile?.firstName}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Welcome back, {userProfile?.firstName}</p>
         </div>
         {userProfile && (
-          <h3 className="text-gray-400 font-medium text-left md:text-right">
+          <h3 className="text-gray-400 dark:text-gray-500 font-medium text-left md:text-right">
             {userProfile.firstName} {userProfile.lastName} <br />
             <span className={`uppercase text-xs tracking-wider border px-2 py-0.5 rounded-full mt-1 inline-block ${
-              userProfile.role === 'Admin' ? 'border-red-300 text-red-600 bg-red-50' : 
-              userProfile.role === 'Management' ? 'border-purple-300 text-purple-600 bg-purple-50' : 
-              'border-gray-300'
+              userProfile.role === 'Admin' ? 'border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20' : 
+              userProfile.role === 'Management' ? 'border-purple-300 dark:border-purple-900 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20' : 
+              'border-gray-300 dark:border-gray-600'
             }`}>
               {userProfile.role}
             </span>
@@ -2210,41 +2265,41 @@ export default function Dashboard() {
         )}
       </header>
 
-      <div className="flex border-b border-gray-300 mb-6 overflow-x-auto whitespace-nowrap pb-1">
+      <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
           setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip");
-        }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+        }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
         <button onClick={() => { setActiveTab('history');
-          setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}>
+          setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           My Logs
         </button>
         {(userProfile?.role === 'Management' || userProfile?.role === 'Admin') && (
-          <button onClick={() => { setActiveTab('all'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500'}`}>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
             All Logs (Admin)
           </button>
         )}
       </div>
 
       {activeTab === 'new' && (
-        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 max-w-4xl">
-          <h2 className="text-xl font-semibold mb-2">
+        <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
+          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
           </h2>
-          <p className="text-sm text-gray-500 mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Trip Type</span>
-              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white" required>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Trip Type</span>
+              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
                 <option value="Pre-Trip">Pre-Trip Inspection</option>
                 <option value="Post-Trip">Post-Trip Inspection</option>
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Select Route</span>
-              <select name="route_id" defaultValue={editingLog?.route_id || ""} className="border p-3 rounded-lg bg-white" required>
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Route</span>
+              <select name="route_id" defaultValue={editingLog?.route_id || ""} className="border p-3 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
                 <option value="" disabled>-- Choose a Route --</option>
                 {routeOptions.length > 0 ? (
                   routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)
@@ -2254,37 +2309,37 @@ export default function Dashboard() {
               </select>
             </div>
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Odometer</span>
-              <input name="odometer" type="number" defaultValue={editingLog?.odometer} className="border p-3 rounded" required />
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Odometer</span>
+              <input name="odometer" type="number" defaultValue={editingLog?.odometer} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
             </label>
 
-            <hr className="border-gray-200" />
+            <hr className="border-gray-200 dark:border-gray-700" />
             
             <div>
-               <h3 className="text-lg font-bold text-gray-800 mb-4">Inspection Checklist</h3>
+               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Inspection Checklist</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {currentQuestions.map((question, index) => {
                    const answer = checklistData[question];
                    const showComment = requiresDescription(question, answer);
                    const isBad = showComment;
                    return (
-                     <div key={index} className={`flex flex-col bg-gray-50 p-3 rounded border ${isBad ? 'border-red-200 bg-red-50' : 'border-gray-100'}`}>
+                     <div key={index} className={`flex flex-col bg-gray-50 dark:bg-gray-700/50 p-3 rounded border ${isBad ? 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20' : 'border-gray-100 dark:border-gray-700'}`}>
                        <div className="flex justify-between items-start mb-2">
-                         <span className="text-sm text-gray-700 font-medium max-w-[70%]">{question}</span>
+                         <span className="text-sm text-gray-700 dark:text-gray-200 font-medium max-w-[70%]">{question}</span>
                          <div className="flex gap-4">
                            <label className="flex items-center gap-1 cursor-pointer">
                              <input type="radio" name={`q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
-                             <span className="text-sm">Yes</span>
+                             <span className="text-sm dark:text-gray-300">Yes</span>
                            </label>
                            <label className="flex items-center gap-1 cursor-pointer">
                              <input type="radio" name={`q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
-                             <span className="text-sm">No</span>
+                             <span className="text-sm dark:text-gray-300">No</span>
                            </label>
                          </div>
                        </div>
                        {showComment && (
                          <div className="mt-1 animate-in fade-in slide-in-from-top-1">
-                           <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700 placeholder-red-300 bg-white" required />
+                           <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700 dark:text-red-300 placeholder-red-300 dark:placeholder-red-700 bg-white dark:bg-gray-800" required />
                          </div>
                        )}
                      </div>
@@ -2293,49 +2348,49 @@ export default function Dashboard() {
                </div>
             </div>
 
-            <hr className="border-gray-200" />
+            <hr className="border-gray-200 dark:border-gray-700" />
 
             {tripType === 'Pre-Trip' && (
               <>
                 <div className="animate-in fade-in slide-in-from-top-2">
-                  <h3 className="text-lg font-bold text-gray-800 mb-4">Tire Pressure (PSI) (Required)</h3>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Tire Pressure (PSI) (Required)</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded" required /></label>
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded" required /></label>
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded" required /></label>
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
                   </div>
                 </div>
-                <hr className="border-gray-200" />
+                <hr className="border-gray-200 dark:border-gray-700" />
               </>
             )}
 
             <div>
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Vehicle Photos (Required)</h3>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Vehicle Photos (Required)</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <span className="block text-sm font-semibold text-gray-700 mb-2">Front Seats</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.front} />
-                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seats</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
+                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <span className="block text-sm font-semibold text-gray-700 mb-2">Back Seats</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.back} />
-                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seats</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.back} />
+                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                  <span className="block text-sm font-semibold text-gray-700 mb-2">Trunk</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500" required={!editingLog?.images?.trunk} />
-                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Trunk</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.trunk} />
+                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
             </div>
 
-            <hr className="border-gray-200" />
+            <hr className="border-gray-200 dark:border-gray-700" />
             
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700">Additional Notes / Defects</span>
-              <textarea name="notes" defaultValue={editingLog?.notes} className="border p-3 rounded" rows={3} placeholder="General notes..." />
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Notes / Defects</span>
+              <textarea name="notes" defaultValue={editingLog?.notes} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" rows={3} placeholder="General notes..." />
             </label>
             
             <button type="submit" disabled={submitting} className={`font-bold py-3 px-6 rounded text-white flex items-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
@@ -2346,37 +2401,37 @@ export default function Dashboard() {
       )}
 
       {(activeTab === 'history' || activeTab === 'all') && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
           
           {/* MOBILE CARD VIEW */}
           <div className="block md:hidden">
             {visibleLogs.map((log) => {
               const hasPermission = canEditOrDelete(log);
               return (
-                <div key={log.id} className="p-4 border-b border-gray-100 flex flex-col gap-2">
+                <div key={log.id} className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{log.trip_type}</span>
-                      <p className="text-xs text-gray-500 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => printLog(log)} className="text-lg bg-gray-50 p-2 rounded">📄</button>
-                      <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 p-2 rounded">📊</button>
+                      <button onClick={() => printLog(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📄</button>
+                      <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📊</button>
                     </div>
                   </div>
                   
-                  <div className="text-sm text-gray-800 font-medium">
-                    {activeTab === 'all' && <div className="text-purple-700 mb-1">{log.driver_name}</div>}
+                  <div className="text-sm text-gray-800 dark:text-gray-200 font-medium">
+                    {activeTab === 'all' && <div className="text-purple-700 dark:text-purple-400 mb-1">{log.driver_name}</div>}
                     <div>Route: {log.route_id || "N/A"}</div>
                     <div>Odo: {log.odometer}</div>
                   </div>
 
-                  {log.notes && <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded mt-1 italic">&quot;{log.notes}&quot;</div>}
+                  {log.notes && <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded mt-1 italic">&quot;{log.notes}&quot;</div>}
 
                   {hasPermission && (
-                    <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
-                      <button onClick={() => handleEditClick(log)} className="flex-1 text-center bg-orange-50 text-orange-700 text-sm py-2 rounded font-semibold">Edit</button>
-                      <button onClick={() => handleDelete(log.id)} className="flex-1 text-center bg-red-50 text-red-700 text-sm py-2 rounded font-semibold">Delete</button>
+                    <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                      <button onClick={() => handleEditClick(log)} className="flex-1 text-center bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-sm py-2 rounded font-semibold">Edit</button>
+                      <button onClick={() => handleDelete(log.id)} className="flex-1 text-center bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm py-2 rounded font-semibold">Delete</button>
                     </div>
                   )}
                 </div>
@@ -2387,39 +2442,39 @@ export default function Dashboard() {
           {/* DESKTOP TABLE VIEW */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
                 <tr>
-                  <th className="p-4 font-semibold text-gray-700">Actions</th>
-                  {activeTab === 'all' && <th className="p-4 font-semibold text-gray-700">Driver</th>}
-                  <th className="p-4 font-semibold text-gray-700">Date</th>
-                  <th className="p-4 font-semibold text-gray-700">Route</th>
-                  <th className="p-4 font-semibold text-gray-700">Type</th>
-                  <th className="p-4 font-semibold text-gray-700">Odo</th>
-                  <th className="p-4 font-semibold text-gray-700">Notes</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                  {activeTab === 'all' && <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Driver</th>}
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Date</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Route</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Type</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Odo</th>
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Notes</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {visibleLogs.map((log) => {
                   const hasPermission = canEditOrDelete(log);
                   return (
-                    <tr key={log.id} className="hover:bg-gray-50">
+                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                       <td className="p-4 flex gap-2">
-                        <button onClick={() => printLog(log)} className="text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded">📄</button>
-                        <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 hover:bg-green-100 px-2 py-1 rounded">📊</button>
+                        <button onClick={() => printLog(log)} className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded">📄</button>
+                        <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 px-2 py-1 rounded">📊</button>
                         {hasPermission && (
                           <>
-                            <div className="w-px h-4 bg-gray-300 mx-1 self-center"></div>
-                            <button onClick={() => handleEditClick(log)} className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">✏️</button>
-                            <button onClick={() => handleDelete(log.id)} className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">🗑️</button>
+                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1 self-center"></div>
+                            <button onClick={() => handleEditClick(log)} className="text-xs bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">✏️</button>
+                            <button onClick={() => handleDelete(log.id)} className="text-xs bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 px-2 py-1 rounded">🗑️</button>
                           </>
                         )}
                       </td>
-                      {activeTab === 'all' && <td className="p-4 font-medium">{log.driver_name}</td>}
-                      <td className="p-4 text-gray-600">{new Date(log.created_at).toLocaleDateString()}</td>
-                      <td className="p-4 font-medium text-gray-800">{log.route_id || "-"}</td>
-                      <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>{log.trip_type}</span></td>
-                      <td className="p-4">{log.odometer}</td>
-                      <td className="p-4 text-gray-500 truncate max-w-xs">{log.notes || "-"}</td>
+                      {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
+                      <td className="p-4 text-gray-600 dark:text-gray-400">{new Date(log.created_at).toLocaleDateString()}</td>
+                      <td className="p-4 font-medium text-gray-800 dark:text-gray-200">{log.route_id || "-"}</td>
+                      <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span></td>
+                      <td className="p-4 text-gray-900 dark:text-gray-200">{log.odometer}</td>
+                      <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-xs">{log.notes || "-"}</td>
                     </tr>
                   );
                 })}
@@ -2431,7 +2486,6 @@ export default function Dashboard() {
     </div>
   );
 }
-
 
 ==================================================
 FILE: ./app/api/feedback/route.ts
@@ -2502,6 +2556,74 @@ export async function POST(req: Request) {
     console.error('Feedback error:', error);
     return NextResponse.json({ error: 'Error submitting feedback' }, { status: 500 });
   }
+}
+
+
+==================================================
+FILE: ./prisma/schema.prisma
+==================================================
+
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 1. Feedback (Existing)
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+}
+
+// 2. Trip Logs (Restoring for Dashboard)
+model TripLog {
+  id          Int      @id @default(autoincrement())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  edit_count  Int      @default(0)
+  user_id     String
+  vehicle_id  String?
+  route_id    String?
+  odometer    Decimal? 
+  trip_type   String
+  notes       String?
+  checklist   Json?    
+  images      Json?    
+  driver_name String?
+
+  @@map("trip_logs")
+}
+
+// 3. Profiles (Restoring for Contacts/Login)
+model Profile {
+  id         String   @id @default(uuid())
+  first_name String?
+  last_name  String?
+  email      String?
+  role       String?  @default("Driver")
+  job_title  String?
+  phone      String?
+  
+  @@map("profiles")
+}
+
+// 4. Routes (Restoring for Dashboard Dropdown)
+model Route {
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(true)
+
+  @@map("routes")
 }
 
 
