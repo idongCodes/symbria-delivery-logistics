@@ -105,14 +105,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800">
+    <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-950 transition-colors">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300 border border-gray-200 dark:border-gray-700">
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
           {view === 'login' ? 'Login' : 'Create Account'}
         </h1>
         
         {message && (
-          <div className={`p-3 mb-4 rounded text-sm ${message.includes("Error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+          <div className={`p-3 mb-4 rounded text-sm ${message.includes("Error") ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200" : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200"}`}>
             {message}
           </div>
         )}
@@ -123,20 +123,20 @@ export default function LoginPage() {
             <>
               {/* Names */}
               <div className="flex gap-2">
-                <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded text-black w-1/2" required />
-                <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded text-black w-1/2" required />
+                <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 w-1/2 focus:ring-2 focus:ring-blue-500 outline-none" required />
+                <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 w-1/2 focus:ring-2 focus:ring-blue-500 outline-none" required />
               </div>
 
               {/* Phone */}
-              <input type="tel" placeholder="Phone Number (Ex: 555-123-4567)" value={phone} onChange={(e) => setPhone(e.target.value)} className="border p-3 rounded text-black" required />
+              <input type="tel" placeholder="Phone Number (Ex: 555-123-4567)" value={phone} onChange={(e) => setPhone(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
 
               {/* Job Title Dropdown */}
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-semibold text-gray-500 uppercase">Title:</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Title:</span>
                 <select 
                   value={jobTitle} 
                   onChange={(e) => setJobTitle(e.target.value)} 
-                  className="border p-3 rounded bg-white text-black"
+                  className="border p-3 rounded bg-white dark:bg-gray-700 text-black dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   <option value="Delivery Driver">Delivery Driver</option>
                   <option value="Logistics Lead">Logistics Lead</option>
@@ -147,17 +147,17 @@ export default function LoginPage() {
 
               {/* Role Selection */}
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase">System Role:</span>
+                <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">System Role:</span>
                 <div className="flex gap-2">
-                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer border dark:border-gray-600 p-2 rounded flex-1 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
                     <input type="radio" name="role" value="Driver" checked={role === 'Driver'} onChange={() => setRole('Driver')} className="accent-blue-600" />
                     Driver
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer border dark:border-gray-600 p-2 rounded flex-1 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
                     <input type="radio" name="role" value="Management" checked={role === 'Management'} onChange={() => setRole('Management')} className="accent-purple-600" />
                     Manager
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer border p-2 rounded flex-1 hover:bg-gray-50 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer border dark:border-gray-600 p-2 rounded flex-1 hover:bg-gray-50 dark:hover:bg-gray-600 text-sm text-gray-700 dark:text-gray-200">
                     <input type="radio" name="role" value="Admin" checked={role === 'Admin'} onChange={() => setRole('Admin')} className="accent-red-600" />
                     Admin
                   </label>
@@ -166,21 +166,21 @@ export default function LoginPage() {
             </>
           )}
 
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black" required />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black" required />
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
           
           {view === 'register' && (
-            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50" : ""}`} required />
+            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} required />
           )}
 
-          <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2">
+          <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2 transition-colors">
             {loading ? "Processing..." : (view === 'login' ? "Sign In" : "Sign Up")}
           </button>
         </form>
 
-        <div className="mt-6 text-center border-t pt-4">
-          <p className="text-gray-600 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
-          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 hover:underline font-medium">
+        <div className="mt-6 text-center border-t border-gray-100 dark:border-gray-700 pt-4">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
+          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
             {view === 'login' ? "Register here" : "Log in here"}
           </button>
         </div>
