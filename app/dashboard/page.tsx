@@ -49,7 +49,7 @@ type TripLog = {
   created_at: string;
   updated_at: string; 
   edit_count: number; 
-  user_id: string; 
+  user_id: string;
   vehicle_id: string;
   route_id: string; 
   odometer: number;
@@ -174,13 +174,32 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
+  // --- UPDATED PRINT LOG FUNCTION ---
   const printLog = (log: TripLog) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Please allow popups.");
 
+    // 1. GENERATE CUSTOM FILENAME
+    const dateObj = new Date(log.created_at);
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    
+    let firstName = "Unknown";
+    let lastName = "Driver";
+    
+    if (log.driver_name) {
+      const parts = log.driver_name.split(" ");
+      if (parts.length > 0) firstName = parts[0];
+      if (parts.length > 1) lastName = parts.slice(1).join(" ");
+    }
+
+    const cleanType = log.trip_type.replace(/\s+/g, '-');
+    // Format: LastName-FirstName-mm-dd-TripType
+    const filename = `${lastName}-${firstName}-${mm}-${dd}-${cleanType}`;
+
     const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-    // Generate checklist rows with zebra striping and badges
+    // Generate checklist rows
     const checklistRows = relevantQuestions.map((q, index) => {
       const val = log.checklist?.[q] || "-";
       const comment = log.checklist?.[`${q}_COMMENT`];
@@ -189,12 +208,10 @@ export default function Dashboard() {
       if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
       else isBad = (val === "No");
 
-      // Status Badge Logic
       const statusBadge = isBad 
         ? `<span class="badge badge-error">ISSUE</span>` 
         : `<span class="badge badge-success">OK</span>`;
 
-      // Alternate row background color
       const rowClass = index % 2 === 0 ? 'bg-gray' : '';
 
       return `
@@ -206,7 +223,7 @@ export default function Dashboard() {
       `;
     }).join('');
     
-    // Tire Pressure Table (Pre-Trip only)
+    // Tire Pressure Table
     let tireHtml = "";
     if (log.trip_type === 'Pre-Trip') {
       const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
@@ -247,7 +264,7 @@ export default function Dashboard() {
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Log #${log.id}</title>
+          <title>${filename}</title>
           <style>
             @media print {
                 @page { margin: 0.5cm; size: portrait; }
