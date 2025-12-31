@@ -11,10 +11,11 @@ ignore_dirs = {
     'dist', 
     'build', 
     '.vscode', 
-    'coverage'
+    'coverage',
+    '.idea'
 }
 
-# File extensions to include (add more if needed)
+# File extensions to include (Added .prisma, .mjs, .sql)
 include_extensions = {
     '.ts', 
     '.tsx', 
@@ -24,7 +25,10 @@ include_extensions = {
     '.css', 
     '.scss', 
     '.md', 
-    '.env.local' 
+    '.env.local',
+    '.prisma',  # Critical for your DB Schema
+    '.mjs',     # Critical for Tailwind/ESLint configs
+    '.sql'      # Good for migrations
 }
 
 # Specific files to ignore
@@ -40,6 +44,7 @@ def is_text_file(filename):
     return any(filename.endswith(ext) for ext in include_extensions)
 
 def bundle_files():
+    print(f"📦 Bundling files...")
     with open(output_file, 'w', encoding='utf-8') as outfile:
         # Walk through the directory tree
         for root, dirs, files in os.walk('.'):
@@ -64,11 +69,11 @@ def bundle_files():
                             outfile.write(content)
                             outfile.write("\n")
                             
-                        print(f"Added: {file_path}")
+                        print(f" + Added: {file_path}")
                     except Exception as e:
-                        print(f"Skipping {file_path}: {e}")
+                        print(f" ! Skipping {file_path}: {e}")
 
-    print(f"\n✅ All files bundled into: {output_file}")
+    print(f"\n✅ Success! All files bundled into: {output_file}")
 
 if __name__ == "__main__":
     bundle_files()
