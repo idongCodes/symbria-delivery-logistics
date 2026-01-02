@@ -91,41 +91,43 @@ export default function Nav() {
         </button>
       </div>
 
-      {/* --- MOBILE MENU DROPDOWN --- */}
+      {/* --- MOBILE MENU (Floating Bottom Bar) --- */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 dark:bg-blue-950 border-t border-blue-700 dark:border-blue-900 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="md:hidden fixed bottom-6 left-4 right-4 z-50 bg-blue-900/95 dark:bg-blue-950/95 backdrop-blur-sm border border-blue-700 dark:border-blue-800 shadow-2xl rounded-2xl flex flex-col p-4 gap-3 text-center animate-in slide-in-from-bottom-4 fade-in duration-300">
           {loggedIn ? (
             <>
               <Link 
                 href="/dashboard" 
                 onClick={closeMenu} 
-                className="flex items-center justify-center gap-2 py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition"
+                className="flex items-center justify-center gap-3 py-3 hover:bg-blue-800 dark:hover:bg-blue-900 rounded-xl transition"
               >
                 <HomeIcon className="w-5 h-5" />
-                Dashboard
+                <span className="font-semibold">Dashboard</span>
               </Link>
               
               <Link 
                 href="/admin/feedback" 
                 onClick={closeMenu} 
-                className="flex items-center justify-center gap-2 py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition"
+                className="flex items-center justify-center gap-3 py-3 hover:bg-blue-800 dark:hover:bg-blue-900 rounded-xl transition"
               >
                 <ChatBubbleLeftRightIcon className="w-5 h-5" />
-                Feedback
+                <span className="font-semibold">Feedback</span>
               </Link>
               
               <Link 
                 href="/contacts" 
                 onClick={closeMenu} 
-                className="flex items-center justify-center gap-2 py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition"
+                className="flex items-center justify-center gap-3 py-3 hover:bg-blue-800 dark:hover:bg-blue-900 rounded-xl transition"
               >
                 <PhoneIcon className="w-5 h-5" />
-                Contacts
+                <span className="font-semibold">Contacts</span>
               </Link>
               
+              <div className="h-px bg-blue-800 dark:bg-blue-900 my-1 mx-4"></div>
+
               <button 
                 onClick={handleLogout} 
-                className="flex items-center justify-center gap-2 w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
+                className="flex items-center justify-center gap-3 w-full bg-white text-blue-900 font-bold py-3 rounded-xl mt-1 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 shadow-sm"
               >
                 <ArrowRightOnRectangleIcon className="w-5 h-5" />
                 Logout
@@ -135,7 +137,7 @@ export default function Nav() {
             <Link 
               href="/login" 
               onClick={closeMenu} 
-              className="flex items-center justify-center gap-2 w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
+              className="flex items-center justify-center gap-3 w-full bg-white text-blue-900 font-bold py-3 rounded-xl hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 shadow-sm"
             >
               <ArrowLeftOnRectangleIcon className="w-5 h-5" />
               Login
