@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; // 👈 Added Import
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -104,7 +105,7 @@ export default function Dashboard() {
     trunk: File | null;
   }>({ front: null, back: null, trunk: null });
 
-  // 👇 NEW STATE: Password Update
+  // State: Password Update Form
   const [passwordForm, setPasswordForm] = useState({
     current: "",
     new: "",
@@ -112,6 +113,11 @@ export default function Dashboard() {
   });
   const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // 👇 State: Password Visibility Toggles
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // --- LOGIC HELPERS ---
 
@@ -369,51 +375,11 @@ export default function Dashboard() {
     printWindow.document.close();
   };
 
-  const handleDelete = async (logId: number) => {
-    if (!confirm("Are you sure? This cannot be undone.")) return;
-    const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
-    if (error) alert("Error: " + error.message);
-    else { alert("Log deleted."); fetchData(); }
-  };
-
-  const handleEditClick = (log: TripLog) => {
-    setEditingLog(log);
-    setTripType(log.trip_type);
-    setImageFiles({ front: null, back: null, trunk: null });
-
-    const answers: Record<string, string> = {};
-    const comments: Record<string, string> = {};
-    
-    if (log.checklist) {
-      setTirePressures({
-        df: log.checklist["Tire Pressure (Driver Front)"] || "",
-        pf: log.checklist["Tire Pressure (Passenger Front)"] || "",
-        dr: log.checklist["Tire Pressure (Driver Rear)"] || "",
-        pr: log.checklist["Tire Pressure (Passenger Rear)"] || "",
-      });
-
-      Object.keys(log.checklist).forEach(key => {
-        if (key.includes("Tire Pressure")) return;
-        if (key.endsWith('_COMMENT')) {
-          const realKey = key.replace('_COMMENT', '');
-          comments[realKey] = log.checklist[key];
-        } else {
-          answers[key] = log.checklist[key];
-        }
-      });
-    }
-    setChecklistData(answers);
-    setChecklistComments(comments);
-    setActiveTab('new');
-  };
-
-  // 👇 NEW FUNCTION: Handle Password Update
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordLoading(true);
     setPasswordMsg({ type: "", text: "" });
 
-    // 1. Validation
     if (passwordForm.new !== passwordForm.confirm) {
         setPasswordMsg({ type: "error", text: "New passwords do not match." });
         setPasswordLoading(false);
@@ -426,7 +392,6 @@ export default function Dashboard() {
     }
 
     try {
-        // 2. Verify Current Password (by attempting sign-in)
         const { error: signInError } = await supabase.auth.signInWithPassword({
             email: userProfile?.email || "",
             password: passwordForm.current,
@@ -436,7 +401,6 @@ export default function Dashboard() {
             throw new Error("Current password is incorrect.");
         }
 
-        // 3. Update Password
         const { error: updateError } = await supabase.auth.updateUser({
             password: passwordForm.new,
         });
@@ -471,7 +435,6 @@ export default function Dashboard() {
         jobTitle: metadata.job_title || "N/A"
       });
 
-      // 1. Fetch Routes FIRST to prevent dropdown blocking
       const { data: routeData, error: routeError } = await supabase
         .from('routes')
         .select('id, name')
@@ -481,7 +444,6 @@ export default function Dashboard() {
       if (routeError) console.error("Route Error:", routeError);
       if (routeData) setRouteOptions(routeData);
 
-      // 2. Fetch Logs SECOND
       const { data: logsData, error: logsError } = await supabase
         .from('trip_logs')
         .select('*')
@@ -523,13 +485,11 @@ export default function Dashboard() {
     setSubmitting(true);
     
     try {
-      // 1. Upload Images (shallow copy old list first)
       const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
       if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
       if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
       if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
 
-      // 2. Prepare Data
       const finalChecklist = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
         const answer = checklistData[q];
@@ -546,7 +506,7 @@ export default function Dashboard() {
       }
 
       const baseData = {
-        user_id: userProfile.id, // <--- User ID added here
+        user_id: userProfile.id,
         vehicle_id: "N/A", 
         route_id: formData.get('route_id'), 
         odometer: formData.get('odometer'),
@@ -569,9 +529,7 @@ export default function Dashboard() {
         const response = await supabase.from('trip_logs').insert(baseData);
         error = response.error;
 
-        // --- NEW EMAIL TRIGGER ---
         if (!error) {
-            // Trigger email in background
             fetch('/api/email-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -650,7 +608,6 @@ export default function Dashboard() {
           </button>
         )}
         
-        {/* "My Info" Tab button */}
         <button 
           onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
           className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
@@ -659,11 +616,9 @@ export default function Dashboard() {
         </button>
       </div>
       
-      {/* "My Info" Content Section */}
       {activeTab === 'my-info' && userProfile && (
         <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
           
-          {/* 1. Profile Summary Card */}
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
               {userProfile.firstName[0]}{userProfile.lastName[0]}
@@ -675,7 +630,6 @@ export default function Dashboard() {
           </div>
 
           <div className="grid gap-6">
-            {/* First Name & Last Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">First Name</label>
@@ -687,13 +641,11 @@ export default function Dashboard() {
                </div>
             </div>
 
-            {/* Position */}
             <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Company Position</label>
                <div className="font-medium text-gray-900 dark:text-white">{userProfile.jobTitle}</div>
             </div>
 
-            {/* Contact Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
                  <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
@@ -708,7 +660,7 @@ export default function Dashboard() {
 
           <hr className="border-gray-200 dark:border-gray-700" />
 
-          {/* 👇 2. Change Password Section */}
+          {/* Change Password Section */}
           <div className="pt-2">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Change Password</h3>
             
@@ -725,38 +677,65 @@ export default function Dashboard() {
             <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Current Password</label>
-                <input 
-                  type="password" 
-                  value={passwordForm.current}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                  className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white"
-                  placeholder="Enter current password"
-                  required
-                />
+                <div className="relative">
+                  <input 
+                    type={showCurrentPassword ? "text" : "password"} 
+                    value={passwordForm.current}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
+                    placeholder="Enter current password"
+                    required
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    {showCurrentPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">New Password</label>
-                  <input 
-                    type="password" 
-                    value={passwordForm.new}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white"
-                    placeholder="Min. 6 characters"
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showNewPassword ? "text" : "password"} 
+                      value={passwordForm.new}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                      className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
+                      placeholder="Min. 6 characters"
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showNewPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Confirm New Password</label>
-                  <input 
-                    type="password" 
-                    value={passwordForm.confirm}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white"
-                    placeholder="Re-enter new password"
-                    required
-                  />
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                      className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
+                      placeholder="Re-enter new password"
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

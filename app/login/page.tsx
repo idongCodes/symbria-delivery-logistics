@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; // 👈 Import Icons
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +14,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // 👇 Visibility Toggles State
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -166,11 +171,47 @@ export default function LoginPage() {
             </>
           )}
 
+          {/* EMAIL INPUT */}
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
           
+          {/* PASSWORD INPUT WITH TOGGLE */}
+          <div className="relative">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10" 
+              required 
+            />
+            <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+            </button>
+          </div>
+          
+          {/* CONFIRM PASSWORD INPUT WITH TOGGLE */}
           {view === 'register' && (
-            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} required />
+            <div className="relative">
+              <input 
+                type={showConfirmPassword ? "text" : "password"} 
+                placeholder="Confirm Password" 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10 ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} 
+                required 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+              </button>
+            </div>
           )}
 
           <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2 transition-colors">
@@ -180,7 +221,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center border-t border-gray-100 dark:border-gray-700 pt-4">
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
-          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); setShowPassword(false); setShowConfirmPassword(false); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
             {view === 'login' ? "Register here" : "Log in here"}
           </button>
         </div>
