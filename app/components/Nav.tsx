@@ -83,25 +83,26 @@ export default function Nav() {
 
       {/* --- MOBILE FLOATING BOTTOM NAV (Visible only on mobile when logged IN) --- */}
       {loggedIn && (
-        <div className="md:hidden fixed bottom-6 left-4 right-4 z-50 bg-blue-900/95 dark:bg-blue-950/95 backdrop-blur-md border border-blue-700 dark:border-blue-800 shadow-2xl rounded-2xl flex justify-between items-center px-6 py-3 animate-in slide-in-from-bottom-4 fade-in duration-500">
+        // 👇 CHANGED: Opacity lowered to /80 for more transparency
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-fit min-w-[40%] bg-blue-900/85 dark:bg-blue-950/80 backdrop-blur-md border border-blue-700 dark:border-blue-800 shadow-2xl rounded-full flex justify-between items-center px-6 py-3 gap-6 animate-in slide-in-from-bottom-4 fade-in duration-500 whitespace-nowrap">
           
-          <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition">
-            <HomeIcon className="w-6 h-6" />
+          <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+            <HomeIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-medium">Dashboard</span>
           </Link>
           
-          <Link href="/admin/feedback" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition">
-            <ChatBubbleLeftRightIcon className="w-6 h-6" />
+          <Link href="/admin/feedback" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+            <ChatBubbleLeftRightIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-medium">Feedback</span>
           </Link>
           
-          <Link href="/contacts" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition">
-            <PhoneIcon className="w-6 h-6" />
+          <Link href="/contacts" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+            <PhoneIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-medium">Contacts</span>
           </Link>
           
-          <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-300 hover:text-red-100 transition">
-            <ArrowRightOnRectangleIcon className="w-6 h-6" />
+          <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-300 hover:text-red-100 transition group">
+            <ArrowRightOnRectangleIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-medium">Logout</span>
           </button>
 

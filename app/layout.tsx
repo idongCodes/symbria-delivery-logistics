@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900`}>
+      <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900 pb-25`}>
         
         <AutoLogout /> {/* 👈 2. Add the component here */}
         
