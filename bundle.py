@@ -15,7 +15,7 @@ ignore_dirs = {
     '.idea'
 }
 
-# File extensions to include (Added .prisma, .mjs, .sql)
+# File extensions (and specific filenames) to include
 include_extensions = {
     '.ts', 
     '.tsx', 
@@ -26,12 +26,13 @@ include_extensions = {
     '.scss', 
     '.md', 
     '.env.local',
-    '.prisma',  # Critical for your DB Schema
-    '.mjs',     # Critical for Tailwind/ESLint configs
-    '.sql'      # Good for migrations
+    '.prisma',   # Database Schema
+    '.mjs',      # Config files (Tailwind, ESLint)
+    '.sql',      # SQL Migrations
+    '.gitignore' # Git ignore file
 }
 
-# Specific files to ignore
+# Specific files to ignore (even if they match extension)
 ignore_files = {
     'package-lock.json',
     'bundle.py',
@@ -44,7 +45,7 @@ def is_text_file(filename):
     return any(filename.endswith(ext) for ext in include_extensions)
 
 def bundle_files():
-    print(f"📦 Bundling files...")
+    print(f"📦 Bundling files into {output_file}...")
     with open(output_file, 'w', encoding='utf-8') as outfile:
         # Walk through the directory tree
         for root, dirs, files in os.walk('.'):
