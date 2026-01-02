@@ -34,18 +34,20 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   // --- 🔒 PROTECTED ROUTES ---
-  // If user tries to go to Dashboard OR Contacts without logging in -> Redirect to Home ("/")
+  // Only protect specific routes. The landing page "/" is public by default.
   if (
-    (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/contacts')) 
+    (request.nextUrl.pathname.startsWith('/dashboard') || 
+     request.nextUrl.pathname.startsWith('/contacts') || 
+     request.nextUrl.pathname.startsWith('/admin')) 
     && !user
   ) {
-    // 👇 CHANGED: Redirect to "/" instead of "/login"
-    return NextResponse.redirect(new URL('/', request.url))
+    // Redirect unauthenticated users to the Login page, NOT the landing page
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/contacts', '/login'],
+  matcher: ['/dashboard/:path*', '/contacts', '/admin/:path*', '/login'],
 }

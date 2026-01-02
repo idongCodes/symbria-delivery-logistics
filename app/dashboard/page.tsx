@@ -199,7 +199,7 @@ export default function Dashboard() {
 
     const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-    // Generate checklist rows
+    // Generate checklist rows with zebra striping and badges
     const checklistRows = relevantQuestions.map((q, index) => {
       const val = log.checklist?.[q] || "-";
       const comment = log.checklist?.[`${q}_COMMENT`];
@@ -208,10 +208,12 @@ export default function Dashboard() {
       if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
       else isBad = (val === "No");
 
+      // Status Badge Logic
       const statusBadge = isBad 
         ? `<span class="badge badge-error">ISSUE</span>` 
         : `<span class="badge badge-success">OK</span>`;
 
+      // Alternate row background color
       const rowClass = index % 2 === 0 ? 'bg-gray' : '';
 
       return `
@@ -223,7 +225,7 @@ export default function Dashboard() {
       `;
     }).join('');
     
-    // Tire Pressure Table
+    // Tire Pressure Table (Pre-Trip only)
     let tireHtml = "";
     if (log.trip_type === 'Pre-Trip') {
       const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
@@ -514,6 +516,19 @@ export default function Dashboard() {
       } else {
         const response = await supabase.from('trip_logs').insert(baseData);
         error = response.error;
+
+        // --- NEW EMAIL TRIGGER ---
+        if (!error) {
+            // Trigger email in background
+            fetch('/api/email-log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...baseData,
+                    created_at: new Date().toISOString()
+                })
+            }).catch(err => console.error("Email trigger failed:", err));
+        }
       }
 
       if (error) {
