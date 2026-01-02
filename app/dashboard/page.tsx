@@ -67,6 +67,8 @@ type UserProfile = {
   lastName: string;
   role: 'Driver' | 'Management' | 'Admin';
   email: string;
+  phone: string;
+  jobTitle: string;
 };
 
 // Shape for Dynamic Routes
@@ -79,7 +81,6 @@ export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   
-  // 👇 UPDATED: Added 'my-info' to the state type
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
@@ -89,7 +90,7 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
-  // Form State
+  // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
   const [checklistData, setChecklistData] = useState<Record<string, string>>({});
   const [checklistComments, setChecklistComments] = useState<Record<string, string>>({});
@@ -102,6 +103,15 @@ export default function Dashboard() {
     back: File | null;
     trunk: File | null;
   }>({ front: null, back: null, trunk: null });
+
+  // 👇 NEW STATE: Password Update
+  const [passwordForm, setPasswordForm] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  });
+  const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // --- LOGIC HELPERS ---
 
@@ -176,12 +186,10 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  // --- UPDATED PRINT LOG FUNCTION ---
   const printLog = (log: TripLog) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Please allow popups.");
 
-    // 1. GENERATE CUSTOM FILENAME
     const dateObj = new Date(log.created_at);
     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
     const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -196,12 +204,10 @@ export default function Dashboard() {
     }
 
     const cleanType = log.trip_type.replace(/\s+/g, '-');
-    // Format: LastName-FirstName-mm-dd-TripType
     const filename = `${lastName}-${firstName}-${mm}-${dd}-${cleanType}`;
 
     const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-    // Generate checklist rows with zebra striping and badges
     const checklistRows = relevantQuestions.map((q, index) => {
       const val = log.checklist?.[q] || "-";
       const comment = log.checklist?.[`${q}_COMMENT`];
@@ -210,12 +216,10 @@ export default function Dashboard() {
       if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
       else isBad = (val === "No");
 
-      // Status Badge Logic
       const statusBadge = isBad 
         ? `<span class="badge badge-error">ISSUE</span>` 
         : `<span class="badge badge-success">OK</span>`;
 
-      // Alternate row background color
       const rowClass = index % 2 === 0 ? 'bg-gray' : '';
 
       return `
@@ -227,7 +231,6 @@ export default function Dashboard() {
       `;
     }).join('');
     
-    // Tire Pressure Table (Pre-Trip only)
     let tireHtml = "";
     if (log.trip_type === 'Pre-Trip') {
       const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
@@ -245,7 +248,6 @@ export default function Dashboard() {
       `;
     }
 
-    // Images Layout
     const imgFront = log.images?.front ? `<div class="img-box"><p>Front Seat</p><img src="${log.images.front}" /></div>` : '';
     const imgBack = log.images?.back ? `<div class="img-box"><p>Back Seat</p><img src="${log.images.back}" /></div>` : '';
     const imgTrunk = log.images?.trunk ? `<div class="img-box"><p>Trunk</p><img src="${log.images.trunk}" /></div>` : '';
@@ -405,6 +407,52 @@ export default function Dashboard() {
     setActiveTab('new');
   };
 
+  // 👇 NEW FUNCTION: Handle Password Update
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    setPasswordMsg({ type: "", text: "" });
+
+    // 1. Validation
+    if (passwordForm.new !== passwordForm.confirm) {
+        setPasswordMsg({ type: "error", text: "New passwords do not match." });
+        setPasswordLoading(false);
+        return;
+    }
+    if (passwordForm.new.length < 6) {
+        setPasswordMsg({ type: "error", text: "Password must be at least 6 characters." });
+        setPasswordLoading(false);
+        return;
+    }
+
+    try {
+        // 2. Verify Current Password (by attempting sign-in)
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: userProfile?.email || "",
+            password: passwordForm.current,
+        });
+
+        if (signInError) {
+            throw new Error("Current password is incorrect.");
+        }
+
+        // 3. Update Password
+        const { error: updateError } = await supabase.auth.updateUser({
+            password: passwordForm.new,
+        });
+
+        if (updateError) throw updateError;
+
+        setPasswordMsg({ type: "success", text: "Password updated successfully!" });
+        setPasswordForm({ current: "", new: "", confirm: "" });
+
+    } catch (err: any) {
+        setPasswordMsg({ type: "error", text: err.message || "Failed to update password." });
+    } finally {
+        setPasswordLoading(false);
+    }
+  };
+
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -419,6 +467,8 @@ export default function Dashboard() {
         firstName: metadata.first_name || "",
         lastName: metadata.last_name || "",
         role: metadata.role || "Driver",
+        phone: metadata.phone || "N/A",
+        jobTitle: metadata.job_title || "N/A"
       });
 
       // 1. Fetch Routes FIRST to prevent dropdown blocking
@@ -600,7 +650,7 @@ export default function Dashboard() {
           </button>
         )}
         
-        {/* 👇 UPDATED: Added "My Info" Tab button */}
+        {/* "My Info" Tab button */}
         <button 
           onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
           className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
@@ -609,10 +659,119 @@ export default function Dashboard() {
         </button>
       </div>
       
-      {/* 👇 UPDATED: Added "My Info" Content Section */}
-      {activeTab === 'my-info' && (
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 min-h-[200px] flex items-center justify-center text-gray-400">
-           My Info Tab - Content coming soon.
+      {/* "My Info" Content Section */}
+      {activeTab === 'my-info' && userProfile && (
+        <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
+          
+          {/* 1. Profile Summary Card */}
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
+              {userProfile.firstName[0]}{userProfile.lastName[0]}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{userProfile.firstName} {userProfile.lastName}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.jobTitle}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            {/* First Name & Last Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">First Name</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.firstName}</div>
+               </div>
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Last Name</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.lastName}</div>
+               </div>
+            </div>
+
+            {/* Position */}
+            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Company Position</label>
+               <div className="font-medium text-gray-900 dark:text-white">{userProfile.jobTitle}</div>
+            </div>
+
+            {/* Contact Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.phone}</div>
+               </div>
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Email</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.email}</div>
+               </div>
+            </div>
+          </div>
+
+          <hr className="border-gray-200 dark:border-gray-700" />
+
+          {/* 👇 2. Change Password Section */}
+          <div className="pt-2">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Change Password</h3>
+            
+            {passwordMsg.text && (
+              <div className={`p-3 rounded text-sm mb-4 ${
+                passwordMsg.type === 'success' 
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800' 
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'
+              }`}>
+                {passwordMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Current Password</label>
+                <input 
+                  type="password" 
+                  value={passwordForm.current}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white"
+                  placeholder="Enter current password"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">New Password</label>
+                  <input 
+                    type="password" 
+                    value={passwordForm.new}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white"
+                    placeholder="Min. 6 characters"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Confirm New Password</label>
+                  <input 
+                    type="password" 
+                    value={passwordForm.confirm}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white"
+                    placeholder="Re-enter new password"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button 
+                  type="submit" 
+                  disabled={passwordLoading}
+                  className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {passwordLoading ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+
         </div>
       )}
 
