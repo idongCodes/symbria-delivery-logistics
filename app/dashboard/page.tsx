@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // 👈 Added Import
+import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
@@ -79,7 +79,8 @@ export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
+  // 👇 UPDATED: Added 'my-info' to the state type
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -598,7 +599,22 @@ export default function Dashboard() {
             All Logs (Admin)
           </button>
         )}
+        
+        {/* 👇 UPDATED: Added "My Info" Tab button */}
+        <button 
+          onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
+          className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+        >
+          My Info
+        </button>
       </div>
+      
+      {/* 👇 UPDATED: Added "My Info" Content Section */}
+      {activeTab === 'my-info' && (
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 min-h-[200px] flex items-center justify-center text-gray-400">
+           My Info Tab - Content coming soon.
+        </div>
+      )}
 
       {activeTab === 'new' && (
         <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
