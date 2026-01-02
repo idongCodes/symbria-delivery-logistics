@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link"; // 👈 Added Import
 import { createClient } from "@/lib/supabase/client";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
@@ -732,6 +733,15 @@ export default function Dashboard() {
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     </div>
                     <div className="flex gap-2">
+                      {/* VIEW BUTTON ADDED HERE */}
+                      <Link 
+                        href={`/logs/${log.id}`}
+                        className="text-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center"
+                        title="View Log"
+                      >
+                        👁️
+                      </Link>
+
                       <button onClick={() => printLog(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📄</button>
                       <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📊</button>
                     </div>
@@ -776,6 +786,15 @@ export default function Dashboard() {
                   return (
                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                       <td className="p-4 flex gap-2">
+                        {/* VIEW BUTTON ADDED HERE */}
+                        <Link 
+                          href={`/logs/${log.id}`}
+                          className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 px-2 py-1 rounded flex items-center justify-center"
+                          title="View Log"
+                        >
+                          👁️
+                        </Link>
+
                         <button onClick={() => printLog(log)} className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded">📄</button>
                         <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 px-2 py-1 rounded">📊</button>
                         {hasPermission && (
