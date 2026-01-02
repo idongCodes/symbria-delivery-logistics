@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; // 👈 Added Import
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -114,7 +114,7 @@ export default function Dashboard() {
   const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // 👇 State: Password Visibility Toggles
+  // State: Password Visibility Toggles
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -373,6 +373,45 @@ export default function Dashboard() {
       </html>
     `);
     printWindow.document.close();
+  };
+
+  const handleDelete = async (logId: number) => {
+    if (!confirm("Are you sure? This cannot be undone.")) return;
+    const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
+    if (error) alert("Error: " + error.message);
+    else { alert("Log deleted."); fetchData(); }
+  };
+
+  // 👇 RESTORED FUNCTION
+  const handleEditClick = (log: TripLog) => {
+    setEditingLog(log);
+    setTripType(log.trip_type);
+    setImageFiles({ front: null, back: null, trunk: null });
+
+    const answers: Record<string, string> = {};
+    const comments: Record<string, string> = {};
+    
+    if (log.checklist) {
+      setTirePressures({
+        df: log.checklist["Tire Pressure (Driver Front)"] || "",
+        pf: log.checklist["Tire Pressure (Passenger Front)"] || "",
+        dr: log.checklist["Tire Pressure (Driver Rear)"] || "",
+        pr: log.checklist["Tire Pressure (Passenger Rear)"] || "",
+      });
+
+      Object.keys(log.checklist).forEach(key => {
+        if (key.includes("Tire Pressure")) return;
+        if (key.endsWith('_COMMENT')) {
+          const realKey = key.replace('_COMMENT', '');
+          comments[realKey] = log.checklist[key];
+        } else {
+          answers[key] = log.checklist[key];
+        }
+      });
+    }
+    setChecklistData(answers);
+    setChecklistComments(comments);
+    setActiveTab('new');
   };
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
