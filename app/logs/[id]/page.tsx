@@ -28,7 +28,7 @@ export default async function LogPreviewPage({
     return notFound();
   }
 
-  // --- CONFIGURATION: QUESTIONS LISTS ( duplicated from dashboard for display logic) ---
+  // --- CONFIGURATION: QUESTIONS LISTS ---
   const PRE_TRIP_QUESTIONS = [
     "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
     "Fuel Tank Full",
@@ -103,7 +103,8 @@ export default async function LogPreviewPage({
             </div>
             <div>
               <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Odometer</span>
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{log.odometer}</span>
+              {/* 👇 FIXED: Added .toString() to convert Decimal object to string */}
+              <span className="text-gray-900 dark:text-gray-100 font-medium">{log.odometer?.toString() || 'N/A'}</span>
             </div>
           </div>
 
