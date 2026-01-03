@@ -100,6 +100,68 @@ tsconfig.json
 <files>
 This section contains the contents of the repository's files.
 
+<file path="public/file.svg">
+<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
+</file>
+
+<file path="public/globe.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
+</file>
+
+<file path="public/next.svg">
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
+</file>
+
+<file path="public/vercel.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+</file>
+
+<file path="public/window.svg">
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
+</file>
+
+<file path="eslint.config.mjs">
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  // Override default ignores of eslint-config-next.
+  globalIgnores([
+    // Default ignores of eslint-config-next:
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+  ]),
+]);
+
+export default eslintConfig;
+</file>
+
+<file path="next.config.ts">
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  reactCompiler: true,
+};
+
+export default nextConfig;
+</file>
+
+<file path="postcss.config.mjs">
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;
+</file>
+
 <file path="app/admin/feedback/actions.ts">
 // app/admin/feedback/actions.ts
 'use server';
@@ -309,6 +371,36 @@ export default function AutoLogout() {
 }
 </file>
 
+<file path="app/globals.css">
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Ensure dark mode sets the correct base colors */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a; /* Dark Slate 900 */
+    --foreground: #f8fafc; /* Slate 50 */
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+</file>
+
 <file path="lib/supabase/client.ts">
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -367,66 +459,50 @@ export const prisma =
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 </file>
 
-<file path="public/file.svg">
-<svg fill="none" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M14.5 13.5V5.41a1 1 0 0 0-.3-.7L9.8.29A1 1 0 0 0 9.08 0H1.5v13.5A2.5 2.5 0 0 0 4 16h8a2.5 2.5 0 0 0 2.5-2.5m-1.5 0v-7H8v-5H3v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1M9.5 5V2.12L12.38 5zM5.13 5h-.62v1.25h2.12V5zm-.62 3h7.12v1.25H4.5zm.62 3h-.62v1.25h7.12V11z" clip-rule="evenodd" fill="#666" fill-rule="evenodd"/></svg>
-</file>
+<file path=".gitignore">
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-<file path="public/globe.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><g clip-path="url(#a)"><path fill-rule="evenodd" clip-rule="evenodd" d="M10.27 14.1a6.5 6.5 0 0 0 3.67-3.45q-1.24.21-2.7.34-.31 1.83-.97 3.1M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.48-1.52a7 7 0 0 1-.96 0H7.5a4 4 0 0 1-.84-1.32q-.38-.89-.63-2.08a40 40 0 0 0 3.92 0q-.25 1.2-.63 2.08a4 4 0 0 1-.84 1.31zm2.94-4.76q1.66-.15 2.95-.43a7 7 0 0 0 0-2.58q-1.3-.27-2.95-.43a18 18 0 0 1 0 3.44m-1.27-3.54a17 17 0 0 1 0 3.64 39 39 0 0 1-4.3 0 17 17 0 0 1 0-3.64 39 39 0 0 1 4.3 0m1.1-1.17q1.45.13 2.69.34a6.5 6.5 0 0 0-3.67-3.44q.65 1.26.98 3.1M8.48 1.5l.01.02q.41.37.84 1.31.38.89.63 2.08a40 40 0 0 0-3.92 0q.25-1.2.63-2.08a4 4 0 0 1 .85-1.32 7 7 0 0 1 .96 0m-2.75.4a6.5 6.5 0 0 0-3.67 3.44 29 29 0 0 1 2.7-.34q.31-1.83.97-3.1M4.58 6.28q-1.66.16-2.95.43a7 7 0 0 0 0 2.58q1.3.27 2.95.43a18 18 0 0 1 0-3.44m.17 4.71q-1.45-.12-2.69-.34a6.5 6.5 0 0 0 3.67 3.44q-.65-1.27-.98-3.1" fill="#666"/></g><defs><clipPath id="a"><path fill="#fff" d="M0 0h16v16H0z"/></clipPath></defs></svg>
-</file>
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-<file path="public/next.svg">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 394 80"><path fill="#000" d="M262 0h68.5v12.7h-27.2v66.6h-13.6V12.7H262V0ZM149 0v12.7H94v20.4h44.3v12.6H94v21h55v12.6H80.5V0h68.7zm34.3 0h-17.8l63.8 79.4h17.9l-32-39.7 32-39.6h-17.9l-23 28.6-23-28.6zm18.3 56.7-9-11-27.1 33.7h17.8l18.3-22.7z"/><path fill="#000" d="M81 79.3 17 0H0v79.3h13.6V17l50.2 62.3H81Zm252.6-.4c-1 0-1.8-.4-2.5-1s-1.1-1.6-1.1-2.6.3-1.8 1-2.5 1.6-1 2.6-1 1.8.3 2.5 1a3.4 3.4 0 0 1 .6 4.3 3.7 3.7 0 0 1-3 1.8zm23.2-33.5h6v23.3c0 2.1-.4 4-1.3 5.5a9.1 9.1 0 0 1-3.8 3.5c-1.6.8-3.5 1.3-5.7 1.3-2 0-3.7-.4-5.3-1s-2.8-1.8-3.7-3.2c-.9-1.3-1.4-3-1.4-5h6c.1.8.3 1.6.7 2.2s1 1.2 1.6 1.5c.7.4 1.5.5 2.4.5 1 0 1.8-.2 2.4-.6a4 4 0 0 0 1.6-1.8c.3-.8.5-1.8.5-3V45.5zm30.9 9.1a4.4 4.4 0 0 0-2-3.3 7.5 7.5 0 0 0-4.3-1.1c-1.3 0-2.4.2-3.3.5-.9.4-1.6 1-2 1.6a3.5 3.5 0 0 0-.3 4c.3.5.7.9 1.3 1.2l1.8 1 2 .5 3.2.8c1.3.3 2.5.7 3.7 1.2a13 13 0 0 1 3.2 1.8 8.1 8.1 0 0 1 3 6.5c0 2-.5 3.7-1.5 5.1a10 10 0 0 1-4.4 3.5c-1.8.8-4.1 1.2-6.8 1.2-2.6 0-4.9-.4-6.8-1.2-2-.8-3.4-2-4.5-3.5a10 10 0 0 1-1.7-5.6h6a5 5 0 0 0 3.5 4.6c1 .4 2.2.6 3.4.6 1.3 0 2.5-.2 3.5-.6 1-.4 1.8-1 2.4-1.7a4 4 0 0 0 .8-2.4c0-.9-.2-1.6-.7-2.2a11 11 0 0 0-2.1-1.4l-3.2-1-3.8-1c-2.8-.7-5-1.7-6.6-3.2a7.2 7.2 0 0 1-2.4-5.7 8 8 0 0 1 1.7-5 10 10 0 0 1 4.3-3.5c2-.8 4-1.2 6.4-1.2 2.3 0 4.4.4 6.2 1.2 1.8.8 3.2 2 4.3 3.4 1 1.4 1.5 3 1.5 5h-5.8z"/></svg>
-</file>
+# testing
+/coverage
 
-<file path="public/vercel.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
-</file>
+# next.js
+/.next/
+/out/
 
-<file path="public/window.svg">
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 2.5h13v10a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1zM0 1h16v11.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 0 12.5zm3.75 4.5a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5M7 4.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0m1.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5" fill="#666"/></svg>
-</file>
+# production
+/build
 
-<file path="eslint.config.mjs">
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+# misc
+.DS_Store
+*.pem
 
-const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  // Override default ignores of eslint-config-next.
-  globalIgnores([
-    // Default ignores of eslint-config-next:
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
 
-export default eslintConfig;
-</file>
+# env files (can opt-in for committing if needed)
+.env*
 
-<file path="next.config.ts">
-import type { NextConfig } from "next";
+# vercel
+.vercel
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  reactCompiler: true,
-};
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
-export default nextConfig;
-</file>
-
-<file path="postcss.config.mjs">
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
-};
-
-export default config;
+/lib/generated/prisma
 </file>
 
 <file path="app/admin/feedback/feedback-table.tsx">
@@ -983,82 +1059,6 @@ export default async function LogPreviewPage({
 }
 </file>
 
-<file path="app/globals.css">
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* Ensure dark mode sets the correct base colors */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a; /* Dark Slate 900 */
-    --foreground: #f8fafc; /* Slate 50 */
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-</file>
-
-<file path=".gitignore">
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/lib/generated/prisma
-</file>
-
 <file path="bundle.py">
 import os
 
@@ -1140,6 +1140,52 @@ def bundle_files():
 
 if __name__ == "__main__":
     bundle_files()
+</file>
+
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
 </file>
 
 <file path="app/admin/feedback/page.tsx">
@@ -4101,52 +4147,6 @@ export function createClient() {
 }
 </file>
 
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.d.ts",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
-}
-</file>
-
 <file path="app/api/feedback/route.ts">
 // app/api/feedback/route.ts
 import { NextResponse } from 'next/server';
@@ -4213,62 +4213,6 @@ export async function POST(req: Request) {
     console.error('Feedback error:', error);
     return NextResponse.json({ error: 'Error submitting feedback' }, { status: 500 });
   }
-}
-</file>
-
-<file path="middleware.ts">
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
-
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          )
-          response = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // --- 🔒 PROTECTED ROUTES ---
-  // Only protect specific routes. The landing page "/" is public by default.
-  if (
-    (request.nextUrl.pathname.startsWith('/dashboard') || 
-     request.nextUrl.pathname.startsWith('/contacts') || 
-     request.nextUrl.pathname.startsWith('/admin')) 
-    && !user
-  ) {
-    // Redirect unauthenticated users to the Login page, NOT the landing page
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  return response
-}
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/contacts', '/admin/:path*', '/login'],
 }
 </file>
 
@@ -4408,7 +4352,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900`}>
+      <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900 pb-25`}>
         
         <AutoLogout /> {/* 👈 2. Add the component here */}
         
@@ -4422,6 +4366,295 @@ export default function RootLayout({
         
       </body>
     </html>
+  );
+}
+</file>
+
+<file path="middleware.ts">
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // --- 🔒 PROTECTED ROUTES ---
+  // Only protect specific routes. The landing page "/" is public by default.
+  if (
+    (request.nextUrl.pathname.startsWith('/dashboard') || 
+     request.nextUrl.pathname.startsWith('/contacts') || 
+     request.nextUrl.pathname.startsWith('/admin')) 
+    && !user
+  ) {
+    // Redirect unauthenticated users to the Login page, NOT the landing page
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  return response
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/contacts', '/admin/:path*', '/login'],
+}
+</file>
+
+<file path="app/page.tsx">
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import { useState } from "react";
+
+export default function Home() {
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  // State for custom error messages
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "General Suggestion",
+    message: ""
+  });
+
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMsg(""); // Clear previous errors
+
+    // --- VALIDATION: Check for @symbria.com ---
+    if (!formData.email.toLowerCase().endsWith('@symbria.com')) {
+      setErrorMsg("Please use a valid @symbria.com company email address.");
+      setLoading(false);
+      return; 
+    }
+
+    const payload = {
+      name: formData.name,
+      email: formData.email,
+      message: `[Subject: ${formData.subject}] \n\n${formData.message}`
+    };
+
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+        setLoading(false);
+        setErrorMsg(""); // Success, so clear errors
+        
+        setTimeout(() => {
+          setSubmitted(false);
+          setFormData({ name: "", email: "", subject: "General Suggestion", message: "" });
+        }, 3000);
+      } else {
+        throw new Error('Failed to send');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setErrorMsg("Something went wrong. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+      
+      {/* 1. HERO IMAGE SECTION */}
+      <section className="relative w-full bg-gray-900">
+        <div className="relative w-full h-[55vh] md:h-[65vh]">
+          {/* Make sure this image exists in public/images/ */}
+          <Image 
+            src="/images/Gemini_Generated_Image_hero_img.png" 
+            alt="Driver filling out inspection form" 
+            fill 
+            className="object-cover object-center opacity-80" 
+            priority
+          />
+          <div className="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-b from-transparent to-blue-900" />
+        </div>
+      </section>
+
+      {/* 2. MAIN CONTENT SECTION */}
+      <section className="relative bg-blue-900 text-white pt-6 pb-20 px-6 shadow-xl z-10 -mt-1">
+        <div className="max-w-4xl mx-auto text-center space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-700">
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+            Streamline Your <br/> RX Logistics.
+          </h1>
+          <p className="text-blue-100 text-lg md:text-2xl max-w-2xl mx-auto leading-relaxed font-light">
+            Quick and easy Pre/Post-Trip Inspection management.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-5 justify-center pt-8 pb-4">
+            <Link href="/login" className="bg-white text-blue-900 font-bold px-10 py-4 rounded-full shadow-lg hover:bg-blue-50 transition transform hover:-translate-y-1">
+              Login or Register
+            </Link>
+            <Link href="#contact" className="bg-transparent border-2 border-white text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition">
+              Contact Support
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. BENEFITS SECTION */}
+      <section className="bg-gray-50 dark:bg-gray-900 py-20 px-6 transition-colors">
+        <div className="max-w-6xl mx-auto">
+           <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4">Why Go Digital?</h2>
+              <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">Replacing paper logs with this platform improves accuracy, accountability, and speed.</p>
+           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Card 1 */}
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">👁️</div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Instant Visibility</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Admins see inspection status in real-time. No waiting for paper logs at the end of the shift.</p>
+            </div>
+            {/* Card 2 */}
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">📸</div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Photo Evidence</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Mandatory photo uploads for vehicle conditions create an indisputable history of the fleet.</p>
+            </div>
+            {/* Card 3 */}
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">🧠</div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Smart Forms</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Dynamic checklists adapt to &quot;Pre-Trip&quot; or &quot;Post-Trip&quot; contexts and enforce descriptions for defects.</p>
+            </div>
+            {/* Card 4 */}
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">🔒</div>
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Secure Records</h3>
+              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Role-based access ensures data integrity. Search, filter, and export PDF reports instantly.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. FEEDBACK SECTION */}
+      <section id="contact" className="w-[90%] mx-auto bg-white dark:bg-gray-800 rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
+        <div className="max-w-2xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">We Value Your Feedback</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
+          
+          <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-left">
+            
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+              <input 
+                id="name" 
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
+                placeholder="Your Name"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+              <input 
+                id="email" 
+                type="email"
+                value={formData.email}
+                onChange={(e) => {
+                  setFormData({...formData, email: e.target.value});
+                  if (errorMsg) setErrorMsg(""); 
+                }}
+                className={`w-full border p-3 rounded-lg focus:ring-2 outline-none bg-white dark:bg-gray-700 text-black dark:text-white ${
+                  errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                }`}
+                placeholder="name@symbria.com"
+                required
+              />
+              {errorMsg && (
+                <p className="text-red-500 dark:text-red-400 text-sm mt-1 animate-in slide-in-from-top-1">
+                  {errorMsg}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+              <select 
+                id="subject" 
+                value={formData.subject}
+                onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
+              >
+                <option>General Suggestion</option>
+                <option>Report a Bug</option>
+                <option>Feature Request</option>
+                <option>Other</option>
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
+              <textarea 
+                id="message" 
+                value={formData.message}
+                onChange={(e) => setFormData({...formData, message: e.target.value})}
+                rows={4} 
+                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
+                placeholder="Type your feedback here..."
+                required
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading || submitted}
+              className={`w-full font-bold py-4 rounded-lg transition duration-300 ${
+                submitted 
+                  ? "bg-green-600 text-white cursor-default" 
+                  : loading 
+                    ? "bg-gray-400 text-white cursor-wait" 
+                    : "bg-blue-900 text-white hover:bg-blue-800"
+              }`}
+            >
+              {loading ? "Sending..." : submitted ? "Thank You! Feedback Sent." : "Submit Feedback"}
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
   );
 }
 </file>
@@ -4799,239 +5032,6 @@ export default function ContactsPage() {
 }
 </file>
 
-<file path="app/page.tsx">
-"use client";
-
-import Link from "next/link";
-import Image from "next/image";
-import { useState } from "react";
-
-export default function Home() {
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  
-  // State for custom error messages
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "General Suggestion",
-    message: ""
-  });
-
-  const handleFeedbackSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMsg(""); // Clear previous errors
-
-    // --- VALIDATION: Check for @symbria.com ---
-    if (!formData.email.toLowerCase().endsWith('@symbria.com')) {
-      setErrorMsg("Please use a valid @symbria.com company email address.");
-      setLoading(false);
-      return; 
-    }
-
-    const payload = {
-      name: formData.name,
-      email: formData.email,
-      message: `[Subject: ${formData.subject}] \n\n${formData.message}`
-    };
-
-    try {
-      const res = await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setSubmitted(true);
-        setLoading(false);
-        setErrorMsg(""); // Success, so clear errors
-        
-        setTimeout(() => {
-          setSubmitted(false);
-          setFormData({ name: "", email: "", subject: "General Suggestion", message: "" });
-        }, 3000);
-      } else {
-        throw new Error('Failed to send');
-      }
-    } catch (error) {
-      console.error('Error submitting feedback:', error);
-      setErrorMsg("Something went wrong. Please try again.");
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
-      
-      {/* 1. HERO IMAGE SECTION */}
-      <section className="relative w-full bg-gray-900">
-        <div className="relative w-full h-[55vh] md:h-[65vh]">
-          {/* Make sure this image exists in public/images/ */}
-          <Image 
-            src="/images/Gemini_Generated_Image_hero_img.png" 
-            alt="Driver filling out inspection form" 
-            fill 
-            className="object-cover object-center opacity-80" 
-            priority
-          />
-          <div className="absolute bottom-0 left-0 w-full h-32 md:h-48 bg-gradient-to-b from-transparent to-blue-900" />
-        </div>
-      </section>
-
-      {/* 2. MAIN CONTENT SECTION */}
-      <section className="relative bg-blue-900 text-white pt-6 pb-20 px-6 shadow-xl z-10 -mt-1">
-        <div className="max-w-4xl mx-auto text-center space-y-8 animate-in slide-in-from-bottom-4 fade-in duration-700">
-          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-            Streamline Your <br/> RX Logistics.
-          </h1>
-          <p className="text-blue-100 text-lg md:text-2xl max-w-2xl mx-auto leading-relaxed font-light">
-            Quick and easy Pre/Post-Trip Inspection management.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-5 justify-center pt-8 pb-4">
-            <Link href="/login" className="bg-white text-blue-900 font-bold px-10 py-4 rounded-full shadow-lg hover:bg-blue-50 transition transform hover:-translate-y-1">
-              Login or Register
-            </Link>
-            <Link href="#contact" className="bg-transparent border-2 border-white text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition">
-              Contact Support
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. BENEFITS SECTION */}
-      <section className="bg-gray-50 dark:bg-gray-900 py-20 px-6 transition-colors">
-        <div className="max-w-6xl mx-auto">
-           <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4">Why Go Digital?</h2>
-              <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">Replacing paper logs with this platform improves accuracy, accountability, and speed.</p>
-           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {/* Card 1 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">👁️</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Instant Visibility</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Admins see inspection status in real-time. No waiting for paper logs at the end of the shift.</p>
-            </div>
-            {/* Card 2 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">📸</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Photo Evidence</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Mandatory photo uploads for vehicle conditions create an indisputable history of the fleet.</p>
-            </div>
-            {/* Card 3 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">🧠</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Smart Forms</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Dynamic checklists adapt to &quot;Pre-Trip&quot; or &quot;Post-Trip&quot; contexts and enforce descriptions for defects.</p>
-            </div>
-            {/* Card 4 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">🔒</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Secure Records</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Role-based access ensures data integrity. Search, filter, and export PDF reports instantly.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. FEEDBACK SECTION */}
-      <section id="contact" className="w-[90%] mx-auto bg-white dark:bg-gray-800 rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">We Value Your Feedback</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
-          
-          <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-left">
-            
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-              <input 
-                id="name" 
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
-                placeholder="Your Name"
-                required
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-              <input 
-                id="email" 
-                type="email"
-                value={formData.email}
-                onChange={(e) => {
-                  setFormData({...formData, email: e.target.value});
-                  if (errorMsg) setErrorMsg(""); 
-                }}
-                className={`w-full border p-3 rounded-lg focus:ring-2 outline-none bg-white dark:bg-gray-700 text-black dark:text-white ${
-                  errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-                }`}
-                placeholder="name@symbria.com"
-                required
-              />
-              {errorMsg && (
-                <p className="text-red-500 dark:text-red-400 text-sm mt-1 animate-in slide-in-from-top-1">
-                  {errorMsg}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
-              <select 
-                id="subject" 
-                value={formData.subject}
-                onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
-              >
-                <option>General Suggestion</option>
-                <option>Report a Bug</option>
-                <option>Feature Request</option>
-                <option>Other</option>
-              </select>
-            </div>
-            
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
-              <textarea 
-                id="message" 
-                value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
-                rows={4} 
-                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
-                placeholder="Type your feedback here..."
-                required
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={loading || submitted}
-              className={`w-full font-bold py-4 rounded-lg transition duration-300 ${
-                submitted 
-                  ? "bg-green-600 text-white cursor-default" 
-                  : loading 
-                    ? "bg-gray-400 text-white cursor-wait" 
-                    : "bg-blue-900 text-white hover:bg-blue-800"
-              }`}
-            >
-              {loading ? "Sending..." : submitted ? "Thank You! Feedback Sent." : "Submit Feedback"}
-            </button>
-          </form>
-        </div>
-      </section>
-
-    </div>
-  );
-}
-</file>
-
 <file path="package.json">
 {
   "name": "symbria-delivery-logistics",
@@ -5069,142 +5069,13 @@ export default function Home() {
 }
 </file>
 
-<file path="app/components/Nav.tsx">
-"use client";
-
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-
-export default function Nav() {
-  const router = useRouter();
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const supabase = createClient();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setLoggedIn(!!session);
-    };
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setLoggedIn(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setLoggedIn(false);
-    setIsMenuOpen(false); 
-    router.push("/");
-    router.refresh();
-  };
-
-  const closeMenu = () => setIsMenuOpen(false);
-
-  return (
-    <nav className="bg-blue-800 dark:bg-blue-950 text-white shadow-md relative z-50 transition-colors">
-      <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
-        
-        {/* LOGO - Always redirects to Home */}
-        <Link 
-          href="/" 
-          className="font-bold text-xl tracking-tight hover:text-blue-200 transition" 
-          onClick={closeMenu}
-        >
-          Symbria RX Logistics
-        </Link>
-        
-        {/* --- DESKTOP MENU --- */}
-        <div className="hidden md:flex gap-6 text-sm font-medium items-center">
-          {loggedIn ? (
-            <>
-              <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
-              
-              {/* NEW FEEDBACK LINK ADDED HERE */}
-              <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
-              
-              <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
-              <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
-              Login
-            </Link>
-          )}
-        </div>
-
-        {/* --- MOBILE HAMBURGER BUTTON --- */}
-        <button 
-          className="md:hidden p-2 text-white focus:outline-none"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
-        >
-          {isMenuOpen ? (
-            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg xmlns="[http://www.w3.org/2000/svg](http://www.w3.org/2000/svg)" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
-        </button>
-      </div>
-
-      {/* --- MOBILE MENU DROPDOWN --- */}
-      {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-blue-900 dark:bg-blue-950 border-t border-blue-700 dark:border-blue-900 shadow-xl flex flex-col p-4 gap-4 text-center animate-in slide-in-from-top-2 fade-in duration-200">
-          {loggedIn ? (
-            <>
-              <Link href="/dashboard" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
-                Dashboard
-              </Link>
-              
-              {/* NEW FEEDBACK LINK ADDED HERE TOO */}
-              <Link href="/admin/feedback" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
-                Feedback
-              </Link>
-              
-              <Link href="/contacts" onClick={closeMenu} className="block py-2 hover:bg-blue-800 dark:hover:bg-blue-900 rounded transition">
-                Contacts
-              </Link>
-              <button 
-                onClick={handleLogout} 
-                className="block w-full bg-white text-blue-900 font-bold py-3 rounded mt-2 hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <Link 
-              href="/login" 
-              onClick={closeMenu} 
-              className="block w-full bg-white text-blue-900 font-bold py-3 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700"
-            >
-              Login
-            </Link>
-          )}
-        </div>
-      )}
-    </nav>
-  );
-}
-</file>
-
 <file path="app/login/page.tsx">
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; // 👈 Import Icons
 
 export default function LoginPage() {
   const router = useRouter();
@@ -5215,6 +5086,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  
+  // 👇 Visibility Toggles State
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -5368,11 +5243,47 @@ export default function LoginPage() {
             </>
           )}
 
+          {/* EMAIL INPUT */}
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
           
+          {/* PASSWORD INPUT WITH TOGGLE */}
+          <div className="relative">
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10" 
+              required 
+            />
+            <button 
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+            </button>
+          </div>
+          
+          {/* CONFIRM PASSWORD INPUT WITH TOGGLE */}
           {view === 'register' && (
-            <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} required />
+            <div className="relative">
+              <input 
+                type={showConfirmPassword ? "text" : "password"} 
+                placeholder="Confirm Password" 
+                value={confirmPassword} 
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10 ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} 
+                required 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+              </button>
+            </div>
           )}
 
           <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2 transition-colors">
@@ -5382,7 +5293,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center border-t border-gray-100 dark:border-gray-700 pt-4">
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
-          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); setShowPassword(false); setShowConfirmPassword(false); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
             {view === 'login' ? "Register here" : "Log in here"}
           </button>
         </div>
@@ -5392,13 +5303,130 @@ export default function LoginPage() {
 }
 </file>
 
+<file path="app/components/Nav.tsx">
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { 
+  HomeIcon, 
+  ChatBubbleLeftRightIcon, 
+  PhoneIcon, 
+  ArrowRightOnRectangleIcon 
+} from "@heroicons/react/24/outline";
+
+export default function Nav() {
+  const router = useRouter();
+  const [loggedIn, setLoggedIn] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setLoggedIn(!!session);
+    };
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setLoggedIn(false);
+    router.push("/");
+    router.refresh();
+  };
+
+  return (
+    <>
+      {/* --- TOP NAVIGATION BAR --- */}
+      <nav className="bg-blue-800 dark:bg-blue-950 text-white shadow-md relative z-50 transition-colors">
+        <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
+          
+          {/* LOGO */}
+          <Link 
+            href="/" 
+            className="font-bold text-xl tracking-tight hover:text-blue-200 transition" 
+          >
+            Symbria RX Logistics
+          </Link>
+          
+          {/* DESKTOP MENU (Hidden on Mobile) */}
+          <div className="hidden md:flex gap-6 text-sm font-medium items-center">
+            {loggedIn ? (
+              <>
+                <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
+                <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
+                <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
+                <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
+                Login
+              </Link>
+            )}
+          </div>
+
+          {/* MOBILE LOGIN BUTTON (Visible only on mobile when logged OUT) */}
+          {!loggedIn && (
+            <Link 
+              href="/login" 
+              className="md:hidden bg-white text-blue-800 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition"
+            >
+              Login
+            </Link>
+          )}
+        </div>
+      </nav>
+
+      {/* --- MOBILE FLOATING BOTTOM NAV (Visible only on mobile when logged IN) --- */}
+      {loggedIn && (
+        // 👇 CHANGED: Opacity lowered to /80 for more transparency
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-fit min-w-[40%] bg-blue-900/85 dark:bg-blue-950/80 backdrop-blur-md border border-blue-700 dark:border-blue-800 shadow-2xl rounded-full flex justify-between items-center px-6 py-3 gap-6 animate-in slide-in-from-bottom-4 fade-in duration-500 whitespace-nowrap">
+          
+          <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+            <HomeIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-medium">Dashboard</span>
+          </Link>
+          
+          <Link href="/admin/feedback" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+            <ChatBubbleLeftRightIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-medium">Feedback</span>
+          </Link>
+          
+          <Link href="/contacts" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+            <PhoneIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-medium">Contacts</span>
+          </Link>
+          
+          <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-300 hover:text-red-100 transition group">
+            <ArrowRightOnRectangleIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-medium">Logout</span>
+          </button>
+
+        </div>
+      )}
+    </>
+  );
+}
+</file>
+
 <file path="app/dashboard/page.tsx">
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link"; // 👈 Added Import
+import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -5462,6 +5490,8 @@ type UserProfile = {
   lastName: string;
   role: 'Driver' | 'Management' | 'Admin';
   email: string;
+  phone: string;
+  jobTitle: string;
 };
 
 // Shape for Dynamic Routes
@@ -5474,7 +5504,7 @@ export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -5483,7 +5513,7 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
-  // Form State
+  // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
   const [checklistData, setChecklistData] = useState<Record<string, string>>({});
   const [checklistComments, setChecklistComments] = useState<Record<string, string>>({});
@@ -5496,6 +5526,20 @@ export default function Dashboard() {
     back: File | null;
     trunk: File | null;
   }>({ front: null, back: null, trunk: null });
+
+  // State: Password Update Form
+  const [passwordForm, setPasswordForm] = useState({
+    current: "",
+    new: "",
+    confirm: ""
+  });
+  const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // State: Password Visibility Toggles
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // --- LOGIC HELPERS ---
 
@@ -5570,12 +5614,10 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  // --- UPDATED PRINT LOG FUNCTION ---
   const printLog = (log: TripLog) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return alert("Please allow popups.");
 
-    // 1. GENERATE CUSTOM FILENAME
     const dateObj = new Date(log.created_at);
     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
     const dd = String(dateObj.getDate()).padStart(2, '0');
@@ -5590,12 +5632,10 @@ export default function Dashboard() {
     }
 
     const cleanType = log.trip_type.replace(/\s+/g, '-');
-    // Format: LastName-FirstName-mm-dd-TripType
     const filename = `${lastName}-${firstName}-${mm}-${dd}-${cleanType}`;
 
     const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-    // Generate checklist rows with zebra striping and badges
     const checklistRows = relevantQuestions.map((q, index) => {
       const val = log.checklist?.[q] || "-";
       const comment = log.checklist?.[`${q}_COMMENT`];
@@ -5604,12 +5644,10 @@ export default function Dashboard() {
       if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
       else isBad = (val === "No");
 
-      // Status Badge Logic
       const statusBadge = isBad 
         ? `<span class="badge badge-error">ISSUE</span>` 
         : `<span class="badge badge-success">OK</span>`;
 
-      // Alternate row background color
       const rowClass = index % 2 === 0 ? 'bg-gray' : '';
 
       return `
@@ -5621,7 +5659,6 @@ export default function Dashboard() {
       `;
     }).join('');
     
-    // Tire Pressure Table (Pre-Trip only)
     let tireHtml = "";
     if (log.trip_type === 'Pre-Trip') {
       const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
@@ -5639,7 +5676,6 @@ export default function Dashboard() {
       `;
     }
 
-    // Images Layout
     const imgFront = log.images?.front ? `<div class="img-box"><p>Front Seat</p><img src="${log.images.front}" /></div>` : '';
     const imgBack = log.images?.back ? `<div class="img-box"><p>Back Seat</p><img src="${log.images.back}" /></div>` : '';
     const imgTrunk = log.images?.trunk ? `<div class="img-box"><p>Trunk</p><img src="${log.images.trunk}" /></div>` : '';
@@ -5768,6 +5804,7 @@ export default function Dashboard() {
     else { alert("Log deleted."); fetchData(); }
   };
 
+  // 👇 RESTORED FUNCTION
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
     setTripType(log.trip_type);
@@ -5799,6 +5836,48 @@ export default function Dashboard() {
     setActiveTab('new');
   };
 
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    setPasswordMsg({ type: "", text: "" });
+
+    if (passwordForm.new !== passwordForm.confirm) {
+        setPasswordMsg({ type: "error", text: "New passwords do not match." });
+        setPasswordLoading(false);
+        return;
+    }
+    if (passwordForm.new.length < 6) {
+        setPasswordMsg({ type: "error", text: "Password must be at least 6 characters." });
+        setPasswordLoading(false);
+        return;
+    }
+
+    try {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: userProfile?.email || "",
+            password: passwordForm.current,
+        });
+
+        if (signInError) {
+            throw new Error("Current password is incorrect.");
+        }
+
+        const { error: updateError } = await supabase.auth.updateUser({
+            password: passwordForm.new,
+        });
+
+        if (updateError) throw updateError;
+
+        setPasswordMsg({ type: "success", text: "Password updated successfully!" });
+        setPasswordForm({ current: "", new: "", confirm: "" });
+
+    } catch (err: any) {
+        setPasswordMsg({ type: "error", text: err.message || "Failed to update password." });
+    } finally {
+        setPasswordLoading(false);
+    }
+  };
+
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -5813,9 +5892,10 @@ export default function Dashboard() {
         firstName: metadata.first_name || "",
         lastName: metadata.last_name || "",
         role: metadata.role || "Driver",
+        phone: metadata.phone || "N/A",
+        jobTitle: metadata.job_title || "N/A"
       });
 
-      // 1. Fetch Routes FIRST to prevent dropdown blocking
       const { data: routeData, error: routeError } = await supabase
         .from('routes')
         .select('id, name')
@@ -5825,7 +5905,6 @@ export default function Dashboard() {
       if (routeError) console.error("Route Error:", routeError);
       if (routeData) setRouteOptions(routeData);
 
-      // 2. Fetch Logs SECOND
       const { data: logsData, error: logsError } = await supabase
         .from('trip_logs')
         .select('*')
@@ -5867,13 +5946,11 @@ export default function Dashboard() {
     setSubmitting(true);
     
     try {
-      // 1. Upload Images (shallow copy old list first)
       const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
       if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
       if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
       if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
 
-      // 2. Prepare Data
       const finalChecklist = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
         const answer = checklistData[q];
@@ -5890,7 +5967,7 @@ export default function Dashboard() {
       }
 
       const baseData = {
-        user_id: userProfile.id, // <--- User ID added here
+        user_id: userProfile.id,
         vehicle_id: "N/A", 
         route_id: formData.get('route_id'), 
         odometer: formData.get('odometer'),
@@ -5913,9 +5990,7 @@ export default function Dashboard() {
         const response = await supabase.from('trip_logs').insert(baseData);
         error = response.error;
 
-        // --- NEW EMAIL TRIGGER ---
         if (!error) {
-            // Trigger email in background
             fetch('/api/email-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -5993,7 +6068,152 @@ export default function Dashboard() {
             All Logs (Admin)
           </button>
         )}
+        
+        <button 
+          onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
+          className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+        >
+          My Info
+        </button>
       </div>
+      
+      {activeTab === 'my-info' && userProfile && (
+        <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
+          
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
+              {userProfile.firstName[0]}{userProfile.lastName[0]}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{userProfile.firstName} {userProfile.lastName}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.jobTitle}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">First Name</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.firstName}</div>
+               </div>
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Last Name</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.lastName}</div>
+               </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Company Position</label>
+               <div className="font-medium text-gray-900 dark:text-white">{userProfile.jobTitle}</div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.phone}</div>
+               </div>
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Email</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.email}</div>
+               </div>
+            </div>
+          </div>
+
+          <hr className="border-gray-200 dark:border-gray-700" />
+
+          {/* Change Password Section */}
+          <div className="pt-2">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Change Password</h3>
+            
+            {passwordMsg.text && (
+              <div className={`p-3 rounded text-sm mb-4 ${
+                passwordMsg.type === 'success' 
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800' 
+                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'
+              }`}>
+                {passwordMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordUpdate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Current Password</label>
+                <div className="relative">
+                  <input 
+                    type={showCurrentPassword ? "text" : "password"} 
+                    value={passwordForm.current}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
+                    placeholder="Enter current password"
+                    required
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    {showCurrentPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">New Password</label>
+                  <div className="relative">
+                    <input 
+                      type={showNewPassword ? "text" : "password"} 
+                      value={passwordForm.new}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
+                      className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
+                      placeholder="Min. 6 characters"
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showNewPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Confirm New Password</label>
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                      className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
+                      placeholder="Re-enter new password"
+                      required
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button 
+                  type="submit" 
+                  disabled={passwordLoading}
+                  className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {passwordLoading ? "Updating..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+
+        </div>
+      )}
 
       {activeTab === 'new' && (
         <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
