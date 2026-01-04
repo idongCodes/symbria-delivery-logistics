@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
-import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline"; // 👈 Added ChevronDownIcon
+import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -91,8 +91,8 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
-  // 👇 NEW STATE: Pagination
-  const [visibleCount, setVisibleCount] = useState(10);
+  // 👇 UPDATED: Initialize visibleCount to 5
+  const [visibleCount, setVisibleCount] = useState(5);
 
   // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
@@ -604,7 +604,6 @@ export default function Dashboard() {
     }
   }
 
-  // 👇 Filter logs
   const visibleLogs = (activeTab === 'history')
     ? logs.filter(log => log.user_id === userProfile?.id) 
     : logs;
@@ -636,16 +635,16 @@ export default function Dashboard() {
 
       <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
-          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(10);
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); // Reset to 5
         }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
         <button onClick={() => { setActiveTab('history');
-          setEditingLog(null); setVisibleCount(10); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           My Logs
         </button>
         {(userProfile?.role === 'Management' || userProfile?.role === 'Admin') && (
-          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(10); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
             All Logs (Admin)
           </button>
         )}
@@ -1021,7 +1020,8 @@ export default function Dashboard() {
           {visibleCount < visibleLogs.length && (
             <div className="flex justify-center pb-4">
               <button 
-                onClick={() => setVisibleCount(prev => prev + 10)}
+                // 👇 UPDATED: Increment by 5
+                onClick={() => setVisibleCount(prev => prev + 5)}
                 className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 py-3 rounded-full shadow-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Load More Logs <ChevronDownIcon className="w-4 h-4" />
