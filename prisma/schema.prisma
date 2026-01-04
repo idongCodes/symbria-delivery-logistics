@@ -35,6 +35,7 @@ model TripLog {
   checklist   Json?    
   images      Json?    
   driver_name String?
+  share_token String? @unique
 
   @@map("trip_logs")
 }
