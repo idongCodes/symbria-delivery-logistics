@@ -1,18 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import LogDownloadButton from './LogDownloadButton';
 
 // Force dynamic rendering to ensure fresh data
 export const dynamic = 'force-dynamic';
 
-// 👇 UPDATE: params is now a Promise<{ id: string }>
 export default async function LogPreviewPage({ 
   params 
 }: { 
   params: Promise<{ id: string }> 
 }) {
   
-  // 👇 UPDATE: Await the params before accessing properties
   const { id } = await params; 
   const logId = parseInt(id);
 
@@ -27,6 +26,15 @@ export default async function LogPreviewPage({
   if (!log) {
     return notFound();
   }
+
+  // --- PREPARE DATA FOR CLIENT COMPONENT ---
+  // Convert Decimal and Date objects to primitive types so they can be passed to Client Component
+  const serializableLog = {
+    ...log,
+    odometer: log.odometer?.toString() || "0",
+    created_at: log.created_at.toISOString(),
+    updated_at: log.updated_at.toISOString(),
+  };
 
   // --- CONFIGURATION: QUESTIONS LISTS ---
   const PRE_TRIP_QUESTIONS = [
@@ -66,23 +74,39 @@ export default async function LogPreviewPage({
 
   const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
   
-  // Cast checklist to Record<string, string> for easier access
-  const checklist = log.checklist as Record<string, string> || {};
-  const images = log.images as Record<string, string> || {};
+  const checklist = (log.checklist as Record<string, string>) || {};
+  const images = (log.images as Record<string, string>) || {};
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8 pb-32">
       <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
         
         {/* HEADER */}
-        <div className="bg-blue-600 dark:bg-blue-800 p-6 text-white flex justify-between items-center">
+        <div className="bg-white dark:bg-gray-800 p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Trip Log #{log.id}</h1>
-            <p className="text-blue-100 text-sm mt-1">{log.trip_type} Inspection</p>
+            <div className="flex items-center gap-3">
+               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trip Log #{log.id}</h1>
+               <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${
+                 log.trip_type === 'Pre-Trip' 
+                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
+                   : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+               }`}>
+                 {log.trip_type}
+               </span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              Submitted by <span className="font-medium text-gray-800 dark:text-gray-200">{log.driver_name || 'Unknown'}</span>
+            </p>
           </div>
-          <Link href="/dashboard" className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            ← Back to Dashboard
-          </Link>
+          
+          <div className="flex items-center gap-3">
+            {/* 👇 NEW DOWNLOAD BUTTON */}
+            <LogDownloadButton log={serializableLog} />
+            
+            <Link href="/dashboard" className="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Back
+            </Link>
+          </div>
         </div>
 
         <div className="p-6 md:p-8 space-y-8">
@@ -90,12 +114,12 @@ export default async function LogPreviewPage({
           {/* INFO GRID */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
             <div>
-              <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Driver</span>
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{log.driver_name || 'Unknown'}</span>
-            </div>
-            <div>
               <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date</span>
               <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleDateString()}</span>
+            </div>
+            <div>
+              <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Time</span>
+              <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
             </div>
             <div>
               <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Route</span>
@@ -103,7 +127,6 @@ export default async function LogPreviewPage({
             </div>
             <div>
               <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Odometer</span>
-              {/* 👇 FIXED: Added .toString() to convert Decimal object to string */}
               <span className="text-gray-900 dark:text-gray-100 font-medium">{log.odometer?.toString() || 'N/A'}</span>
             </div>
           </div>
