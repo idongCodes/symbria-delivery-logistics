@@ -23,7 +23,7 @@ model Feedback {
 // 2. Trip Logs (Restoring for Dashboard)
 model TripLog {
   id          Int      @id @default(autoincrement())
-  created_at  DateTime @default(now())
+  created_at  DateTime @default(now()) @updatedAt
   updated_at  DateTime @updatedAt
   edit_count  Int      @default(0)
   user_id     String

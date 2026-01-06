@@ -41,6 +41,8 @@ The content is organized as follows:
 
 <directory_structure>
 app/
+  actions/
+    log-actions.ts
   admin/
     feedback/
       actions.ts
@@ -54,6 +56,7 @@ app/
   components/
     AutoLogout.tsx
     Footer.tsx
+    LogViewer.tsx
     Nav.tsx
   contacts/
     page.tsx
@@ -63,6 +66,11 @@ app/
     page.tsx
   logs/
     [id]/
+      LogDownloadButton.tsx
+      page.tsx
+      ShareButton.tsx
+  share/
+    [token]/
       page.tsx
   favicon.ico
   globals.css
@@ -160,6 +168,35 @@ const config = {
 };
 
 export default config;
+</file>
+
+<file path="app/actions/log-actions.ts">
+'use server'
+
+import { prisma } from '@/lib/prisma';
+import { randomUUID } from 'crypto';
+
+export async function generateShareToken(logId: number) {
+  // 1. Check if token already exists
+  const log = await prisma.tripLog.findUnique({
+    where: { id: logId },
+    select: { share_token: true }
+  });
+
+  if (log?.share_token) {
+    return log.share_token;
+  }
+
+  // 2. Generate new token
+  const token = randomUUID();
+  
+  await prisma.tripLog.update({
+    where: { id: logId },
+    data: { share_token: token }
+  });
+
+  return token;
+}
 </file>
 
 <file path="app/admin/feedback/actions.ts">
@@ -368,6 +405,511 @@ export default function AutoLogout() {
   }, [lastActivity, router, supabase]);
 
   return null;
+}
+</file>
+
+<file path="app/components/LogViewer.tsx">
+"use client";
+
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import LogDownloadButton from "@/app/logs/[id]/LogDownloadButton";
+
+// --- CONFIGURATION ---
+const PRE_TRIP_QUESTIONS = [
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Fuel Tank Full",
+  "Gas card in binder",
+  "Dashboard warning lights on",
+  "Horn works",
+  "HVAC systems working",
+  "Info/Entertainment systems working",
+  "All doors working",
+  "Interior lights working",
+  "Driver/Passenger seat and belts working",
+  "Windshield wipers working",
+  "Cracks/chips on any windows",
+  "Dings, dents, or other visible damage on interior/exterior",
+  "Headlights working",
+  "Brake lights working",
+  "Turn signals working",
+  "Hazard lights working",
+  "Fog lights working"
+];
+
+const POST_TRIP_QUESTIONS = [
+  "Fuel Tank Full",
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Synchronize Scanner, End Route, Log Off",
+  "Scanner returned",
+  "Tackle boxes returned"
+];
+
+const DAMAGE_QUESTIONS = [
+  "Dings, dents, or other visible damage on interior/exterior",
+  "Cracks/chips on any windows",
+  "Dashboard warning lights on"
+];
+
+export default function LogViewer({ log }: { log: any }) {
+  const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
+  const checklist = (log.checklist as Record<string, string>) || {};
+  const images = (log.images as Record<string, string>) || {};
+
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      {/* INFO GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+        <div>
+          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date</span>
+          <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleDateString()}</span>
+        </div>
+        <div>
+          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Time</span>
+          <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        </div>
+        <div>
+          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Route</span>
+          <span className="text-gray-900 dark:text-gray-100 font-medium">{log.route_id || 'N/A'}</span>
+        </div>
+        <div>
+          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Odometer</span>
+          <span className="text-gray-900 dark:text-gray-100 font-medium">{log.odometer?.toString() || 'N/A'}</span>
+        </div>
+      </div>
+
+      {/* TIRE PRESSURE (PRE-TRIP ONLY) */}
+      {log.trip_type === 'Pre-Trip' && (
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Tire Pressure (PSI)</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {["Driver Front", "Passenger Front", "Driver Rear", "Passenger Rear"].map((pos) => (
+              <div key={pos} className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-center border border-blue-100 dark:border-blue-900/30">
+                <span className="block text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">{pos}</span>
+                <span className="text-lg font-mono text-blue-900 dark:text-blue-100">{checklist[`Tire Pressure (${pos})`] || '-'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CHECKLIST */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Inspection Checklist</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Item</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-300 w-24">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Notes / Defects</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              {relevantQuestions.map((q, i) => {
+                const val = checklist[q] || "-";
+                const comment = checklist[`${q}_COMMENT`];
+                let isBad = DAMAGE_QUESTIONS.includes(q) ? (val === "Yes") : (val === "No");
+
+                return (
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{q}</td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        isBad ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                      }`}>
+                        {isBad ? 'ISSUE' : 'OK'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {comment ? <span className="text-red-600 dark:text-red-400 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded block w-fit">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* NOTES */}
+      {log.notes && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 rounded-lg p-4">
+          <h4 className="text-sm font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide mb-2">Additional Notes</h4>
+          <p className="text-yellow-900 dark:text-yellow-100 text-sm">{log.notes}</p>
+        </div>
+      )}
+
+      {/* IMAGES */}
+      {(images.front || images.back || images.trunk) && (
+        <div>
+          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Vehicle Photos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {['front', 'back', 'trunk'].map((key) => images[key] && (
+              <div key={key} className="space-y-2">
+                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 text-center uppercase">{key} Seat/Area</p>
+                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                  <img src={images[key]} alt={key} className="w-full h-full object-cover" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="app/logs/[id]/LogDownloadButton.tsx">
+"use client";
+
+import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+
+// --- REUSED CONFIGURATION ---
+const PRE_TRIP_QUESTIONS = [
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Fuel Tank Full",
+  "Gas card in binder",
+  "Dashboard warning lights on",
+  "Horn works",
+  "HVAC systems working",
+  "Info/Entertainment systems working",
+  "All doors working",
+  "Interior lights working",
+  "Driver/Passenger seat and belts working",
+  "Windshield wipers working",
+  "Cracks/chips on any windows",
+  "Dings, dents, or other visible damage on interior/exterior",
+  "Headlights working",
+  "Brake lights working",
+  "Turn signals working",
+  "Hazard lights working",
+  "Fog lights working"
+];
+
+const POST_TRIP_QUESTIONS = [
+  "Fuel Tank Full",
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Synchronize Scanner, End Route, Log Off",
+  "Scanner returned",
+  "Tackle boxes returned"
+];
+
+const DAMAGE_QUESTIONS = [
+  "Dings, dents, or other visible damage on interior/exterior",
+  "Cracks/chips on any windows",
+  "Dashboard warning lights on"
+];
+
+export default function LogDownloadButton({ log }: { log: any }) {
+
+  const printLog = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return alert("Please allow popups to download/print.");
+
+    // 1. DATA PREP
+    const dateObj = new Date(log.created_at);
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    
+    let firstName = "Unknown";
+    let lastName = "Driver";
+    
+    if (log.driver_name) {
+      const parts = log.driver_name.split(" ");
+      if (parts.length > 0) firstName = parts[0];
+      if (parts.length > 1) lastName = parts.slice(1).join(" ");
+    }
+
+    const cleanType = log.trip_type.replace(/\s+/g, '-');
+    const filename = `${lastName}-${firstName}-${mm}-${dd}-${cleanType}`;
+
+    const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
+    const checklist = log.checklist || {};
+    const images = log.images || {};
+
+    // 2. GENERATE HTML
+    const checklistRows = relevantQuestions.map((q: string, index: number) => {
+      const val = checklist[q] || "-";
+      const comment = checklist[`${q}_COMMENT`];
+      
+      let isBad = false;
+      if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
+      else isBad = (val === "No");
+
+      const statusBadge = isBad 
+        ? `<span class="badge badge-error">ISSUE</span>` 
+        : `<span class="badge badge-success">OK</span>`;
+
+      const rowClass = index % 2 === 0 ? 'bg-gray' : '';
+
+      return `
+        <tr class="${rowClass}">
+          <td class="q-col">${q}</td>
+          <td class="s-col">${statusBadge}</td>
+          <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '<span class="text-muted">-</span>'}</td>
+        </tr>
+      `;
+    }).join('');
+    
+    let tireHtml = "";
+    if (log.trip_type === 'Pre-Trip') {
+      const tDF = checklist["Tire Pressure (Driver Front)"] || "-";
+      const tPF = checklist["Tire Pressure (Passenger Front)"] || "-";
+      const tDR = checklist["Tire Pressure (Driver Rear)"] || "-";
+      const tPR = checklist["Tire Pressure (Passenger Rear)"] || "-";
+      tireHtml = `
+        <div class="section-box page-break-inside-avoid">
+            <h3>Tire Pressure (PSI)</h3>
+            <table class="tire-table">
+                <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
+                <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
+            </table>
+        </div>
+      `;
+    }
+
+    const imgFront = images.front ? `<div class="img-box"><p>Front Seat</p><img src="${images.front}" /></div>` : '';
+    const imgBack = images.back ? `<div class="img-box"><p>Back Seat</p><img src="${images.back}" /></div>` : '';
+    const imgTrunk = images.trunk ? `<div class="img-box"><p>Trunk</p><img src="${images.trunk}" /></div>` : '';
+    
+    let imagesHtml = "";
+    if (imgFront || imgBack || imgTrunk) {
+        imagesHtml = `
+            <div class="page-break-inside-avoid" style="margin-top: 20px;">
+                <h3>Vehicle Photos</h3>
+                <div class="images-container">
+                    ${imgFront}
+                    ${imgBack}
+                    ${imgTrunk}
+                </div>
+            </div>
+        `;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${filename}</title>
+          <style>
+            @media print {
+                @page { margin: 0.5cm; size: portrait; }
+                body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; color: #333; line-height: 1.4; max-width: 900px; margin: 0 auto; padding: 20px; }
+            h1 { font-size: 22px; margin: 0 0 15px 0; color: #1e3a8a; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+            h3 { font-size: 14px; margin: 20px 0 10px 0; color: #444; text-transform: uppercase; background: #e2e8f0; padding: 8px; border-radius: 4px; font-weight: 700; }
+            .header-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+            .info-item { background: #f8fafc; padding: 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
+            .info-label { display: block; font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; margin-bottom: 2px;}
+            .info-value { font-size: 14px; font-weight: 700; color: #0f172a; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+            th { text-align: left; background: #f1f5f9; padding: 8px; border-bottom: 2px solid #e2e8f0; font-size: 10px; text-transform: uppercase; color: #475569; }
+            td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+            .bg-gray { background-color: #f8fafc; }
+            .q-col { width: 50%; font-weight: 600; font-size: 11px; }
+            .s-col { width: 10%; text-align: center; }
+            .n-col { width: 40%; font-size: 11px; }
+            .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+            .badge-success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+            .badge-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+            .comment { color: #b91c1c; font-weight: 600; display: block; background: #fff5f5; padding: 4px; border-radius: 4px; border-left: 3px solid #ef4444; }
+            .text-muted { color: #cbd5e1; font-style: italic; }
+            .notes-box { background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 4px; margin-top: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+            .tire-table th, .tire-table td { text-align: center; border: 1px solid #e2e8f0; font-size: 13px; padding: 10px; }
+            .tire-table th { background: #f8fafc; }
+            .images-container { display: flex; gap: 15px; margin-top: 10px; }
+            .img-box { flex: 1; border: 1px solid #cbd5e1; padding: 5px; border-radius: 6px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+            .img-box p { margin: 0 0 5px 0; font-weight: bold; font-size: 10px; text-align: center; text-transform: uppercase; color: #64748b; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px; }
+            .img-box img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; }
+            .page-break-inside-avoid { page-break-inside: avoid; }
+          </style>
+        </head>
+        <body>
+          <h1>
+            <span>Symbria RX Logistics</span>
+            <span style="font-size:14px; color:#64748b; font-weight:normal;">Trip Log #${log.id}</span>
+          </h1>
+          
+          <div class="header-grid">
+            <div class="info-item">
+                <span class="info-label">Driver</span>
+                <div class="info-value">${log.driver_name || 'Unknown'}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Inspection Type</span>
+                <div class="info-value" style="color:${log.trip_type === 'Pre-Trip' ? '#2563eb' : '#d97706'}">${log.trip_type}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date & Time</span>
+                <div class="info-value">${new Date(log.created_at).toLocaleString()}</div>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Route / Odometer</span>
+                <div class="info-value">${log.route_id || 'N/A'} / ${log.odometer}</div>
+            </div>
+          </div>
+
+          ${tireHtml}
+
+          <h3>Inspection Checklist</h3>
+          <table>
+            <thead>
+                <tr>
+                    <th>Inspection Item</th>
+                    <th style="text-align:center;">Status</th>
+                    <th>Notes / Defects</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${checklistRows}
+            </tbody>
+          </table>
+
+          ${log.notes ? `
+            <div class="notes-box page-break-inside-avoid">
+                <span class="info-label" style="color:#92400e; margin-bottom:5px;">Additional Notes</span>
+                <div style="font-size:13px; color:#78350f; font-weight:500;">${log.notes}</div>
+            </div>
+          ` : ''}
+
+          ${imagesHtml}
+
+          <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 10px;">
+            <p>Certified by ${log.driver_name} on ${new Date(log.created_at).toLocaleDateString()}</p>
+            Symbria RX Logistics Digital Dashboard
+          </div>
+
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  return (
+    <button 
+      onClick={printLog}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-sm"
+    >
+      <ArrowDownTrayIcon className="w-4 h-4" />
+      Download PDF
+    </button>
+  );
+}
+</file>
+
+<file path="app/logs/[id]/ShareButton.tsx">
+"use client";
+
+import { useState } from "react";
+import { ShareIcon, CheckIcon } from "@heroicons/react/24/outline";
+import { generateShareToken } from "@/app/actions/log-actions";
+
+export default function ShareButton({ logId }: { logId: number }) {
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    setLoading(true);
+    try {
+      const token = await generateShareToken(logId);
+      const url = `${window.location.origin}/share/${token}`;
+      
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 3000); // Reset after 3s
+    } catch (err) {
+      alert("Failed to generate share link");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button 
+      onClick={handleShare}
+      disabled={loading}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 shadow-sm ${
+        copied 
+          ? "bg-green-100 text-green-700 border border-green-200" 
+          : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+      }`}
+    >
+      {loading ? (
+        <span className="animate-pulse">Generating...</span>
+      ) : copied ? (
+        <>
+          <CheckIcon className="w-4 h-4" />
+          Link Copied!
+        </>
+      ) : (
+        <>
+          <ShareIcon className="w-4 h-4" />
+          Share Public Link
+        </>
+      )}
+    </button>
+  );
+}
+</file>
+
+<file path="app/share/[token]/page.tsx">
+import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
+import LogViewer from '@/app/components/LogViewer';
+import LogDownloadButton from '@/app/logs/[id]/LogDownloadButton';
+
+export const dynamic = 'force-dynamic';
+
+export default async function PublicLogPage({ 
+  params 
+}: { 
+  params: Promise<{ token: string }> 
+}) {
+  const { token } = await params;
+
+  const log = await prisma.tripLog.findUnique({
+    where: { share_token: token },
+  });
+
+  if (!log) return notFound();
+
+  // Prepare data
+  const serializableLog = {
+    ...log,
+    odometer: log.odometer?.toString() || "0",
+    created_at: log.created_at.toISOString(),
+    updated_at: log.updated_at.toISOString(),
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        
+        {/* PUBLIC HEADER */}
+        <div className="bg-blue-900 text-white p-6 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Trip Log #{log.id}</h1>
+            <p className="text-blue-200 text-sm mt-1">
+              Public View • Submitted by {log.driver_name || 'Unknown'}
+            </p>
+          </div>
+          <LogDownloadButton log={serializableLog} />
+        </div>
+
+        {/* REUSED VIEWER */}
+        <LogViewer log={serializableLog} />
+        
+        <div className="bg-gray-50 dark:bg-gray-800 p-4 text-center text-xs text-gray-500">
+          Symbria RX Logistics • Public Record
+        </div>
+      </div>
+    </div>
+  );
 }
 </file>
 
@@ -825,237 +1367,49 @@ export default function Footer() {
 }
 </file>
 
-<file path="app/logs/[id]/page.tsx">
-import { prisma } from '@/lib/prisma';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-
-// Force dynamic rendering to ensure fresh data
-export const dynamic = 'force-dynamic';
-
-// 👇 UPDATE: params is now a Promise<{ id: string }>
-export default async function LogPreviewPage({ 
-  params 
-}: { 
-  params: Promise<{ id: string }> 
-}) {
-  
-  // 👇 UPDATE: Await the params before accessing properties
-  const { id } = await params; 
-  const logId = parseInt(id);
-
-  if (isNaN(logId)) {
-    return notFound();
-  }
-
-  const log = await prisma.tripLog.findUnique({
-    where: { id: logId },
-  });
-
-  if (!log) {
-    return notFound();
-  }
-
-  // --- CONFIGURATION: QUESTIONS LISTS ---
-  const PRE_TRIP_QUESTIONS = [
-    "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
-    "Fuel Tank Full",
-    "Gas card in binder",
-    "Dashboard warning lights on",
-    "Horn works",
-    "HVAC systems working",
-    "Info/Entertainment systems working",
-    "All doors working",
-    "Interior lights working",
-    "Driver/Passenger seat and belts working",
-    "Windshield wipers working",
-    "Cracks/chips on any windows",
-    "Dings, dents, or other visible damage on interior/exterior",
-    "Headlights working",
-    "Brake lights working",
-    "Turn signals working",
-    "Hazard lights working",
-    "Fog lights working"
-  ];
-
-  const POST_TRIP_QUESTIONS = [
-    "Fuel Tank Full",
-    "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
-    "Synchronize Scanner, End Route, Log Off",
-    "Scanner returned",
-    "Tackle boxes returned"
-  ];
-
-  const DAMAGE_QUESTIONS = [
-    "Dings, dents, or other visible damage on interior/exterior",
-    "Cracks/chips on any windows",
-    "Dashboard warning lights on"
-  ];
-
-  const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
-  
-  // Cast checklist to Record<string, string> for easier access
-  const checklist = log.checklist as Record<string, string> || {};
-  const images = log.images as Record<string, string> || {};
-
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
-        
-        {/* HEADER */}
-        <div className="bg-blue-600 dark:bg-blue-800 p-6 text-white flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold">Trip Log #{log.id}</h1>
-            <p className="text-blue-100 text-sm mt-1">{log.trip_type} Inspection</p>
-          </div>
-          <Link href="/dashboard" className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-            ← Back to Dashboard
-          </Link>
-        </div>
-
-        <div className="p-6 md:p-8 space-y-8">
-          
-          {/* INFO GRID */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
-            <div>
-              <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Driver</span>
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{log.driver_name || 'Unknown'}</span>
-            </div>
-            <div>
-              <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date</span>
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleDateString()}</span>
-            </div>
-            <div>
-              <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Route</span>
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{log.route_id || 'N/A'}</span>
-            </div>
-            <div>
-              <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Odometer</span>
-              {/* 👇 FIXED: Added .toString() to convert Decimal object to string */}
-              <span className="text-gray-900 dark:text-gray-100 font-medium">{log.odometer?.toString() || 'N/A'}</span>
-            </div>
-          </div>
-
-          {/* TIRE PRESSURE (PRE-TRIP ONLY) */}
-          {log.trip_type === 'Pre-Trip' && (
-            <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Tire Pressure (PSI)</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-center border border-blue-100 dark:border-blue-900/30">
-                  <span className="block text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Driver Front</span>
-                  <span className="text-lg font-mono text-blue-900 dark:text-blue-100">{checklist["Tire Pressure (Driver Front)"] || '-'}</span>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-center border border-blue-100 dark:border-blue-900/30">
-                  <span className="block text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Pass. Front</span>
-                  <span className="text-lg font-mono text-blue-900 dark:text-blue-100">{checklist["Tire Pressure (Passenger Front)"] || '-'}</span>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-center border border-blue-100 dark:border-blue-900/30">
-                  <span className="block text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Driver Rear</span>
-                  <span className="text-lg font-mono text-blue-900 dark:text-blue-100">{checklist["Tire Pressure (Driver Rear)"] || '-'}</span>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded text-center border border-blue-100 dark:border-blue-900/30">
-                  <span className="block text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">Pass. Rear</span>
-                  <span className="text-lg font-mono text-blue-900 dark:text-blue-100">{checklist["Tire Pressure (Passenger Rear)"] || '-'}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* CHECKLIST */}
-          <div>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Inspection Checklist</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Item</th>
-                    <th className="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-300 w-24">Status</th>
-                    <th className="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-300">Notes / Defects</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {relevantQuestions.map((q, i) => {
-                    const val = checklist[q] || "-";
-                    const comment = checklist[`${q}_COMMENT`];
-                    
-                    let isBad = false;
-                    if (DAMAGE_QUESTIONS.includes(q)) isBad = (val === "Yes");
-                    else isBad = (val === "No");
-
-                    return (
-                      <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="px-4 py-3 text-gray-800 dark:text-gray-200">{q}</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            isBad 
-                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' 
-                              : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                          }`}>
-                            {isBad ? 'ISSUE' : 'OK'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          {comment ? (
-                            <span className="text-red-600 dark:text-red-400 font-medium text-xs bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded block w-fit">
-                              ⚠️ {comment}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">-</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* NOTES */}
-          {log.notes && (
-            <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 rounded-lg p-4">
-              <h4 className="text-sm font-bold text-yellow-800 dark:text-yellow-500 uppercase tracking-wide mb-2">Additional Notes</h4>
-              <p className="text-yellow-900 dark:text-yellow-100 text-sm">{log.notes}</p>
-            </div>
-          )}
-
-          {/* IMAGES */}
-          {(images.front || images.back || images.trunk) && (
-            <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Vehicle Photos</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {images.front && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 text-center uppercase">Front Seat</p>
-                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                      <img src={images.front} alt="Front Seat" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-                {images.back && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 text-center uppercase">Back Seat</p>
-                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                      <img src={images.back} alt="Back Seat" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-                {images.trunk && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-bold text-gray-500 dark:text-gray-400 text-center uppercase">Trunk</p>
-                    <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                      <img src={images.trunk} alt="Trunk" className="w-full h-full object-cover" />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-        </div>
-      </div>
-    </div>
-  );
+<file path="tsconfig.json">
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
 </file>
 
@@ -1142,52 +1496,6 @@ if __name__ == "__main__":
     bundle_files()
 </file>
 
-<file path="tsconfig.json">
-{
-  "compilerOptions": {
-    "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    }
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.d.ts",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
-}
-</file>
-
 <file path="app/admin/feedback/page.tsx">
 // app/admin/feedback/page.tsx
 import { prisma } from '@/lib/prisma';
@@ -1214,6 +1522,84 @@ export default async function AdminFeedbackPage() {
 
       {/* 2. Render the interactive table */}
       <FeedbackTable initialData={feedbackList} />
+    </div>
+  );
+}
+</file>
+
+<file path="app/logs/[id]/page.tsx">
+import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
+import Link from 'next/link';
+import LogDownloadButton from './LogDownloadButton';
+import ShareButton from './ShareButton';
+import LogViewer from '@/app/components/LogViewer'; // 👈 Import new viewer
+
+export const dynamic = 'force-dynamic';
+
+export default async function LogPreviewPage({ 
+  params 
+}: { 
+  params: Promise<{ id: string }> 
+}) {
+  const { id } = await params; 
+  const logId = parseInt(id);
+
+  if (isNaN(logId)) return notFound();
+
+  const log = await prisma.tripLog.findUnique({
+    where: { id: logId },
+  });
+
+  if (!log) return notFound();
+
+  // Prepare data for Client Components
+  const serializableLog = {
+    ...log,
+    odometer: log.odometer?.toString() || "0",
+    created_at: log.created_at.toISOString(),
+    updated_at: log.updated_at.toISOString(),
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8 pb-32">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        
+        {/* HEADER */}
+        <div className="bg-white dark:bg-gray-800 p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trip Log #{log.id}</h1>
+               <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${
+                 log.trip_type === 'Pre-Trip' 
+                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
+                   : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+               }`}>
+                 {log.trip_type}
+               </span>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              Submitted by <span className="font-medium text-gray-800 dark:text-gray-200">{log.driver_name || 'Unknown'}</span>
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* 👇 SHARE BUTTON */}
+            <ShareButton logId={log.id} />
+            
+            {/* DOWNLOAD BUTTON */}
+            <LogDownloadButton log={serializableLog} />
+            
+            <Link href="/dashboard" className="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+              Back
+            </Link>
+          </div>
+        </div>
+
+        {/* 👇 REUSED LOG VIEWER */}
+        <LogViewer log={serializableLog} />
+
+      </div>
     </div>
   );
 }
@@ -4370,62 +4756,6 @@ export default function RootLayout({
 }
 </file>
 
-<file path="middleware.ts">
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
-
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          )
-          response = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // --- 🔒 PROTECTED ROUTES ---
-  // Only protect specific routes. The landing page "/" is public by default.
-  if (
-    (request.nextUrl.pathname.startsWith('/dashboard') || 
-     request.nextUrl.pathname.startsWith('/contacts') || 
-     request.nextUrl.pathname.startsWith('/admin')) 
-    && !user
-  ) {
-    // Redirect unauthenticated users to the Login page, NOT the landing page
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  return response
-}
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/contacts', '/admin/:path*', '/login'],
-}
-</file>
-
 <file path="app/page.tsx">
 "use client";
 
@@ -4659,68 +4989,59 @@ export default function Home() {
 }
 </file>
 
-<file path="prisma/schema.prisma">
-// prisma/schema.prisma
+<file path="middleware.ts">
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-generator client {
-  provider = "prisma-client-js"
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            request.cookies.set(name, value)
+          )
+          response = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // --- 🔒 PROTECTED ROUTES ---
+  // Only protect specific routes. The landing page "/" is public by default.
+  if (
+    (request.nextUrl.pathname.startsWith('/dashboard') || 
+     request.nextUrl.pathname.startsWith('/contacts') || 
+     request.nextUrl.pathname.startsWith('/admin')) 
+    && !user
+  ) {
+    // Redirect unauthenticated users to the Login page, NOT the landing page
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  return response
 }
 
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
-// 1. Feedback (Existing)
-model Feedback {
-  id        String   @id @default(cuid())
-  name      String
-  email     String
-  message   String
-  createdAt DateTime @default(now())
-  read      Boolean  @default(false)
-}
-
-// 2. Trip Logs (Restoring for Dashboard)
-model TripLog {
-  id          Int      @id @default(autoincrement())
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  edit_count  Int      @default(0)
-  user_id     String
-  vehicle_id  String?
-  route_id    String?
-  odometer    Decimal? 
-  trip_type   String
-  notes       String?
-  checklist   Json?    
-  images      Json?    
-  driver_name String?
-
-  @@map("trip_logs")
-}
-
-// 3. Profiles (Restoring for Contacts/Login)
-model Profile {
-  id         String   @id @default(uuid())
-  first_name String?
-  last_name  String?
-  email      String?
-  role       String?  @default("Driver")
-  job_title  String?
-  phone      String?
-  
-  @@map("profiles")
-}
-
-// 4. Routes (Restoring for Dashboard Dropdown)
-model Route {
-  id     Int     @id @default(autoincrement())
-  name   String
-  active Boolean @default(true)
-
-  @@map("routes")
+export const config = {
+  matcher: ['/dashboard/:path*', '/contacts', '/admin/:path*', '/login', '/share/:path*'],
 }
 </file>
 
@@ -5032,6 +5353,72 @@ export default function ContactsPage() {
 }
 </file>
 
+<file path="prisma/schema.prisma">
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// 1. Feedback (Existing)
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+  read      Boolean  @default(false)
+}
+
+// 2. Trip Logs (Restoring for Dashboard)
+model TripLog {
+  id          Int      @id @default(autoincrement())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  edit_count  Int      @default(0)
+  user_id     String
+  vehicle_id  String?
+  route_id    String?
+  odometer    Decimal? 
+  trip_type   String
+  notes       String?
+  checklist   Json?    
+  images      Json?    
+  driver_name String?
+  share_token String? @unique
+
+  @@map("trip_logs")
+}
+
+// 3. Profiles (Restoring for Contacts/Login)
+model Profile {
+  id         String   @id @default(uuid())
+  first_name String?
+  last_name  String?
+  email      String?
+  role       String?  @default("Driver")
+  job_title  String?
+  phone      String?
+  
+  @@map("profiles")
+}
+
+// 4. Routes (Restoring for Dashboard Dropdown)
+model Route {
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(true)
+
+  @@map("routes")
+}
+</file>
+
 <file path="package.json">
 {
   "name": "symbria-delivery-logistics",
@@ -5307,7 +5694,7 @@ export default function LoginPage() {
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation"; // 👈 Import usePathname
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
@@ -5319,6 +5706,7 @@ import {
 
 export default function Nav() {
   const router = useRouter();
+  const pathname = usePathname(); // 👈 Get current path
   const [loggedIn, setLoggedIn] = useState(false);
   const supabase = createClient();
 
@@ -5327,14 +5715,17 @@ export default function Nav() {
       const { data: { session } } = await supabase.auth.getSession();
       setLoggedIn(!!session);
     };
+    
+    // Check immediately
     checkUser();
 
+    // Listen for auth changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(!!session);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase]);
+  }, [supabase, pathname]); // 👈 Re-run check whenever path changes (e.g. redirect to login)
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -5342,6 +5733,9 @@ export default function Nav() {
     router.push("/");
     router.refresh();
   };
+
+  // 🛡️ Safety check: Strictly hide bottom nav if on login page
+  const showBottomNav = loggedIn && pathname !== "/login";
 
   return (
     <>
@@ -5388,9 +5782,8 @@ export default function Nav() {
       </nav>
 
       {/* --- MOBILE FLOATING BOTTOM NAV (Visible only on mobile when logged IN) --- */}
-      {loggedIn && (
-        // 👇 CHANGED: Opacity lowered to /80 for more transparency
-        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-fit min-w-[40%] bg-blue-900/85 dark:bg-blue-950/80 backdrop-blur-md border border-blue-700 dark:border-blue-800 shadow-2xl rounded-full flex justify-between items-center px-6 py-3 gap-6 animate-in slide-in-from-bottom-4 fade-in duration-500 whitespace-nowrap">
+      {showBottomNav && (
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-fit min-w-[40%] bg-blue-900/80 dark:bg-blue-950/80 backdrop-blur-md border border-blue-700 dark:border-blue-800 shadow-2xl rounded-full flex justify-between items-center px-6 py-3 gap-6 animate-in slide-in-from-bottom-4 fade-in duration-500 whitespace-nowrap">
           
           <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
             <HomeIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -5426,7 +5819,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -5512,6 +5905,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true); 
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
+
+  // 👇 UPDATED: Initialize visibleCount to 5
+  const [visibleCount, setVisibleCount] = useState(5);
 
   // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
@@ -5804,7 +6200,6 @@ export default function Dashboard() {
     else { alert("Log deleted."); fetchData(); }
   };
 
-  // 👇 RESTORED FUNCTION
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
     setTripType(log.trip_type);
@@ -6055,16 +6450,16 @@ export default function Dashboard() {
 
       <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
-          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip");
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); // Reset to 5
         }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
         <button onClick={() => { setActiveTab('history');
-          setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           My Logs
         </button>
         {(userProfile?.role === 'Management' || userProfile?.role === 'Admin') && (
-          <button onClick={() => { setActiveTab('all'); setEditingLog(null); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
             All Logs (Admin)
           </button>
         )}
@@ -6334,104 +6729,120 @@ export default function Dashboard() {
       )}
 
       {(activeTab === 'history' || activeTab === 'all') && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-          
-          {/* MOBILE CARD VIEW */}
-          <div className="block md:hidden">
-            {visibleLogs.map((log) => {
-              const hasPermission = canEditOrDelete(log);
-              return (
-                <div key={log.id} className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      {/* VIEW BUTTON ADDED HERE */}
-                      <Link 
-                        href={`/logs/${log.id}`}
-                        className="text-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center"
-                        title="View Log"
-                      >
-                        👁️
-                      </Link>
-
-                      <button onClick={() => printLog(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📄</button>
-                      <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📊</button>
-                    </div>
-                  </div>
-                  
-                  <div className="text-sm text-gray-800 dark:text-gray-200 font-medium">
-                    {activeTab === 'all' && <div className="text-purple-700 dark:text-purple-400 mb-1">{log.driver_name}</div>}
-                    <div>Route: {log.route_id || "N/A"}</div>
-                    <div>Odo: {log.odometer}</div>
-                  </div>
-
-                  {log.notes && <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded mt-1 italic">&quot;{log.notes}&quot;</div>}
-
-                  {hasPermission && (
-                    <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
-                      <button onClick={() => handleEditClick(log)} className="flex-1 text-center bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-sm py-2 rounded font-semibold">Edit</button>
-                      <button onClick={() => handleDelete(log.id)} className="flex-1 text-center bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm py-2 rounded font-semibold">Delete</button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* DESKTOP TABLE VIEW */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
-                <tr>
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
-                  {activeTab === 'all' && <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Driver</th>}
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Date</th>
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Route</th>
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Type</th>
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Odo</th>
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {visibleLogs.map((log) => {
-                  const hasPermission = canEditOrDelete(log);
-                  return (
-                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                      <td className="p-4 flex gap-2">
-                        {/* VIEW BUTTON ADDED HERE */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            
+            {/* MOBILE CARD VIEW */}
+            <div className="block md:hidden">
+              {/* 👇 UPDATED: Sliced logs */}
+              {visibleLogs.slice(0, visibleCount).map((log) => {
+                const hasPermission = canEditOrDelete(log);
+                return (
+                  <div key={log.id} className="p-4 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        {/* VIEW BUTTON */}
                         <Link 
                           href={`/logs/${log.id}`}
-                          className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 px-2 py-1 rounded flex items-center justify-center"
+                          className="text-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 flex items-center justify-center"
                           title="View Log"
                         >
                           👁️
                         </Link>
 
-                        <button onClick={() => printLog(log)} className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded">📄</button>
-                        <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 px-2 py-1 rounded">📊</button>
-                        {hasPermission && (
-                          <>
-                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1 self-center"></div>
-                            <button onClick={() => handleEditClick(log)} className="text-xs bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">✏️</button>
-                            <button onClick={() => handleDelete(log.id)} className="text-xs bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 px-2 py-1 rounded">🗑️</button>
-                          </>
-                        )}
-                      </td>
-                      {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
-                      <td className="p-4 text-gray-600 dark:text-gray-400">{new Date(log.created_at).toLocaleDateString()}</td>
-                      <td className="p-4 font-medium text-gray-800 dark:text-gray-200">{log.route_id || "-"}</td>
-                      <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span></td>
-                      <td className="p-4 text-gray-900 dark:text-gray-200">{log.odometer}</td>
-                      <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-xs">{log.notes || "-"}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <button onClick={() => printLog(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📄</button>
+                        <button onClick={() => downloadCSV(log)} className="text-lg bg-gray-50 dark:bg-gray-700 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600">📊</button>
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-800 dark:text-gray-200 font-medium">
+                      {activeTab === 'all' && <div className="text-purple-700 dark:text-purple-400 mb-1">{log.driver_name}</div>}
+                      <div>Route: {log.route_id || "N/A"}</div>
+                      <div>Odo: {log.odometer}</div>
+                    </div>
+
+                    {log.notes && <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded mt-1 italic">&quot;{log.notes}&quot;</div>}
+
+                    {hasPermission && (
+                      <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <button onClick={() => handleEditClick(log)} className="flex-1 text-center bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 text-sm py-2 rounded font-semibold">Edit</button>
+                        <button onClick={() => handleDelete(log.id)} className="flex-1 text-center bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-sm py-2 rounded font-semibold">Delete</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* DESKTOP TABLE VIEW */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 dark:bg-gray-700/50 border-b dark:border-gray-700">
+                  <tr>
+                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                    {activeTab === 'all' && <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Driver</th>}
+                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Date</th>
+                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Route</th>
+                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Type</th>
+                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Odo</th>
+                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Notes</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {/* 👇 UPDATED: Sliced logs */}
+                  {visibleLogs.slice(0, visibleCount).map((log) => {
+                    const hasPermission = canEditOrDelete(log);
+                    return (
+                      <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                        <td className="p-4 flex gap-2">
+                          <Link 
+                            href={`/logs/${log.id}`}
+                            className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 px-2 py-1 rounded flex items-center justify-center"
+                            title="View Log"
+                          >
+                            👁️
+                          </Link>
+
+                          <button onClick={() => printLog(log)} className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 px-2 py-1 rounded">📄</button>
+                          <button onClick={() => downloadCSV(log)} className="text-xs bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 px-2 py-1 rounded">📊</button>
+                          {hasPermission && (
+                            <>
+                              <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1 self-center"></div>
+                              <button onClick={() => handleEditClick(log)} className="text-xs bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-300 px-2 py-1 rounded">✏️</button>
+                              <button onClick={() => handleDelete(log.id)} className="text-xs bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-300 px-2 py-1 rounded">🗑️</button>
+                            </>
+                          )}
+                        </td>
+                        {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
+                        <td className="p-4 text-gray-600 dark:text-gray-400">{new Date(log.created_at).toLocaleDateString()}</td>
+                        <td className="p-4 font-medium text-gray-800 dark:text-gray-200">{log.route_id || "-"}</td>
+                        <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span></td>
+                        <td className="p-4 text-gray-900 dark:text-gray-200">{log.odometer}</td>
+                        <td className="p-4 text-gray-500 dark:text-gray-400 truncate max-w-xs">{log.notes || "-"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
+
+          {/* 👇 LOAD MORE BUTTON */}
+          {visibleCount < visibleLogs.length && (
+            <div className="flex justify-center pb-4">
+              <button 
+                // 👇 UPDATED: Increment by 5
+                onClick={() => setVisibleCount(prev => prev + 5)}
+                className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 py-3 rounded-full shadow-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Load More Logs <ChevronDownIcon className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
