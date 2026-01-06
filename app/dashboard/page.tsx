@@ -555,7 +555,8 @@ export default function Dashboard() {
         notes: formData.get('notes'),
         checklist: finalChecklist,
         images: imageUrls, 
-        driver_name: `${userProfile.firstName} ${userProfile.lastName}`
+        driver_name: `${userProfile.firstName} ${userProfile.lastName}`,
+        updated_at: new Date().toISOString(),
       };
 
       let error;
