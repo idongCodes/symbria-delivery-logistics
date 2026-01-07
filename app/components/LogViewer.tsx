@@ -2,6 +2,7 @@
 
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import LogDownloadButton from "@/app/logs/[id]/LogDownloadButton";
+import ClientDate from "@/app/components/ClientDate"; // 👈 IMPORT ADDED
 
 // --- CONFIGURATION ---
 const PRE_TRIP_QUESTIONS = [
@@ -48,14 +49,15 @@ export default function LogViewer({ log }: { log: any }) {
     <div className="p-6 md:p-8 space-y-8">
       {/* INFO GRID */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
-        <div>
-          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Date</span>
-          <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleDateString()}</span>
+        
+        {/* 👇 UPDATED: Combined Date & Time into one cleaner block */}
+        <div className="col-span-2">
+          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Submitted On</span>
+          <div className="text-gray-900 dark:text-gray-100 font-medium mt-1">
+            <ClientDate timestamp={log.created_at} />
+          </div>
         </div>
-        <div>
-          <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Time</span>
-          <span className="text-gray-900 dark:text-gray-100 font-medium">{new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-        </div>
+
         <div>
           <span className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Route</span>
           <span className="text-gray-900 dark:text-gray-100 font-medium">{log.route_id || 'N/A'}</span>
