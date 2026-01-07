@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
 import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import ClientDate from "@/app/components/ClientDate"; // 👈 IMPORT ADDED
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -91,7 +92,7 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
 
-  // 👇 UPDATED: Initialize visibleCount to 5
+  // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
 
   // Form State for Trip Logs
@@ -556,7 +557,7 @@ export default function Dashboard() {
         checklist: finalChecklist,
         images: imageUrls, 
         driver_name: `${userProfile.firstName} ${userProfile.lastName}`,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(), // 👈 ADDED TO FIX ERROR
       };
 
       let error;
@@ -636,7 +637,7 @@ export default function Dashboard() {
 
       <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
-          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); // Reset to 5
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); 
         }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
@@ -928,7 +929,10 @@ export default function Dashboard() {
                     <div className="flex justify-between items-start">
                       <div>
                         <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{new Date(log.created_at).toLocaleDateString()} at {new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        {/* 👇 UPDATED: ClientDate Component */}
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <ClientDate timestamp={log.created_at} />
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         {/* VIEW BUTTON */}
@@ -1004,7 +1008,12 @@ export default function Dashboard() {
                           )}
                         </td>
                         {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
-                        <td className="p-4 text-gray-600 dark:text-gray-400">{new Date(log.created_at).toLocaleDateString()}</td>
+                        
+                        {/* 👇 UPDATED: ClientDate Component */}
+                        <td className="p-4 text-gray-600 dark:text-gray-400">
+                          <ClientDate timestamp={log.created_at} />
+                        </td>
+
                         <td className="p-4 font-medium text-gray-800 dark:text-gray-200">{log.route_id || "-"}</td>
                         <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span></td>
                         <td className="p-4 text-gray-900 dark:text-gray-200">{log.odometer}</td>
