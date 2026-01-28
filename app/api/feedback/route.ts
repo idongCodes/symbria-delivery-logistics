@@ -1,12 +1,10 @@
 // app/api/feedback/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma'; // Ensure you are using the helper we made
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 export async function POST(req: Request) {
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
     const body = await req.json();
     const { name, email, message } = body;
 
@@ -28,11 +26,22 @@ export async function POST(req: Request) {
     });
 
     // 3. Send Email Notification
-    // 👇 UPDATED: Hardcoded link to your production Vercel app
-    const loginLink = "http://localhost:3000/admin/feedback"; 
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const loginLink = `${baseUrl}/admin/feedback`;
     
-    const { data, error } = await resend.emails.send({
-      from: 'onboarding@resend.dev', 
+    // Configure Transporter using Environment Variables
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
       to: 'i.d.essien@gmail.com', // Keep this as your test email for now
       subject: `New Feedback from ${name}`,
       html: `
@@ -48,14 +57,6 @@ export async function POST(req: Request) {
         </a>
       `,
     });
-
-    if (error) {
-      console.error('Resend API Error:', error);
-      return NextResponse.json(
-        { error: 'Feedback saved, but email failed to send.' }, 
-        { status: 500 }
-      );
-    }
 
     return NextResponse.json(newFeedback, { status: 200 });
 

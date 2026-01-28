@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 export async function POST(req: Request) {
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const body = await req.json();
     const { 
       driver_name, 
@@ -13,7 +12,8 @@ export async function POST(req: Request) {
       notes, 
       checklist, 
       images, 
-      created_at 
+      created_at,
+      shareLink
     } = body;
 
     // --- 1. Format Checklist for Email ---
@@ -72,7 +72,16 @@ export async function POST(req: Request) {
         imagesHtml += `</div>`;
     }
 
-    // --- 4. Construct Email HTML ---
+    // --- 4. Format Share Link ---
+    const shareSection = shareLink ? `
+      <div style="margin: 30px 0; text-align: center; background-color: #f3f4f6; padding: 20px; border-radius: 8px;">
+        <p style="margin-bottom: 15px; font-weight: bold; color: #333;">View the full trip log online:</p>
+        <a href="${shareLink}" style="background-color: #1e3a8a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">View Trip Log</a>
+        <p style="margin-top: 15px; font-size: 12px; color: #666;">Or copy this link: <br/><a href="${shareLink}" style="color: #2563eb;">${shareLink}</a></p>
+      </div>
+    ` : '';
+
+    // --- 5. Construct Email HTML ---
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <h1 style="color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px;">New Trip Log Submitted</h1>
@@ -90,6 +99,8 @@ export async function POST(req: Request) {
             <td colspan="2"><strong>Odometer:</strong> ${odometer}</td>
           </tr>
         </table>
+
+        ${shareSection}
 
         ${tireSection}
 
@@ -116,21 +127,28 @@ export async function POST(req: Request) {
       </div>
     `;
 
-    // --- 5. Send via Resend ---
-    const { data, error } = await resend.emails.send({
-      from: 'Symbria Logistics <onboarding@resend.dev>', // Or your verified domain
-      to: ['lholden@symbria.com'],
+    // --- 6. Send via Nodemailer ---
+    
+    // Configure Transporter using Environment Variables
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com', // Default or from env
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
+      to: 'lholden@symbria.com',
       bcc: ['ressien1@symbria.com', 'idongesit_essien@ymail.com'],
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
     });
 
-    if (error) {
-      console.error('Email Error:', error);
-      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true });
 
   } catch (error) {
     console.error('API Error:', error);

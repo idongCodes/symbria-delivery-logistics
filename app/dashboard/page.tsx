@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
+import { generateShareToken } from "@/app/actions/log-actions";
 import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate"; // 👈 IMPORT ADDED
 
@@ -569,16 +570,29 @@ export default function Dashboard() {
         }).eq('id', editingLog.id);
         error = response.error;
       } else {
-        const response = await supabase.from('trip_logs').insert(baseData);
-        error = response.error;
+        // 1. Insert and SELECT the new log to get its ID
+        const { data: newLogs, error: insertError } = await supabase
+            .from('trip_logs')
+            .insert(baseData)
+            .select();
+        
+        error = insertError;
 
-        if (!error) {
+        if (!error && newLogs && newLogs.length > 0) {
+            const newLog = newLogs[0];
+            
+            // 2. Generate Share Token
+            const token = await generateShareToken(newLog.id);
+            const shareLink = `${window.location.origin}/share/${token}`;
+
+            // 3. Send Email with Share Link
             fetch('/api/email-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...baseData,
-                    created_at: new Date().toISOString()
+                    created_at: newLog.created_at,
+                    shareLink // Pass the link to the API
                 })
             }).catch(err => console.error("Email trigger failed:", err));
         }
