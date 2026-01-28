@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
-      to: 'i.d.essien@gmail.com', // Keep this as your test email for now
+      to: ['idongesit_essien@ymail.com', 'ressien1@symbria.com'], 
       subject: `New Feedback from ${name}`,
       html: `
         <h2>New Feedback Received</h2>
