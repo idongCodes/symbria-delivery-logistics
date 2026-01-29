@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
-import AutoLogout from "./components/AutoLogout"; // 👈 1. Import this
+import AutoLogout from "./components/AutoLogout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900 pb-25`}>
         
-        <AutoLogout /> {/* 👈 2. Add the component here */}
+        <AutoLogout />
         
         <Nav />
         
