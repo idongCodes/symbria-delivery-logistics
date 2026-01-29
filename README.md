@@ -1,111 +1,112 @@
 # Symbria Delivery Logistics
 
-**Fleet Management & RX Delivery Inspection Platform.**
+**A Digital Fleet Management & Inspection Platform.**
 
-This application is a specialized logistics management platform designed to track pharmacy (RX) delivery driver inspections, route assignments, and vehicle conditions. It replaces paper logs with a digital, type-safe, and mobile-responsive solution.
+## 🎯 Purpose & Scope (MVP)
 
-## 🚀 Live Demo
+### The Problem
+Before this platform, vehicle inspections were conducted using manual paper logs. This process was inefficient, prone to errors, difficult to track in real-time, and lacked accountability regarding vehicle conditions (dents, cleanliness, etc.).
 
-[View Deployed Application](https://symbria-delivery-logistics.vercel.app)
+### The Solution
+This Minimum Viable Product (MVP) digitizes the entire Pre-Trip and Post-Trip inspection workflow. It provides a mobile-responsive interface for drivers to submit logs, upload photo evidence, and track vehicle status, while offering administrators real-time visibility into fleet operations.
 
------
-
-## 🛠️ Tech Stack
-
-  - **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
-  - **Language:** [TypeScript](https://www.typescriptlang.org/)
-  - **Styling:** [Tailwind CSS](https://tailwindcss.com/) (Responsive Mobile/Desktop)
-  - **Backend & Auth:** [Supabase](https://supabase.com/) (Postgres, Auth, Storage)
-  - **Deployment:** [Vercel](https://vercel.com/)
-
------
+---
 
 ## ✨ Key Features
 
-### 🚛 Driver & Trip Management
+### 🚛 For Drivers
+*   **Dynamic Inspection Forms:** Context-aware checklists that change based on "Pre-Trip" or "Post-Trip" selection.
+*   **Photo Evidence:** Mandatory photo uploads for vehicle conditions (Front, Back, Trunk) directly from the device camera.
+*   **Smart Validation:** Conditional logic forces detailed comments when specific defects are reported (e.g., "Check Engine Light" = Yes).
+*   **Mobile-First Design:** A "Card View" interface optimized for completing logs on phones during shifts.
+*   **Edit Windows:** Drivers can edit their own logs within a short timeframe (15 mins) to fix mistakes before records are locked.
 
-  * **Smart Inspection Forms:** Dynamic Pre-Trip and Post-Trip logic. Questions change based on the selected trip type.
-  * **Condition Reporting:** Conditional logic requires drivers to describe issues if "No" is selected on safety checks (or "Yes" on damage checks).
-  * **Photo Evidence:** Integrated file uploading for Front, Back, and Trunk vehicle photos (stored in Supabase Buckets).
-  * **Tire Pressure Logging:** Dedicated inputs for tire PSI during Pre-Trip inspections.
-  * **Dynamic Routes:** Route selection dropdown pulls live data from the database, allowing admins to update routes without code changes.
+### 🛡️ For Admins & Management
+*   **Real-Time Dashboard:** Instant access to all submitted logs with filtering and status indicators.
+*   **Role-Based Access Control (RBAC):**
+    *   **Drivers:** View/Edit own logs.
+    *   **Management:** Read-only access to all logs.
+    *   **Admins:** Full CRUD capabilities for logs and routes.
+*   **Reporting:** One-click PDF generation (printable reports) and CSV export for data analysis.
+*   **Public Sharing:** Generate secure, time-limited tokens to share specific inspection logs with external parties (e.g., mechanics/insurers) without requiring a login.
 
-### 🔐 Role-Based Access Control (RBAC)
+---
 
-  * **Drivers:** Can only view and edit their own logs for a limited time window. Mobile-optimized "Card View" for easy use on phones.
-  * **Management:** Read-only access to all driver logs and exports.
-  * **Admins:** Full access to Edit/Delete any log, manage routes, and view global history.
+## 🛠️ Tech Stack
 
-### 📊 Reporting & Contacts
+*   **Framework:** [Next.js 15](https://nextjs.org/) (App Router)
+*   **Language:** [TypeScript](https://www.typescriptlang.org/)
+*   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+*   **Backend & Auth:** [Supabase](https://supabase.com/) (Postgres, Auth, Storage)
+*   **ORM:** [Prisma](https://www.prisma.io/)
+*   **Testing:** Vitest & Playwright
 
-  * **One-Click Exports:** Generate PDF reports for individual inspections (including photos) or export data to CSV.
-  * **Live Contact Roster:** Auto-updating "Contacts" page that separates Drivers from Management based on registration titles.
+---
 
------
+## 🧪 Test Suite
 
-## ⚡ Getting Started
+The codebase maintains quality through a dual-layer testing strategy:
 
-Follow these steps to set up the project locally on your machine.
+### 1. Unit Tests (Vitest + React Testing Library)
+Run via: `npm run test:unit`
 
-### Prerequisites
+Focuses on component logic and isolation.
+*   **Navigation Logic:** Verifies correct link rendering based on auth state (Guest vs. Driver vs. Admin).
+*   **Component Hydration:** Ensures components like `ClientDate` handle server/client timestamp mismatches correctly.
+*   **Mocking:** Uses extensively mocked Supabase and Next.js Navigation modules to test behavior without external dependencies.
 
-  - Node.js (v18 or higher)
-  - A Supabase project (for DB and Auth)
+### 2. End-to-End Tests (Playwright)
+Run via: `npm run test:e2e`
 
-### Installation
+Focuses on critical user flows in a real browser environment.
+*   **Authentication Flows:** Verifies Login form rendering, registration toggles, and form validation.
+*   **Landing Page:** Ensures critical CTA elements and branding are visible.
+*   **Cross-Browser:** configured to run on Chromium, Firefox, and WebKit.
 
-1.  **Clone the repository:**
+---
 
+## 🔧 Technical Challenges & Resolutions
+
+### 1. Hydration Mismatches on Dates
+*   **Issue:** Server-rendered timestamps (UTC) differed from Client-rendered timestamps (Local Time), causing React hydration errors.
+*   **Resolution:** Created a dedicated `<ClientDate />` component that defers rendering the date string until after the component has mounted on the client, ensuring consistency.
+
+### 2. Impure Functions in Render
+*   **Issue:** Using `Date.now()` directly in `useState(Date.now())` caused inconsistent initial states during renders, flagging warnings in strict mode and potential UI bugs.
+*   **Resolution:** Switched to lazy initialization `useState(() => Date.now())` to ensure the timestamp is generated only once during the initial render pass.
+
+### 3. Complex Form State & Validation
+*   **Issue:** Managing dynamic checklists where "Pre-Trip" has different fields (e.g., Tire Pressure) than "Post-Trip" within a single form component.
+*   **Resolution:** Implemented a single source of truth `checklistData` state map, combined with a configuration array (`PRE_TRIP_QUESTIONS`, `POST_TRIP_QUESTIONS`) to dynamically render fields and enforce conditional validation rules.
+
+### 4. E2E Testing in CI/CD
+*   **Issue:** Playwright tests failing due to missing browser binaries in the environment.
+*   **Resolution:** Configured the setup process to include `npx playwright install` and handled system dependency checks to ensure reliable test execution across different environments.
+
+---
+
+## 🚀 Getting Started
+
+1.  **Clone & Install:**
     ```bash
-    git clone https://github.com/idongCodes/symbria-delivery-logistics.git
-    cd symbria-delivery-logistics
-    ```
-
-2.  **Install dependencies:**
-
-    ```bash
+    git clone [repo-url]
     npm install
     ```
 
-3.  **Configure Environment Variables:**
-    Create a `.env.local` file in the root directory and add your Supabase credentials:
-
+2.  **Environment Setup:**
+    Create `.env.local` with your Supabase credentials:
     ```bash
-    NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    NEXT_PUBLIC_SUPABASE_URL=...
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=...
     ```
 
-4.  **Run the development server:**
-
+3.  **Run Development Server:**
     ```bash
     npm run dev
     ```
 
-5.  **Open the app:**
-    Visit [http://localhost:3000](https://www.google.com/search?q=http://localhost:3000) in your browser.
-
------
-
-## 🗄️ Database Schema (Supabase)
-
-The application relies on the following key tables in Postgres:
-
-  * **`auth.users`**: Managed by Supabase Auth.
-  * **`public.profiles`**: Extends user data (Job Title, Phone, First/Last Name).
-  * **`public.trip_logs`**: Stores inspection data, JSON checklists, image URLs, and odometer readings.
-  * **`public.routes`**: Stores the list of active delivery routes.
-  * **`storage.buckets`**: 'trip\_logs' bucket stores vehicle images.
-
------
-
-## 🤝 Contributing
-
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/your-feature`).
-3.  Commit your changes (`git commit -m 'Add some feature'`).
-4.  Push to the branch (`git push origin feature/your-feature`).
-5.  Open a Pull Request.
-
-## 📄 License
-
-This project is proprietary. All rights reserved.
+4.  **Run Tests:**
+    ```bash
+    npm run test:unit  # Run Unit Tests
+    npm run test:e2e   # Run E2E Tests
+    ```
