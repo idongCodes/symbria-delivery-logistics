@@ -9,7 +9,7 @@ const TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
 export default function AutoLogout() {
   const router = useRouter();
   const supabase = createClient();
-  const [lastActivity, setLastActivity] = useState(Date.now());
+  const [lastActivity, setLastActivity] = useState(() => Date.now());
 
   useEffect(() => {
     const updateActivity = () => setLastActivity(Date.now());

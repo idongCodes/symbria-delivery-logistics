@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
-import ClientDate from "@/app/components/ClientDate"; // 👈 IMPORT ADDED
+import ClientDate from "@/app/components/ClientDate";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -558,7 +558,7 @@ export default function Dashboard() {
         checklist: finalChecklist,
         images: imageUrls, 
         driver_name: `${userProfile.firstName} ${userProfile.lastName}`,
-        updated_at: new Date().toISOString(), // 👈 ADDED TO FIX ERROR
+        updated_at: new Date().toISOString(),
       };
 
       let error;
@@ -570,7 +570,6 @@ export default function Dashboard() {
         }).eq('id', editingLog.id);
         error = response.error;
       } else {
-        // 1. Insert and SELECT the new log to get its ID
         const { data: newLogs, error: insertError } = await supabase
             .from('trip_logs')
             .insert(baseData)
@@ -581,11 +580,9 @@ export default function Dashboard() {
         if (!error && newLogs && newLogs.length > 0) {
             const newLog = newLogs[0];
             
-            // 2. Generate Share Token
             const token = await generateShareToken(newLog.id);
             const shareLink = `${window.location.origin}/share/${token}`;
 
-            // 3. Send Email with Share Link
             fetch('/api/email-log', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -935,7 +932,6 @@ export default function Dashboard() {
             
             {/* MOBILE CARD VIEW */}
             <div className="block md:hidden">
-              {/* 👇 UPDATED: Sliced logs */}
               {visibleLogs.slice(0, visibleCount).map((log) => {
                 const hasPermission = canEditOrDelete(log);
                 return (
@@ -943,7 +939,6 @@ export default function Dashboard() {
                     <div className="flex justify-between items-start">
                       <div>
                         <span className={`px-2 py-1 rounded text-xs font-bold ${log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'}`}>{log.trip_type}</span>
-                        {/* 👇 UPDATED: ClientDate Component */}
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           <ClientDate timestamp={log.created_at} />
                         </div>
@@ -997,7 +992,6 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {/* 👇 UPDATED: Sliced logs */}
                   {visibleLogs.slice(0, visibleCount).map((log) => {
                     const hasPermission = canEditOrDelete(log);
                     return (
@@ -1023,7 +1017,6 @@ export default function Dashboard() {
                         </td>
                         {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
                         
-                        {/* 👇 UPDATED: ClientDate Component */}
                         <td className="p-4 text-gray-600 dark:text-gray-400">
                           <ClientDate timestamp={log.created_at} />
                         </td>
@@ -1040,11 +1033,9 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* 👇 LOAD MORE BUTTON */}
           {visibleCount < visibleLogs.length && (
             <div className="flex justify-center pb-4">
               <button 
-                // 👇 UPDATED: Increment by 5
                 onClick={() => setVisibleCount(prev => prev + 5)}
                 className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-6 py-3 rounded-full shadow-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >

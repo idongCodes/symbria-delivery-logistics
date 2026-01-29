@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation"; // 👈 Import usePathname
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { 
@@ -13,7 +13,7 @@ import {
 
 export default function Nav() {
   const router = useRouter();
-  const pathname = usePathname(); // 👈 Get current path
+  const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
   const supabase = createClient();
 
@@ -32,7 +32,7 @@ export default function Nav() {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, pathname]); // 👈 Re-run check whenever path changes (e.g. redirect to login)
+  }, [supabase, pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -41,7 +41,6 @@ export default function Nav() {
     router.refresh();
   };
 
-  // 🛡️ Safety check: Strictly hide bottom nav if on login page
   const showBottomNav = loggedIn && pathname !== "/login";
 
   return (
