@@ -87,7 +87,7 @@ export default function LoginPage() {
     }
     // ------------------------------------
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -103,10 +103,18 @@ export default function LoginPage() {
 
     if (error) {
       setMessage("Error: " + error.message);
+      setLoading(false);
     } else {
-      setMessage("Success! Check your email for a confirmation link.");
+      // If email confirmation is disabled, user will have a session immediately
+      if (data.session) {
+        setMessage("Success! Logging you in...");
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        setMessage("Success! Please check your email for a confirmation link.");
+        setLoading(false);
+      }
     }
-    setLoading(false);
   };
 
   return (
