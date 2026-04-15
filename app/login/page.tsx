@@ -9,7 +9,7 @@ export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   
-  const [view, setView] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'forgot_password'>('login');
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +31,23 @@ export default function LoginPage() {
   
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+    });
+
+    if (error) {
+      setMessage("Error: " + error.message);
+    } else {
+      setMessage("Success! Password reset instructions sent to your email.");
+    }
+    setLoading(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,7 +138,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-950 transition-colors">
       <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300 border border-gray-200 dark:border-gray-700">
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          {view === 'login' ? 'Login' : 'Create Account'}
+          {view === 'login' ? 'Login' : (view === 'register' ? 'Create Account' : 'Reset Password')}
         </h1>
         
         {message && (
@@ -130,7 +147,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
+        <form onSubmit={view === 'login' ? handleLogin : (view === 'register' ? handleRegister : handleForgotPassword)} className="flex flex-col gap-4">
           
           {view === 'register' && (
             <>
@@ -183,23 +200,25 @@ export default function LoginPage() {
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
           
           {/* PASSWORD INPUT WITH TOGGLE */}
-          <div className="relative">
-            <input 
-              type={showPassword ? "text" : "password"} 
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10" 
-              required 
-            />
-            <button 
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-            </button>
-          </div>
+          {view !== 'forgot_password' && (
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Password" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10" 
+                required 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+              </button>
+            </div>
+          )}
           
           {/* CONFIRM PASSWORD INPUT WITH TOGGLE */}
           {view === 'register' && (
@@ -222,13 +241,23 @@ export default function LoginPage() {
             </div>
           )}
 
+          {view === 'login' && (
+            <div className="flex justify-end mt-[-8px]">
+              <button type="button" onClick={() => { setView('forgot_password'); setMessage(""); }} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                Forgot Password?
+              </button>
+            </div>
+          )}
+
           <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2 transition-colors">
-            {loading ? "Processing..." : (view === 'login' ? "Sign In" : "Sign Up")}
+            {loading ? "Processing..." : (view === 'login' ? "Sign In" : (view === 'register' ? "Sign Up" : "Send Reset Link"))}
           </button>
         </form>
 
         <div className="mt-6 text-center border-t border-gray-100 dark:border-gray-700 pt-4">
-          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{view === 'login' ? "Don't have an account?" : "Already have an account?"}</p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
+            {view === 'login' ? "Don't have an account?" : (view === 'register' ? "Already have an account?" : "Remembered your password?")}
+          </p>
           <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); setShowPassword(false); setShowConfirmPassword(false); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
             {view === 'login' ? "Register here" : "Log in here"}
           </button>
