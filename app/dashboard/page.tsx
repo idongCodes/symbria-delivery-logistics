@@ -927,35 +927,7 @@ export default function Dashboard() {
                           </div>
                         </div>
             
-                        <hr className="border-gray-200 dark:border-gray-700" />
-                        
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Exterior Photos (Required)</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front of Vehicle</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
-                              {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Side</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverSide} />
-                              {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rear of Vehicle</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('rear', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.rear} />
-                              {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Side</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerSide} />
-                              {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
-                            </div>
-                          </div>
-                        </div>
-            <div>
+                                    <div>
               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Exterior Photos (Required)</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
