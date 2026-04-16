@@ -108,7 +108,14 @@ export default function Dashboard() {
     front: File | null;
     back: File | null;
     trunk: File | null;
-  }>({ front: null, back: null, trunk: null });
+    driverSide: File | null;
+    passengerSide: File | null;
+    rear: File | null;
+    driverFrontTire: File | null;
+    passengerFrontTire: File | null;
+    driverRearTire: File | null;
+    passengerRearTire: File | null;
+  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
 
   // State: Password Update Form
   const [passwordForm, setPasswordForm] = useState({
@@ -390,7 +397,7 @@ export default function Dashboard() {
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
     setTripType(log.trip_type);
-    setImageFiles({ front: null, back: null, trunk: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
@@ -506,7 +513,7 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = (key: 'front' | 'back' | 'trunk', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
+  const handleFileChange = (key: 'front' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
   const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
   
   const uploadImage = async (file: File) => {
@@ -528,10 +535,17 @@ export default function Dashboard() {
     setSubmitting(true);
     
     try {
-      const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "" }) };
+      const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "", driverSide: "", passengerSide: "", rear: "", driverFrontTire: "", passengerFrontTire: "", driverRearTire: "", passengerRearTire: "" }) };
       if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
       if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
       if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
+      if (imageFiles.driverSide) imageUrls.driverSide = await uploadImage(imageFiles.driverSide);
+      if (imageFiles.passengerSide) imageUrls.passengerSide = await uploadImage(imageFiles.passengerSide);
+      if (imageFiles.rear) imageUrls.rear = await uploadImage(imageFiles.rear);
+      if (imageFiles.driverFrontTire) imageUrls.driverFrontTire = await uploadImage(imageFiles.driverFrontTire);
+      if (imageFiles.passengerFrontTire) imageUrls.passengerFrontTire = await uploadImage(imageFiles.passengerFrontTire);
+      if (imageFiles.driverRearTire) imageUrls.driverRearTire = await uploadImage(imageFiles.driverRearTire);
+      if (imageFiles.passengerRearTire) imageUrls.passengerRearTire = await uploadImage(imageFiles.passengerRearTire);
 
       const finalChecklist = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
@@ -541,12 +555,10 @@ export default function Dashboard() {
         }
       });
 
-      if (tripType === 'Pre-Trip') {
-        finalChecklist["Tire Pressure (Driver Front)"] = tirePressures.df;
-        finalChecklist["Tire Pressure (Passenger Front)"] = tirePressures.pf;
-        finalChecklist["Tire Pressure (Driver Rear)"] = tirePressures.dr;
-        finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
-      }
+      finalChecklist["Tire Pressure (Driver Front)"] = tirePressures.df;
+      finalChecklist["Tire Pressure (Passenger Front)"] = tirePressures.pf;
+      finalChecklist["Tire Pressure (Driver Rear)"] = tirePressures.dr;
+      finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
 
       const baseData = {
         user_id: userProfile.id,
@@ -602,7 +614,7 @@ export default function Dashboard() {
         formElement.reset();
         setChecklistData({});
         setChecklistComments({});
-        setImageFiles({ front: null, back: null, trunk: null });
+        setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
         setTirePressures({ df: "", pf: "", dr: "", pr: "" });
         setTripType("Pre-Trip");
         setEditingLog(null); 
@@ -648,7 +660,7 @@ export default function Dashboard() {
 
       <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
-          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); 
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); 
         }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
@@ -874,33 +886,115 @@ export default function Dashboard() {
                </div>
             </div>
 
-            <hr className="border-gray-200 dark:border-gray-700" />
-
-            {tripType === 'Pre-Trip' && (
-              <>
-                <div className="animate-in fade-in slide-in-from-top-2">
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Tire Pressure (PSI) (Required)</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                    <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                  </div>
-                </div>
-                <hr className="border-gray-200 dark:border-gray-700" />
-              </>
-            )}
-
+                        <hr className="border-gray-200 dark:border-gray-700" />
+                        
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Tire Pressure (PSI) (Required)</h3>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                          </div>
+                        </div>
+            
+                        <hr className="border-gray-200 dark:border-gray-700" />
+                        
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Tire Photos (Required)</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Front Tire</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverFrontTire} />
+                              {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Front Tire</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerFrontTire} />
+                              {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Rear Tire</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverRearTire} />
+                              {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Rear Tire</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerRearTire} />
+                              {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                          </div>
+                        </div>
+            
+                        <hr className="border-gray-200 dark:border-gray-700" />
+                        
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Exterior Photos (Required)</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front of Vehicle</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
+                              {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Side</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverSide} />
+                              {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rear of Vehicle</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('rear', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.rear} />
+                              {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Side</span>
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerSide} />
+                              {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                            </div>
+                          </div>
+                        </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Vehicle Photos (Required)</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Exterior Photos (Required)</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seats</span>
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front of Vehicle</span>
                   <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
                   {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seats</span>
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Side</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverSide} />
+                  {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rear of Vehicle</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('rear', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.rear} />
+                  {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Side</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerSide} />
+                  {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                </div>
+              </div>
+            </div>
+
+            <hr className="border-gray-200 dark:border-gray-700" />
+
+            <div>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Interior Photos (Required)</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seat Area</span>
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
+                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                </div>
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
+                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seat</span>
                   <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.back} />
                   {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
