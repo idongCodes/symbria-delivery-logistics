@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
-import { generateShareToken, updateLogImage } from "@/app/actions/log-actions";
+import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
 import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
@@ -116,7 +116,8 @@ export default function Dashboard() {
     passengerFrontTire: File | null;
     driverRearTire: File | null;
     passengerRearTire: File | null;
-  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
+    frontSeat: File | null;
+  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
 
   // State: Password Update Form
   const [passwordForm, setPasswordForm] = useState({
@@ -276,6 +277,7 @@ export default function Dashboard() {
       passengerFrontTire: "Passenger Front Tire",
       driverRearTire: "Driver Rear Tire",
       passengerRearTire: "Passenger Rear Tire",
+      frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
     };
@@ -287,7 +289,7 @@ export default function Dashboard() {
     if (log.images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["back", "trunk"];
+      const interiorKeys = ["frontSeat", "back", "trunk"];
 
       const generateImageHtml = (keys: string[], title: string) => {
         let html = '';
@@ -437,7 +439,7 @@ export default function Dashboard() {
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
     setTripType(log.trip_type);
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
@@ -553,7 +555,7 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = (key: 'front' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
+  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
   const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
   
   const uploadImage = async (file: File, quality: number = 0.6) => {
@@ -662,7 +664,7 @@ export default function Dashboard() {
         formElement.reset();
         setChecklistData({});
         setChecklistComments({});
-        setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
+        setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
         setTirePressures({ df: "", pf: "", dr: "", pr: "" });
         setTripType("Pre-Trip");
         fetchData();
@@ -671,14 +673,35 @@ export default function Dashboard() {
         // 4. Asynchronously upload images and update the log
         const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
   
-        for (const [key, file] of imagesToUpload) {
-            uploadImage(file!).then(imageUrl => {
-                console.log(`Uploaded ${key}. Updating log...`);
-                updateLogImage(newLog.id, key, imageUrl);
-            }).catch(err => {
-                console.error(`Failed to upload ${key}:`, err);
-                // Optional: Add some error handling state to show in the UI
-            });
+        if (imagesToUpload.length > 0) {
+          (async () => {
+            try {
+              const imageUrls: Record<string, string> = {};
+              await Promise.all(imagesToUpload.map(async ([key, file]) => {
+                try {
+                  const url = await uploadImage(file!);
+                  imageUrls[key] = url;
+                  console.log(`Uploaded ${key}.`);
+                } catch (err) {
+                  console.error(`Failed to upload ${key}:`, err);
+                }
+              }));
+              
+              if (Object.keys(imageUrls).length > 0) {
+                const { error } = await supabase.from('trip_logs').update({
+                  images: imageUrls
+                }).eq('id', newLog.id);
+                
+                if (error) {
+                  console.error("Failed to save images to log:", error);
+                } else {
+                  console.log("All images successfully saved to log.");
+                }
+              }
+            } catch (err) {
+              console.error("Background image upload process failed:", err);
+            }
+          })();
         }
   
         // 5. Trigger email notification
@@ -735,7 +758,7 @@ export default function Dashboard() {
 
       <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
-          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); 
+          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); 
         }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
@@ -1036,8 +1059,8 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seat Area</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
-                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('frontSeat', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.frontSeat} />
+                  {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seat</span>

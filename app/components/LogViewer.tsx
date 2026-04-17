@@ -52,13 +52,14 @@ export default function LogViewer({ log }: { log: any }) {
     passengerFrontTire: "Passenger Front Tire",
     driverRearTire: "Driver Rear Tire",
     passengerRearTire: "Passenger Rear Tire",
+    frontSeat: "Front Seat Area",
     back: "Back Seat",
     trunk: "Trunk",
   };
 
   const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
   const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-  const interiorKeys = ["back", "trunk"];
+  const interiorKeys = ["frontSeat", "back", "trunk"];
 
   const renderImageSection = (keys: string[], title: string) => {
     const hasImages = keys.some(key => images[key]);
