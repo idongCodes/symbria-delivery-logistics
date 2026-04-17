@@ -63,13 +63,52 @@ export async function POST(req: Request) {
     }
 
     // --- 3. Format Images ---
-    let imagesHtml = "";
+    const imageTitles: { [key: string]: string } = {
+      front: "Front of Vehicle",
+      driverSide: "Driver Side",
+      rear: "Rear of Vehicle",
+      passengerSide: "Passenger Side",
+      driverFrontTire: "Driver Front Tire",
+      passengerFrontTire: "Passenger Front Tire",
+      driverRearTire: "Driver Rear Tire",
+      passengerRearTire: "Passenger Rear Tire",
+      back: "Back Seat",
+      trunk: "Trunk",
+    };
+
+    let exteriorImagesHtml = "";
+    let tireImagesHtml = "";
+    let interiorImagesHtml = "";
+
     if (images) {
-        imagesHtml = `<div style="display:flex; gap:10px; margin-top:20px;">`;
-        if (images.front) imagesHtml += `<div style="flex:1;"><p style="font-size:12px; font-weight:bold;">Front Seat</p><img src="${images.front}" style="width:100%; max-width:200px; border-radius:5px; border:1px solid #ccc;" /></div>`;
-        if (images.back) imagesHtml += `<div style="flex:1;"><p style="font-size:12px; font-weight:bold;">Back Seat</p><img src="${images.back}" style="width:100%; max-width:200px; border-radius:5px; border:1px solid #ccc;" /></div>`;
-        if (images.trunk) imagesHtml += `<div style="flex:1;"><p style="font-size:12px; font-weight:bold;">Trunk</p><img src="${images.trunk}" style="width:100%; max-width:200px; border-radius:5px; border:1px solid #ccc;" /></div>`;
-        imagesHtml += `</div>`;
+      const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
+      const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
+      const interiorKeys = ["back", "trunk"];
+
+
+      const generateImageHtml = (keys: string[]) => {
+        let html = '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:10px;">';
+        let count = 0;
+        for (const key of keys) {
+          if (images[key]) {
+            html += `
+              <div style="flex:1; min-width: 200px; max-width: 250px;">
+                <p style="font-size:13px; font-weight:bold; margin-bottom:5px; color:#555;">${imageTitles[key] || key}</p>
+                <a href="${images[key]}" target="_blank">
+                  <img src="${images[key]}" style="width:100%; border-radius:6px; border:1px solid #ccc;" />
+                </a>
+              </div>
+            `;
+            count++;
+          }
+        }
+        html += '</div>';
+        return count > 0 ? html : "";
+      }
+
+      exteriorImagesHtml = generateImageHtml(exteriorKeys);
+      tireImagesHtml = generateImageHtml(tireKeys);
+      interiorImagesHtml = generateImageHtml(interiorKeys);
     }
 
     // --- 4. Format Share Link ---
@@ -119,7 +158,20 @@ export async function POST(req: Request) {
 
         ${notes ? `<div style="margin-top:20px; background:#fffbeb; padding:15px; border:1px solid #fcd34d; border-radius:5px;"><strong>📝 Notes:</strong><br/>${notes}</div>` : ''}
 
-        ${imagesHtml}
+        ${exteriorImagesHtml ? `
+          <h3 style="background:#f3f4f6; padding:10px; margin-top: 20px;">Exterior Photos</h3>
+          ${exteriorImagesHtml}
+        ` : ''}
+
+        ${tireImagesHtml ? `
+          <h3 style="background:#f3f4f6; padding:10px; margin-top: 20px;">Tire Photos</h3>
+          ${tireImagesHtml}
+        ` : ''}
+
+        ${interiorImagesHtml ? `
+          <h3 style="background:#f3f4f6; padding:10px; margin-top: 20px;">Interior Photos</h3>
+          ${interiorImagesHtml}
+        ` : ''}
         
         <p style="margin-top:30px; font-size:12px; color:#999; text-align:center;">
           Automated message from Symbria Delivery Logistics System.
