@@ -115,6 +115,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
       passengerFrontTire: "Passenger Front Tire",
       driverRearTire: "Driver Rear Tire",
       passengerRearTire: "Passenger Rear Tire",
+      frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
     };
@@ -126,7 +127,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["back", "trunk"];
+      const interiorKeys = ["frontSeat", "back", "trunk"];
 
       const generateImageHtml = (keys: string[], title: string) => {
         let html = '';
