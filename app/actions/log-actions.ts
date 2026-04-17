@@ -37,3 +37,30 @@ export async function generateShareToken(logId: number) {
 
   return token;
 }
+
+export async function updateLogImage(logId: number, imageKey: string, imageUrl: string) {
+  try {
+    const log = await prisma.tripLog.findUnique({
+      where: { id: logId },
+      select: { images: true },
+    });
+
+    if (!log) {
+      throw new Error(`Log with ID ${logId} not found.`);
+    }
+
+    const updatedImages = {
+      ...((log.images as object) || {}),
+      [imageKey]: imageUrl,
+    };
+
+    await prisma.tripLog.update({
+      where: { id: logId },
+      data: { images: updatedImages },
+    });
+  } catch (error) {
+    console.error(`Failed to update image for log ${logId}:`, error);
+    // Optionally re-throw or handle the error as needed
+    throw error;
+  }
+}

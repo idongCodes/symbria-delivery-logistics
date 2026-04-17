@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
-import { generateShareToken } from "@/app/actions/log-actions";
+import { generateShareToken, updateLogImage } from "@/app/actions/log-actions";
+import imageCompression from "browser-image-compression";
 import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 
@@ -516,12 +517,31 @@ export default function Dashboard() {
   const handleFileChange = (key: 'front' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
   const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
   
-  const uploadImage = async (file: File) => {
+  const uploadImage = async (file: File, quality: number = 0.6) => {
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      initialQuality: quality,
+    };
+    try {
+      const compressedFile = await imageCompression(file, options);
+      return await uploadAndGetUrl(compressedFile);
+    } catch (error) {
+      console.error("Image compression failed:", error);
+      // Fallback to uploading the original file if compression fails
+      return await uploadAndGetUrl(file);
+    }
+  };
+
+  const uploadAndGetUrl = async (file: File) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()}.${fileExt}`;
     const filePath = `${userProfile?.id}/${fileName}`;
+    
     const { error } = await supabase.storage.from('trip_logs').upload(filePath, file);
     if (error) throw error;
+    
     const { data } = supabase.storage.from('trip_logs').getPublicUrl(filePath);
     return data.publicUrl;
   };
@@ -529,24 +549,12 @@ export default function Dashboard() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!userProfile) return;
-
-    const formElement = e.currentTarget; 
+  
+    const formElement = e.currentTarget;
     const formData = new FormData(formElement);
     setSubmitting(true);
-    
+  
     try {
-      const imageUrls = { ...(editingLog?.images || { front: "", back: "", trunk: "", driverSide: "", passengerSide: "", rear: "", driverFrontTire: "", passengerFrontTire: "", driverRearTire: "", passengerRearTire: "" }) };
-      if (imageFiles.front) imageUrls.front = await uploadImage(imageFiles.front);
-      if (imageFiles.back) imageUrls.back = await uploadImage(imageFiles.back);
-      if (imageFiles.trunk) imageUrls.trunk = await uploadImage(imageFiles.trunk);
-      if (imageFiles.driverSide) imageUrls.driverSide = await uploadImage(imageFiles.driverSide);
-      if (imageFiles.passengerSide) imageUrls.passengerSide = await uploadImage(imageFiles.passengerSide);
-      if (imageFiles.rear) imageUrls.rear = await uploadImage(imageFiles.rear);
-      if (imageFiles.driverFrontTire) imageUrls.driverFrontTire = await uploadImage(imageFiles.driverFrontTire);
-      if (imageFiles.passengerFrontTire) imageUrls.passengerFrontTire = await uploadImage(imageFiles.passengerFrontTire);
-      if (imageFiles.driverRearTire) imageUrls.driverRearTire = await uploadImage(imageFiles.driverRearTire);
-      if (imageFiles.passengerRearTire) imageUrls.passengerRearTire = await uploadImage(imageFiles.passengerRearTire);
-
       const finalChecklist = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
         const answer = checklistData[q];
@@ -554,78 +562,106 @@ export default function Dashboard() {
           finalChecklist[`${q}_COMMENT`] = checklistComments[q];
         }
       });
-
+  
       finalChecklist["Tire Pressure (Driver Front)"] = tirePressures.df;
       finalChecklist["Tire Pressure (Passenger Front)"] = tirePressures.pf;
       finalChecklist["Tire Pressure (Driver Rear)"] = tirePressures.dr;
       finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
-
+  
       const baseData = {
         user_id: userProfile.id,
-        vehicle_id: "N/A", 
-        route_id: formData.get('route_id'), 
-        odometer: formData.get('odometer'),
-        trip_type: tripType, 
-        notes: formData.get('notes'),
+        vehicle_id: "N/A",
+        route_id: formData.get('route_id') as string,
+        odometer: Number(formData.get('odometer')),
+        trip_type: tripType,
+        notes: formData.get('notes') as string,
         checklist: finalChecklist,
-        images: imageUrls, 
+        images: {}, // Start with empty images
         driver_name: `${userProfile.firstName} ${userProfile.lastName}`,
         updated_at: new Date().toISOString(),
       };
-
-      let error;
+  
       if (editingLog) {
+        // --- EDIT MODE ---
+        const imageUrls = { ...(editingLog.images || {}) };
+        const uploadPromises = Object.entries(imageFiles)
+          .filter(([, file]) => file)
+          .map(async ([key, file]) => {
+            const url = await uploadImage(file!);
+            imageUrls[key as keyof typeof imageUrls] = url;
+          });
+      
+        await Promise.all(uploadPromises);
+      
         const response = await supabase.from('trip_logs').update({
-            ...baseData,
-            edit_count: editingLog.edit_count + 1,
-            updated_at: new Date().toISOString()
+          ...baseData,
+          images: imageUrls,
+          edit_count: editingLog.edit_count + 1,
         }).eq('id', editingLog.id);
-        error = response.error;
+      
+        if (response.error) throw response.error;
+      
+        alert("Log updated successfully!");
+  
       } else {
+        // --- NEW LOG MODE (ASYNC) ---
+        // 1. Insert log with text data first to get an ID
         const { data: newLogs, error: insertError } = await supabase
-            .from('trip_logs')
-            .insert(baseData)
-            .select();
+          .from('trip_logs')
+          .insert({ ...baseData, images: {} }) // Ensure images is an empty object
+          .select();
+  
+        if (insertError) throw insertError;
+        if (!newLogs || newLogs.length === 0) throw new Error("Failed to create log.");
         
-        error = insertError;
-
-        if (!error && newLogs && newLogs.length > 0) {
-            const newLog = newLogs[0];
-            
-            const token = await generateShareToken(newLog.id);
-            const shareLink = `${window.location.origin}/share/${token}`;
-
-            fetch('/api/email-log', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...baseData,
-                    created_at: newLog.created_at,
-                    shareLink // Pass the link to the API
-                })
-            }).catch(err => console.error("Email trigger failed:", err));
-        }
-      }
-
-      if (error) {
-        alert("Error: " + error.message);
-      } else {
-        alert(editingLog ? "Log updated!" : "Success! Log submitted.");
+        const newLog = newLogs[0];
+        
+        // 2. Give immediate feedback to user
+        alert("Success! Log submitted. Images are uploading in the background.");
+        
+        // 3. Reset form and navigate away
         formElement.reset();
         setChecklistData({});
         setChecklistComments({});
         setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null });
         setTirePressures({ df: "", pf: "", dr: "", pr: "" });
         setTripType("Pre-Trip");
-        setEditingLog(null); 
-        fetchData(); 
-        setActiveTab('history'); 
+        fetchData();
+        setActiveTab('history');
+  
+        // 4. Asynchronously upload images and update the log
+        const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
+  
+        for (const [key, file] of imagesToUpload) {
+            uploadImage(file!).then(imageUrl => {
+                console.log(`Uploaded ${key}. Updating log...`);
+                updateLogImage(newLog.id, key, imageUrl);
+            }).catch(err => {
+                console.error(`Failed to upload ${key}:`, err);
+                // Optional: Add some error handling state to show in the UI
+            });
+        }
+  
+        // 5. Trigger email notification
+        const token = await generateShareToken(newLog.id);
+        const shareLink = `${window.location.origin}/share/${token}`;
+        fetch('/api/email-log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                ...baseData,
+                created_at: newLog.created_at,
+                shareLink
+            })
+        }).catch(err => console.error("Email trigger failed:", err));
       }
+  
     } catch (err) {
       const errorMessage = (err as Error).message || "An unknown error occurred";
       alert("Submission Failed: " + errorMessage);
     } finally {
       setSubmitting(false);
+      setEditingLog(null);
     }
   }
 
