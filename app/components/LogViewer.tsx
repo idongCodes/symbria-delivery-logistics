@@ -43,6 +43,44 @@ export default function LogViewer({ log }: { log: any }) {
   const checklist = (log.checklist as Record<string, string>) || {};
   const images = (log.images as Record<string, string>) || {};
 
+  const imageTitles: { [key: string]: string } = {
+    front: "Front of Vehicle",
+    driverSide: "Driver Side",
+    rear: "Rear of Vehicle",
+    passengerSide: "Passenger Side",
+    driverFrontTire: "Driver Front Tire",
+    passengerFrontTire: "Passenger Front Tire",
+    driverRearTire: "Driver Rear Tire",
+    passengerRearTire: "Passenger Rear Tire",
+    back: "Back Seat",
+    trunk: "Trunk",
+  };
+
+  const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
+  const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
+  const interiorKeys = ["back", "trunk"];
+
+  const renderImageSection = (keys: string[], title: string) => {
+    const hasImages = keys.some(key => images[key]);
+    if (!hasImages) return null;
+
+    return (
+      <div className="mt-8">
+        <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">{title}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {keys.map((key) => images[key] && (
+            <div key={key} className="space-y-2">
+              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 text-center uppercase">{imageTitles[key] || key}</p>
+              <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                <img src={images[key]} alt={key} className="w-full h-full object-cover" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6 md:p-8 space-y-8">
       {/* INFO GRID */}
@@ -128,21 +166,9 @@ export default function LogViewer({ log }: { log: any }) {
       )}
 
       {/* IMAGES */}
-      {(images.front || images.back || images.trunk) && (
-        <div>
-          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4 border-b dark:border-gray-700 pb-2">Vehicle Photos</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {['front', 'back', 'trunk'].map((key) => images[key] && (
-              <div key={key} className="space-y-2">
-                <p className="text-xs font-bold text-gray-500 dark:text-gray-400 text-center uppercase">{key} Seat/Area</p>
-                <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-                  <img src={images[key]} alt={key} className="w-full h-full object-cover" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      {renderImageSection(exteriorKeys, "Exterior Photos")}
+      {renderImageSection(tireKeys, "Tire Photos")}
+      {renderImageSection(interiorKeys, "Interior Photos")}
     </div>
   );
 }

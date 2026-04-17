@@ -106,22 +106,59 @@ export default function LogDownloadButton({ log }: { log: any }) {
       `;
     }
 
-    const imgFront = images.front ? `<div class="img-box"><p>Front Seat</p><img src="${images.front}" /></div>` : '';
-    const imgBack = images.back ? `<div class="img-box"><p>Back Seat</p><img src="${images.back}" /></div>` : '';
-    const imgTrunk = images.trunk ? `<div class="img-box"><p>Trunk</p><img src="${images.trunk}" /></div>` : '';
-    
-    let imagesHtml = "";
-    if (imgFront || imgBack || imgTrunk) {
-        imagesHtml = `
+    const imageTitles: { [key: string]: string } = {
+      front: "Front of Vehicle",
+      driverSide: "Driver Side",
+      rear: "Rear of Vehicle",
+      passengerSide: "Passenger Side",
+      driverFrontTire: "Driver Front Tire",
+      passengerFrontTire: "Passenger Front Tire",
+      driverRearTire: "Driver Rear Tire",
+      passengerRearTire: "Passenger Rear Tire",
+      back: "Back Seat",
+      trunk: "Trunk",
+    };
+
+    let exteriorImagesHtml = "";
+    let tireImagesHtml = "";
+    let interiorImagesHtml = "";
+
+    if (images) {
+      const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
+      const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
+      const interiorKeys = ["back", "trunk"];
+
+      const generateImageHtml = (keys: string[], title: string) => {
+        let html = '';
+        let sectionImagesHtml = '';
+        let count = 0;
+        for (const key of keys) {
+          if (images[key]) {
+            sectionImagesHtml += `
+              <div class="img-box">
+                <p>${imageTitles[key] || key}</p>
+                <img src="${images[key]}" />
+              </div>
+            `;
+            count++;
+          }
+        }
+        if (count > 0) {
+          html = `
             <div class="page-break-inside-avoid" style="margin-top: 20px;">
-                <h3>Vehicle Photos</h3>
+                <h3>${title}</h3>
                 <div class="images-container">
-                    ${imgFront}
-                    ${imgBack}
-                    ${imgTrunk}
+                    ${sectionImagesHtml}
                 </div>
             </div>
-        `;
+          `;
+        }
+        return html;
+      }
+
+      exteriorImagesHtml = generateImageHtml(exteriorKeys, "Exterior Photos");
+      tireImagesHtml = generateImageHtml(tireKeys, "Tire Photos");
+      interiorImagesHtml = generateImageHtml(interiorKeys, "Interior Photos");
     }
 
     printWindow.document.write(`
@@ -211,7 +248,9 @@ export default function LogDownloadButton({ log }: { log: any }) {
             </div>
           ` : ''}
 
-          ${imagesHtml}
+          ${exteriorImagesHtml}
+          ${tireImagesHtml}
+          ${interiorImagesHtml}
 
           <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 10px;">
             <p>Certified by ${log.driver_name} on ${new Date(log.created_at).toLocaleDateString()}</p>
