@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { clearImagesFromDB } from "@/app/lib/indexedDB";
 
 const TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
 
@@ -19,6 +20,8 @@ export default function AutoLogout() {
 
     const intervalId = setInterval(async () => {
       if (Date.now() - lastActivity >= TIMEOUT_MS) {
+        localStorage.removeItem("tripLogFormState");
+        clearImagesFromDB();
         await supabase.auth.signOut();
         router.push("/");
         router.refresh();
