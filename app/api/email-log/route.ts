@@ -194,8 +194,7 @@ export async function POST(req: Request) {
 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
-      to: 'ressien1@symbria.com',
-      cc: 'idongesit_essien@ymail.com',
+      to: 'idongesit_essien@ymail.com',
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
     });
