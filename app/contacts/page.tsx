@@ -91,6 +91,56 @@ export default function ContactsPage() {
   const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
   const hiddenEmail = "idongesit_essien@ymail.com"; // This Admin should remain HIDDEN
 
+  // Helper Component for Navigation Dropdown
+  const NavDropdownMenu = ({ stops, isDesktop }: { stops: { address: string }[], isDesktop?: boolean }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [links, setLinks] = useState({ google: '', apple: '', waze: '' });
+
+    useEffect(() => {
+      const origin = encodeURIComponent("Midstate Dr, Auburn, MA");
+      const destination = encodeURIComponent("Midstate Dr, Auburn, MA");
+      const waypoints = encodeURIComponent(stops.map(s => s.address).join('|'));
+      
+      const google = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
+      
+      const appleWaypoints = stops.map(s => `&daddr=${encodeURIComponent(s.address)}`).join('');
+      const apple = `http://maps.apple.com/?saddr=${origin}${appleWaypoints}&daddr=${destination}&dirflg=d`;
+      
+      const waze = `https://waze.com/ul?q=${encodeURIComponent(stops[0].address)}&navigate=yes`;
+      
+      setLinks({ google, apple, waze });
+    }, [stops]);
+
+    useEffect(() => {
+      const handleOutsideClick = () => setIsOpen(false);
+      if (isOpen) {
+        document.addEventListener('click', handleOutsideClick);
+      }
+      return () => document.removeEventListener('click', handleOutsideClick);
+    }, [isOpen]);
+
+    return (
+      <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+        <button 
+          onClick={() => setIsOpen(!isOpen)} 
+          className={`bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center transition-colors font-semibold ${isDesktop ? 'text-[11px] inline-flex py-1.5 px-3 gap-1.5' : 'text-[11px] py-1 px-2.5 gap-1.5'}`}
+        >
+          <span>🗺️</span> {isDesktop ? 'Start Navigation' : 'Start Nav'}
+        </button>
+        
+        {isOpen && (
+          <div className={`absolute ${isDesktop ? 'left-0 mt-2' : 'right-0 mt-2'} w-40 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 border border-gray-100 dark:border-gray-700 z-50 overflow-hidden`}>
+            <div className="py-1">
+              <a href={links.google} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 font-medium transition-colors">Google Maps</a>
+              <a href={links.apple} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 font-medium transition-colors">Apple Maps</a>
+              <a href={links.waze} target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="block px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-gray-700 font-medium transition-colors">Waze <span className="text-[10px] text-gray-500 dark:text-gray-400 font-normal block mt-0.5">(1st stop only)</span></a>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // 1. Drivers List
   const drivers = profiles.filter(p => 
     p.email !== hiddenEmail && 
@@ -248,7 +298,10 @@ export default function ContactsPage() {
                 </div>
 
                 <div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase block mb-2">Locations ({route.stops.length})</span>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase">Locations ({route.stops.length})</span>
+                    <NavDropdownMenu stops={route.stops} isDesktop={false} />
+                  </div>
                   <div className="space-y-3 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
                     {route.stops.map((stop, idx) => (
                       <div key={idx} className="pb-2 mb-2 border-b border-gray-200 dark:border-gray-600 last:border-0 last:mb-0 last:pb-0">
@@ -288,6 +341,9 @@ export default function ContactsPage() {
                       </a>
                     </td>
                     <td className="p-4 text-gray-600 dark:text-gray-400">
+                      <div className="mb-4">
+                        <NavDropdownMenu stops={route.stops} isDesktop={true} />
+                      </div>
                       <div className="space-y-4">
                         {route.stops.map((stop, idx) => (
                           <div key={idx}>
