@@ -99,6 +99,12 @@ export default function Dashboard() {
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
 
+  // Filtering State
+  const [filterDriver, setFilterDriver] = useState("");
+  const [filterRoute, setFilterRoute] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterDate, setFilterDate] = useState("");
+
   // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
   const [checklistData, setChecklistData] = useState<Record<string, string>>({});
@@ -759,7 +765,18 @@ export default function Dashboard() {
 
   const visibleLogs = (activeTab === 'history')
     ? logs.filter(log => log.user_id === userProfile?.id) 
-    : logs;
+    : logs.filter(log => {
+        if (activeTab !== 'all') return true;
+        let match = true;
+        if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
+        if (filterRoute && log.route_id !== filterRoute) match = false;
+        if (filterType && log.trip_type !== filterType) match = false;
+        if (filterDate) {
+          const logDate = new Date(log.created_at).toISOString().split('T')[0];
+          if (logDate !== filterDate) match = false;
+        }
+        return match;
+    });
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
@@ -1127,6 +1144,37 @@ export default function Dashboard() {
 
       {(activeTab === 'history' || activeTab === 'all') && (
         <div className="flex flex-col gap-4">
+          {activeTab === 'all' && (
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap gap-4 items-end mb-2">
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Driver Name</label>
+                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Route</label>
+                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="">All Routes</option>
+                  {routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                </select>
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Trip Type</label>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="">All Types</option>
+                  <option value="Pre-Trip">Pre-Trip</option>
+                  <option value="Post-Trip">Post-Trip</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-[130px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Date</label>
+                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <button onClick={() => { setFilterDriver(""); setFilterRoute(""); setFilterType(""); setFilterDate(""); }} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded font-medium transition-colors text-sm h-[38px]">
+                Clear
+              </button>
+            </div>
+          )}
+
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             
             {/* MOBILE CARD VIEW */}
