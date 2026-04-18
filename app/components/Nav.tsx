@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { clearImagesFromDB } from "@/app/lib/indexedDB";
 import { 
   HomeIcon, 
   ChatBubbleLeftRightIcon, 
@@ -35,6 +36,8 @@ export default function Nav() {
   }, [supabase, pathname]);
 
   const handleLogout = async () => {
+    localStorage.removeItem("tripLogFormState");
+    clearImagesFromDB();
     await supabase.auth.signOut();
     setLoggedIn(false);
     router.push("/");

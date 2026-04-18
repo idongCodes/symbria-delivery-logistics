@@ -81,6 +81,8 @@ type RouteOption = {
   name: string;
 };
 
+import { saveImageToDB, loadImagesFromDB, clearImagesFromDB } from "@/app/lib/indexedDB";
+
 export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
@@ -104,6 +106,55 @@ export default function Dashboard() {
   const [tirePressures, setTirePressures] = useState({
     df: "", pf: "", dr: "", pr: ""
   });
+  const [routeId, setRouteId] = useState("");
+  const [odometer, setOdometer] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const resetForm = useCallback(() => {
+    setTripType("Pre-Trip");
+    setChecklistData({});
+    setChecklistComments({});
+    setTirePressures({ df: "", pf: "", dr: "", pr: "" });
+    setRouteId("");
+    setOdometer("");
+    setNotes("");
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
+    localStorage.removeItem("tripLogFormState");
+    clearImagesFromDB();
+  }, []);
+
+  useEffect(() => {
+    if (editingLog) return;
+    const stateToSave = { tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes };
+    const isEmpty = Object.keys(checklistData).length === 0 && Object.keys(checklistComments).length === 0 && !routeId && !odometer && !notes && tripType === "Pre-Trip";
+    if (!isEmpty) {
+      localStorage.setItem("tripLogFormState", JSON.stringify(stateToSave));
+    }
+  }, [tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, editingLog]);
+
+  useEffect(() => {
+    if (editingLog) return;
+    const savedState = localStorage.getItem("tripLogFormState");
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setTripType(parsed.tripType || "Pre-Trip");
+        setChecklistData(parsed.checklistData || {});
+        setChecklistComments(parsed.checklistComments || {});
+        setTirePressures(parsed.tirePressures || { df: "", pf: "", dr: "", pr: "" });
+        setRouteId(parsed.routeId || "");
+        setOdometer(parsed.odometer || "");
+        setNotes(parsed.notes || "");
+      } catch (e) {
+        console.error("Failed to parse saved form state", e);
+      }
+    }
+    
+    // Load images from IndexedDB
+    loadImagesFromDB().then(savedImages => {
+      setImageFiles(prev => ({ ...prev, ...savedImages }));
+    });
+  }, [editingLog]);
   
   const [imageFiles, setImageFiles] = useState<{
     front: File | null;
@@ -439,6 +490,9 @@ export default function Dashboard() {
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
     setTripType(log.trip_type);
+    setRouteId(log.route_id || "");
+    setOdometer(log.odometer?.toString() || "");
+    setNotes(log.notes || "");
     setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
 
     const answers: Record<string, string> = {};
@@ -555,7 +609,10 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => setImageFiles(prev => ({ ...prev, [key]: file }));
+  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => {
+    setImageFiles(prev => ({ ...prev, [key]: file }));
+    saveImageToDB(key, file);
+  };
   const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
   
   const uploadImage = async (file: File, quality: number = 0.6) => {
@@ -612,10 +669,10 @@ export default function Dashboard() {
       const baseData = {
         user_id: userProfile.id,
         vehicle_id: "N/A",
-        route_id: formData.get('route_id') as string,
-        odometer: Number(formData.get('odometer')),
+        route_id: routeId,
+        odometer: Number(odometer),
         trip_type: tripType,
-        notes: formData.get('notes') as string,
+        notes: notes,
         checklist: finalChecklist,
         images: {}, // Start with empty images
         driver_name: `${userProfile.firstName} ${userProfile.lastName}`,
@@ -645,11 +702,22 @@ export default function Dashboard() {
         alert("Log updated successfully!");
   
       } else {
-        // --- NEW LOG MODE (ASYNC) ---
-        // 1. Insert log with text data first to get an ID
+        // --- NEW LOG MODE (SYNC) ---
+        const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
+        const imageUrls: Record<string, string> = {};
+
+        if (imagesToUpload.length > 0) {
+          await Promise.all(imagesToUpload.map(async ([key, file]) => {
+            const url = await uploadImage(file!);
+            imageUrls[key] = url;
+            console.log(`Uploaded ${key}.`);
+          }));
+        }
+
+        // 1. Insert log with text data and image URLs
         const { data: newLogs, error: insertError } = await supabase
           .from('trip_logs')
-          .insert({ ...baseData, images: {} }) // Ensure images is an empty object
+          .insert({ ...baseData, images: imageUrls })
           .select();
   
         if (insertError) throw insertError;
@@ -657,54 +725,16 @@ export default function Dashboard() {
         
         const newLog = newLogs[0];
         
-        // 2. Give immediate feedback to user
-        alert("Success! Log submitted. Images are uploading in the background.");
+        // 2. Give feedback
+        alert("Success! Log submitted.");
         
         // 3. Reset form and navigate away
         formElement.reset();
-        setChecklistData({});
-        setChecklistComments({});
-        setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
-        setTirePressures({ df: "", pf: "", dr: "", pr: "" });
-        setTripType("Pre-Trip");
+        resetForm();
         fetchData();
         setActiveTab('history');
   
-        // 4. Asynchronously upload images and update the log
-        const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
-  
-        if (imagesToUpload.length > 0) {
-          (async () => {
-            try {
-              const imageUrls: Record<string, string> = {};
-              await Promise.all(imagesToUpload.map(async ([key, file]) => {
-                try {
-                  const url = await uploadImage(file!);
-                  imageUrls[key] = url;
-                  console.log(`Uploaded ${key}.`);
-                } catch (err) {
-                  console.error(`Failed to upload ${key}:`, err);
-                }
-              }));
-              
-              if (Object.keys(imageUrls).length > 0) {
-                const { error } = await supabase.from('trip_logs').update({
-                  images: imageUrls
-                }).eq('id', newLog.id);
-                
-                if (error) {
-                  console.error("Failed to save images to log:", error);
-                } else {
-                  console.log("All images successfully saved to log.");
-                }
-              }
-            } catch (err) {
-              console.error("Background image upload process failed:", err);
-            }
-          })();
-        }
-  
-        // 5. Trigger email notification
+        // 4. Trigger email notification
         const token = await generateShareToken(newLog.id);
         const shareLink = `${window.location.origin}/share/${token}`;
         fetch('/api/email-log', {
@@ -758,7 +788,7 @@ export default function Dashboard() {
 
       <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
         <button onClick={() => { setActiveTab('new');
-          setEditingLog(null); setChecklistData({}); setChecklistComments({}); setImageFiles({front:null, back:null, trunk:null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null}); setTirePressures({df:"", pf:"", dr:"", pr:""}); setTripType("Pre-Trip"); setVisibleCount(5); 
+          setEditingLog(null); setVisibleCount(5); 
         }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
           {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
         </button>
@@ -935,7 +965,7 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Route</span>
-              <select name="route_id" defaultValue={editingLog?.route_id || ""} className="border p-3 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
+              <select name="route_id" value={routeId} onChange={(e) => setRouteId(e.target.value)} className="border p-3 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
                 <option value="" disabled>-- Choose a Route --</option>
                 {routeOptions.length > 0 ? (
                   routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)
@@ -946,7 +976,7 @@ export default function Dashboard() {
             </div>
             <label className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Odometer</span>
-              <input name="odometer" type="number" defaultValue={editingLog?.odometer} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+              <input name="odometer" type="number" value={odometer} onChange={(e) => setOdometer(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
             </label>
 
             <hr className="border-gray-200 dark:border-gray-700" />
@@ -1080,12 +1110,17 @@ export default function Dashboard() {
             
             <label className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Notes / Defects</span>
-              <textarea name="notes" defaultValue={editingLog?.notes} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" rows={3} placeholder="General notes..." />
+              <textarea name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" rows={3} placeholder="General notes..." />
             </label>
             
-            <button type="submit" disabled={submitting} className={`font-bold py-3 px-6 rounded text-white flex items-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
-              {submitting ? ( <>Uploading Images...</> ) : ( editingLog ? "Update Log" : "Submit Log" )}
-            </button>
+            <div className="flex gap-4">
+              <button type="submit" disabled={submitting} className={`flex-1 font-bold py-3 px-6 rounded text-white flex items-center justify-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
+                {submitting ? ( <>Uploading Images...</> ) : ( editingLog ? "Update Log" : "Submit Log" )}
+              </button>
+              <button type="button" onClick={resetForm} disabled={submitting} className="font-bold py-3 px-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all">
+                Reset
+              </button>
+            </div>
           </form>
         </div>
       )}
