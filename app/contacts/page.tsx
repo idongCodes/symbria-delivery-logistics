@@ -178,10 +178,10 @@ export default function ContactsPage() {
               <div className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-100 dark:border-yellow-900/30 rounded-lg">
                 <span className="font-bold text-gray-800 dark:text-gray-200">Driver Dispatch</span>
                 <div className="flex flex-col items-end gap-1">
-                  <a href="tel:8775090620" className="text-sm bg-white dark:bg-gray-700 border border-yellow-200 dark:border-yellow-700 px-3 py-1 rounded text-blue-600 dark:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-600 transition">
+                  <a href="tel:6309818000" className="text-sm bg-white dark:bg-gray-700 border border-yellow-200 dark:border-yellow-700 px-3 py-1 rounded text-blue-600 dark:text-blue-300 font-semibold hover:bg-blue-50 dark:hover:bg-gray-600 transition">
                     Call Dispatch
                   </a>
-                  <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">for dispatch press option 4</span>
+                  <span className="text-[10px] text-gray-600 dark:text-gray-400 font-medium">press option 6</span>
                 </div>
               </div>
 
