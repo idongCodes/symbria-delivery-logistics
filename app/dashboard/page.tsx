@@ -1169,7 +1169,7 @@ export default function Dashboard() {
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Date</label>
                 <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
-              <button onClick={() => { setFilterDriver(""); setFilterRoute(""); setFilterType(""); setFilterDate(""); }} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded font-medium transition-colors text-sm h-[38px]">
+              <button onClick={() => { setFilterDriver(""); setFilterRoute(""); setFilterType(""); setFilterDate(""); }} className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded font-medium transition-colors text-sm h-[38px]">
                 Clear
               </button>
             </div>
