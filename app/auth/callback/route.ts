@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
@@ -35,10 +35,26 @@ export async function GET(request: Request) {
     
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      const forwardedHost = request.headers.get('x-forwarded-host')
+      const isLocalEnv = process.env.NODE_ENV === 'development'
+      if (isLocalEnv) {
+        return NextResponse.redirect(`${origin}${next}`)
+      } else if (forwardedHost) {
+        return NextResponse.redirect(`https://${forwardedHost}${next}`)
+      } else {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Invalid%20or%20expired%20confirmation%20link`)
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const isLocalEnv = process.env.NODE_ENV === 'development'
+
+  if (isLocalEnv) {
+    return NextResponse.redirect(`${origin}/login?error=Invalid%20or%20expired%20confirmation%20link`)
+  } else if (forwardedHost) {
+    return NextResponse.redirect(`https://${forwardedHost}/login?error=Invalid%20or%20expired%20confirmation%20link`)
+  } else {
+    return NextResponse.redirect(`${origin}/login?error=Invalid%20or%20expired%20confirmation%20link`)
+  }
 }
