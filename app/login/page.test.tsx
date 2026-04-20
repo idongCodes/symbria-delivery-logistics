@@ -58,7 +58,10 @@ describe('LoginPage', () => {
     expect(mockSignInWithOtp).toHaveBeenCalledWith(
       expect.objectContaining({
         email: 'test@symbria.com',
-        options: expect.objectContaining({ shouldCreateUser: false })
+        options: expect.objectContaining({ 
+          shouldCreateUser: false,
+          emailRedirectTo: expect.stringContaining('/auth/callback?next=/dashboard')
+        })
       })
     );
     
@@ -84,7 +87,10 @@ describe('LoginPage', () => {
     expect(mockSignInWithOtp).toHaveBeenCalledWith(
       expect.objectContaining({
         email: 'jdoe@symbria.com',
-        options: expect.objectContaining({ shouldCreateUser: true })
+        options: expect.objectContaining({ 
+          shouldCreateUser: true,
+          emailRedirectTo: expect.stringContaining('/auth/callback?next=/dashboard')
+        })
       })
     );
     
