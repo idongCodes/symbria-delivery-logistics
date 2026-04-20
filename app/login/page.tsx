@@ -3,21 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline"; // 👈 Import Icons
 
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
   
-  const [view, setView] = useState<'login' | 'register' | 'forgot_password'>('login');
+  const [view, setView] = useState<'login' | 'register'>('login');
   
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  
-  // 👇 Visibility Toggles State
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -32,39 +25,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
-    });
-
-    if (error) {
-      setMessage("Error: " + error.message);
-    } else {
-      setMessage("Success! Password reset instructions sent to your email.");
-    }
-    setLoading(false);
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
+      options: {
+        shouldCreateUser: false,
+      }
     });
 
     if (error) {
       setMessage("Error: " + error.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
-      router.refresh();
+      setMessage("Success! Please check your email for a magic link to log in.");
+      setLoading(false);
     }
   };
 
@@ -72,13 +50,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
-    // --- 🔐 PASSWORD MATCH CHECK ---
-    if (password !== confirmPassword) {
-      setMessage("Error: Passwords do not match.");
-      setLoading(false);
-      return;
-    }
 
     const lowerEmail = email.toLowerCase().trim();
     
@@ -104,10 +75,10 @@ export default function LoginPage() {
     }
     // ------------------------------------
 
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signInWithOtp({
       email,
-      password,
       options: {
+        shouldCreateUser: true,
         data: {
           first_name: firstName,
           last_name: lastName,
@@ -122,15 +93,8 @@ export default function LoginPage() {
       setMessage("Error: " + error.message);
       setLoading(false);
     } else {
-      // If email confirmation is disabled, user will have a session immediately
-      if (data.session) {
-        setMessage("Success! Logging you in...");
-        router.push("/dashboard");
-        router.refresh();
-      } else {
-        setMessage("Success! Please check your email for a confirmation link.");
-        setLoading(false);
-      }
+      setMessage("Success! Please check your email for a login link.");
+      setLoading(false);
     }
   };
 
@@ -138,7 +102,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-950 transition-colors">
       <div className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg w-full max-w-md transition-all duration-300 border border-gray-200 dark:border-gray-700">
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-800 dark:text-white">
-          {view === 'login' ? 'Login' : (view === 'register' ? 'Create Account' : 'Reset Password')}
+          {view === 'login' ? 'Login' : 'Create Account'}
         </h1>
         
         {message && (
@@ -147,7 +111,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={view === 'login' ? handleLogin : (view === 'register' ? handleRegister : handleForgotPassword)} className="flex flex-col gap-4">
+        <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="flex flex-col gap-4">
           
           {view === 'register' && (
             <>
@@ -198,67 +162,17 @@ export default function LoginPage() {
 
           {/* EMAIL INPUT */}
           <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none" required />
-          
-          {/* PASSWORD INPUT WITH TOGGLE */}
-          {view !== 'forgot_password' && (
-            <div className="relative">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                placeholder="Password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                className="border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10" 
-                required 
-              />
-              <button 
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-              </button>
-            </div>
-          )}
-          
-          {/* CONFIRM PASSWORD INPUT WITH TOGGLE */}
-          {view === 'register' && (
-            <div className="relative">
-              <input 
-                type={showConfirmPassword ? "text" : "password"} 
-                placeholder="Confirm Password" 
-                value={confirmPassword} 
-                onChange={(e) => setConfirmPassword(e.target.value)} 
-                className={`border p-3 rounded text-black dark:text-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none w-full pr-10 ${confirmPassword && password !== confirmPassword ? "border-red-500 bg-red-50 dark:bg-red-900/20" : ""}`} 
-                required 
-              />
-              <button 
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-              </button>
-            </div>
-          )}
-
-          {view === 'login' && (
-            <div className="flex justify-end mt-[-8px]">
-              <button type="button" onClick={() => { setView('forgot_password'); setMessage(""); }} className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
-                Forgot Password?
-              </button>
-            </div>
-          )}
 
           <button type="submit" disabled={loading} className="bg-blue-600 text-white p-3 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold mt-2 transition-colors">
-            {loading ? "Processing..." : (view === 'login' ? "Sign In" : (view === 'register' ? "Sign Up" : "Send Reset Link"))}
+            {loading ? "Processing..." : (view === 'login' ? "Send Magic Link" : "Sign Up with Email")}
           </button>
         </form>
 
         <div className="mt-6 text-center border-t border-gray-100 dark:border-gray-700 pt-4">
           <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
-            {view === 'login' ? "Don't have an account?" : (view === 'register' ? "Already have an account?" : "Remembered your password?")}
+            {view === 'login' ? "Don't have an account?" : "Already have an account?"}
           </p>
-          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); setConfirmPassword(""); setShowPassword(false); setShowConfirmPassword(false); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+          <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setMessage(""); }} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
             {view === 'login' ? "Register here" : "Log in here"}
           </button>
         </div>
