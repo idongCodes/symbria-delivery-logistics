@@ -176,21 +176,7 @@ export default function Dashboard() {
     frontSeat: File | null;
   }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
 
-  // State: Password Update Form
-  const [passwordForm, setPasswordForm] = useState({
-    current: "",
-    new: "",
-    confirm: ""
-  });
-  const [passwordMsg, setPasswordMsg] = useState({ type: "", text: "" });
-  const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // State: Password Visibility Toggles
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  // --- LOGIC HELPERS ---
 
   const requiresDescription = (question: string, answer: string) => {
     if (!answer) return false;
@@ -527,48 +513,6 @@ export default function Dashboard() {
     setActiveTab('new');
   };
 
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordLoading(true);
-    setPasswordMsg({ type: "", text: "" });
-
-    if (passwordForm.new !== passwordForm.confirm) {
-        setPasswordMsg({ type: "error", text: "New passwords do not match." });
-        setPasswordLoading(false);
-        return;
-    }
-    if (passwordForm.new.length < 6) {
-        setPasswordMsg({ type: "error", text: "Password must be at least 6 characters." });
-        setPasswordLoading(false);
-        return;
-    }
-
-    try {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: userProfile?.email || "",
-            password: passwordForm.current,
-        });
-
-        if (signInError) {
-            throw new Error("Current password is incorrect.");
-        }
-
-        const { error: updateError } = await supabase.auth.updateUser({
-            password: passwordForm.new,
-        });
-
-        if (updateError) throw updateError;
-
-        setPasswordMsg({ type: "success", text: "Password updated successfully!" });
-        setPasswordForm({ current: "", new: "", confirm: "" });
-
-    } catch (err: any) {
-        setPasswordMsg({ type: "error", text: err.message || "Failed to update password." });
-    } finally {
-        setPasswordLoading(false);
-    }
-  };
-
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -869,98 +813,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <hr className="border-gray-200 dark:border-gray-700" />
 
-          {/* Change Password Section */}
-          <div className="pt-2">
-            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Change Password</h3>
-            
-            {passwordMsg.text && (
-              <div className={`p-3 rounded text-sm mb-4 ${
-                passwordMsg.type === 'success' 
-                  ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800' 
-                  : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'
-              }`}>
-                {passwordMsg.text}
-              </div>
-            )}
-
-            <form onSubmit={handlePasswordUpdate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Current Password</label>
-                <div className="relative">
-                  <input 
-                    type={showCurrentPassword ? "text" : "password"} 
-                    value={passwordForm.current}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                    className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
-                    placeholder="Enter current password"
-                    required
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    {showCurrentPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">New Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showNewPassword ? "text" : "password"} 
-                      value={passwordForm.new}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })}
-                      className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
-                      placeholder="Min. 6 characters"
-                      required
-                    />
-                    <button 
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      {showNewPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Confirm New Password</label>
-                  <div className="relative">
-                    <input 
-                      type={showConfirmPassword ? "text" : "password"} 
-                      value={passwordForm.confirm}
-                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                      className="w-full p-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-black dark:text-white pr-10"
-                      placeholder="Re-enter new password"
-                      required
-                    />
-                    <button 
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-3.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                    >
-                      {showConfirmPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end pt-2">
-                <button 
-                  type="submit" 
-                  disabled={passwordLoading}
-                  className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {passwordLoading ? "Updating..." : "Update Password"}
-                </button>
-              </div>
-            </form>
-          </div>
 
         </div>
       )}

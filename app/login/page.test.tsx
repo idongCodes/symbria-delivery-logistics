@@ -14,84 +14,82 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock Supabase
-const mockSignInWithPassword = vi.fn();
-const mockSignUp = vi.fn();
-const mockResetPasswordForEmail = vi.fn();
+const mockSignInWithOtp = vi.fn();
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
-      signInWithPassword: mockSignInWithPassword,
-      signUp: mockSignUp,
-      resetPasswordForEmail: mockResetPasswordForEmail,
+      signInWithOtp: mockSignInWithOtp,
     },
   }),
 }));
 
-describe('LoginPage - Forgot Password Flow', () => {
+describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('can navigate to forgot password view', () => {
+  it('renders login view by default', () => {
     render(<LoginPage />);
-    
-    // Initially on login view
     expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
-    
-    // Click Forgot Password? link
-    const forgotPasswordBtn = screen.getByRole('button', { name: 'Forgot Password?' });
-    fireEvent.click(forgotPasswordBtn);
-    
-    // Now on reset password view
-    expect(screen.getByRole('heading', { name: 'Reset Password' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Password')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send Reset Link' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Send Magic Link' })).toBeInTheDocument();
   });
 
-  it('calls resetPasswordForEmail on form submission', async () => {
-    mockResetPasswordForEmail.mockResolvedValue({ error: null });
+  it('can toggle to register view', () => {
+    render(<LoginPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Register here' }));
+    expect(screen.getByRole('heading', { name: 'Create Account' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('First Name')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Last Name')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Sign Up with Email' })).toBeInTheDocument();
+  });
+
+  it('calls signInWithOtp on login submission', async () => {
+    mockSignInWithOtp.mockResolvedValue({ error: null });
     render(<LoginPage />);
     
-    // Navigate to forgot password
-    fireEvent.click(screen.getByRole('button', { name: 'Forgot Password?' }));
-    
-    // Fill out email
     const emailInput = screen.getByPlaceholderText('Email');
     fireEvent.change(emailInput, { target: { value: 'test@symbria.com' } });
     
-    // Submit
-    const submitBtn = screen.getByRole('button', { name: 'Send Reset Link' });
+    const submitBtn = screen.getByRole('button', { name: 'Send Magic Link' });
     fireEvent.click(submitBtn);
     
-    expect(mockResetPasswordForEmail).toHaveBeenCalledWith(
-      'test@symbria.com',
-      expect.objectContaining({ redirectTo: expect.stringContaining('/auth/callback?next=/update-password') })
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'test@symbria.com',
+        options: expect.objectContaining({ shouldCreateUser: false })
+      })
     );
     
     await waitFor(() => {
-      expect(screen.getByText('Success! Password reset instructions sent to your email.')).toBeInTheDocument();
+      expect(screen.getByText('Success! Please check your email for a magic link to log in.')).toBeInTheDocument();
     });
   });
 
-  it('handles error when resetPasswordForEmail fails', async () => {
-    mockResetPasswordForEmail.mockResolvedValue({ error: { message: 'User not found' } });
+  it('calls signInWithOtp on register submission', async () => {
+    mockSignInWithOtp.mockResolvedValue({ error: null });
     render(<LoginPage />);
     
-    // Navigate to forgot password
-    fireEvent.click(screen.getByRole('button', { name: 'Forgot Password?' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Register here' }));
     
-    // Fill out email
-    const emailInput = screen.getByPlaceholderText('Email');
-    fireEvent.change(emailInput, { target: { value: 'notfound@symbria.com' } });
+    fireEvent.change(screen.getByPlaceholderText('First Name'), { target: { value: 'John' } });
+    fireEvent.change(screen.getByPlaceholderText('Last Name'), { target: { value: 'Doe' } });
+    fireEvent.change(screen.getByPlaceholderText('Phone Number (Ex: 555-123-4567)'), { target: { value: '555-555-5555' } });
+    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'jdoe@symbria.com' } });
     
-    // Submit
-    const submitBtn = screen.getByRole('button', { name: 'Send Reset Link' });
+    const submitBtn = screen.getByRole('button', { name: 'Sign Up with Email' });
     fireEvent.click(submitBtn);
     
+    expect(mockSignInWithOtp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'jdoe@symbria.com',
+        options: expect.objectContaining({ shouldCreateUser: true })
+      })
+    );
+    
     await waitFor(() => {
-      expect(screen.getByText('Error: User not found')).toBeInTheDocument();
+      expect(screen.getByText('Success! Please check your email for a login link.')).toBeInTheDocument();
     });
   });
 });
