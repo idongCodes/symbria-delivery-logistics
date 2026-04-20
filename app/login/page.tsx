@@ -34,6 +34,7 @@ export default function LoginPage() {
       email,
       options: {
         shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       }
     });
 
@@ -79,6 +80,7 @@ export default function LoginPage() {
       email,
       options: {
         shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
         data: {
           first_name: firstName,
           last_name: lastName,
