@@ -60,7 +60,7 @@ export default async function LogPreviewPage({
             {/* DOWNLOAD BUTTON */}
             <LogDownloadButton log={serializableLog} />
             
-            <Link href="/dashboard" className="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Link href="/trip-log" className="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               Back
             </Link>
           </div>

@@ -90,7 +90,7 @@ export default function Home() {
             Quick and easy Pre/Post-Trip Inspection management.
           </p>
           <div className="flex flex-col sm:flex-row gap-5 justify-center pt-8 pb-4">
-            <Link href="/dashboard" className="bg-white text-blue-900 font-bold px-10 py-4 rounded-full shadow-lg hover:bg-blue-50 transition transform hover:-translate-y-1">
+            <Link href="/trip-log" className="bg-white text-blue-900 font-bold px-10 py-4 rounded-full shadow-lg hover:bg-blue-50 transition transform hover:-translate-y-1">
               Complete Pre/Post-Trip
             </Link>
             <Link href="/login" className="bg-transparent border-2 border-white text-white font-semibold px-10 py-4 rounded-full hover:bg-white/10 transition">

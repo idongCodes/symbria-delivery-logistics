@@ -28,7 +28,7 @@ export default function LoginPage() {
       email,
       options: {
         shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/trip-log`,
       }
     });
 
