@@ -520,24 +520,7 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { return; }
-
-      const { user } = session;
-      const metadata = user.user_metadata || {};
-
-      setUserProfile({
-        id: user.id,
-        email: user.email || "",
-        firstName: metadata.first_name || "",
-        lastName: metadata.last_name || "",
-        role: metadata.role || "Driver",
-        phone: metadata.phone || "N/A",
-        jobTitle: metadata.job_title || "N/A"
-      });
-      setFirstName(metadata.first_name || "");
-      setLastName(metadata.last_name || "");
-
+      // Always attempt to fetch route data, as it's public
       const { data: routeData, error: routeError } = await supabase
         .from('routes')
         .select('id, name')
@@ -546,6 +529,14 @@ export default function Dashboard() {
 
       if (routeError) console.error("Route Error:", routeError);
       if (routeData) setRouteOptions(routeData);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { 
+        setLoading(false); // Ensure loading state is reset even without a session
+        return; 
+      }
+      
+      const { user } = session;
 
       const { data: logsData, error: logsError } = await supabase
         .from('trip_logs')
