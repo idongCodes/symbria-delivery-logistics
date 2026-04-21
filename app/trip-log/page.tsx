@@ -87,14 +87,16 @@ export default function Dashboard() {
   const router = useRouter();
   const [supabase] = useState(() => createClient());
   
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
-  const [logs, setLogs] = useState<TripLog[]>([]);
-  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   
   const [loading, setLoading] = useState(true); 
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
+  const [logs, setLogs] = useState<TripLog[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
@@ -115,8 +117,6 @@ export default function Dashboard() {
   const [routeId, setRouteId] = useState("");
   const [odometer, setOdometer] = useState("");
   const [notes, setNotes] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
 
   const resetForm = useCallback(() => {
     setTripType("Pre-Trip");
@@ -538,6 +538,29 @@ export default function Dashboard() {
       
       const { user } = session;
 
+      // Fetch user profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        // Set a basic profile if fetch fails
+        setUserProfile({
+          id: user.id,
+          firstName: user.email?.split('@')[0] || 'User',
+          lastName: '',
+          role: 'Driver',
+          email: user.email || '',
+          phone: '',
+          jobTitle: 'Driver'
+        });
+      } else if (profileData) {
+        setUserProfile(profileData);
+      }
+
       const { data: logsData, error: logsError } = await supabase
         .from('trip_logs')
         .select('*')
@@ -594,7 +617,6 @@ export default function Dashboard() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!userProfile) return;
   
     const formElement = e.currentTarget;
     const formData = new FormData(formElement);
@@ -615,7 +637,7 @@ export default function Dashboard() {
       finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
   
       const baseData = {
-        user_id: userProfile.id,
+        user_id: userProfile?.id || "e04fde02-765b-40d0-8cdb-3449b2b21eca", // Use Guest Driver ID for public forms
         vehicle_id: "N/A",
         route_id: routeId,
         odometer: Number(odometer),
@@ -680,11 +702,10 @@ export default function Dashboard() {
         formElement.reset();
         resetForm();
         fetchData();
-        setActiveTab('history');
   
         // 4. Trigger email notification
         const token = await generateShareToken(newLog.id);
-        const shareLink = `${window.location.origin}/share/${token}`;
+        const shareLink = `https://symbria-delivery-logistics.vercel.app/share/${token}`;
         fetch('/api/email-log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -705,20 +726,27 @@ export default function Dashboard() {
     }
   }
 
-  const visibleLogs = (activeTab === 'history')
-    ? logs.filter(log => log.user_id === userProfile?.id) 
-    : logs.filter(log => {
-        if (activeTab !== 'all') return true;
-        let match = true;
-        if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
-        if (filterRoute && log.route_id !== filterRoute) match = false;
-        if (filterType && log.trip_type !== filterType) match = false;
-        if (filterDate) {
-          const logDate = new Date(log.created_at).toISOString().split('T')[0];
-          if (logDate !== filterDate) match = false;
-        }
-        return match;
-    });
+  const visibleLogs = logs.filter(log => {
+    let match = true;
+
+    if (activeTab === 'history') {
+      // Only show logs for the current user
+      if (log.user_id !== userProfile?.id) return false;
+    } else if (activeTab === 'all') {
+      // Apply admin filters only if activeTab is 'all'
+      if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
+      if (filterRoute && log.route_id !== filterRoute) match = false;
+      if (filterType && log.trip_type !== filterType) match = false;
+      if (filterDate) {
+        const logDate = new Date(log.created_at).toISOString().split('T')[0];
+        if (logDate !== filterDate) match = false;
+      }
+    } else {
+      // If activeTab is 'new' or 'my-info', no logs should be displayed in this table context
+      return false;
+    }
+    return match;
+  });
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
@@ -743,6 +771,30 @@ export default function Dashboard() {
           </h3>
         )}
       </header>
+
+      {userProfile && ( // Only show tabs if user is authenticated
+        <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
+          <button onClick={() => { setActiveTab('new');
+            setEditingLog(null); setVisibleCount(5); 
+          }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
+          </button>
+          <button onClick={() => { setActiveTab('history');
+            setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            My Logs
+          </button>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            All Logs
+          </button>
+          
+          <button 
+            onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
+            className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+          >
+            My Info
+          </button>
+        </div>
+      )}
       
       {activeTab === 'my-info' && userProfile && (
         <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
@@ -791,7 +843,159 @@ export default function Dashboard() {
         </div>
       )}
 
-              <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
+      {userProfile && activeTab === 'my-info' && (
+        <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
+          
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
+              {userProfile.firstName[0]}{userProfile.lastName[0]}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{userProfile.firstName} {userProfile.lastName}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.jobTitle}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">First Name</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.firstName}</div>
+               </div>
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Last Name</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.lastName}</div>
+               </div>
+            </div>
+
+            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Company Position</label>
+               <div className="font-medium text-gray-900 dark:text-white">{userProfile.jobTitle}</div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.phone}</div>
+               </div>
+               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Email</label>
+                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.email}</div>
+               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {userProfile && (activeTab === 'history' || activeTab === 'all') && (
+        <div className="flex flex-col gap-4">
+          {activeTab === 'all' && (
+            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap gap-4 items-end mb-2">
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Driver Name</label>
+                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Route</label>
+                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="">All Routes</option>
+                  {routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                </select>
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Trip Type</label>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="">All Types</option>
+                  <option value="Pre-Trip">Pre-Trip</option>
+                  <option value="Post-Trip">Post-Trip</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Date</label>
+                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Date / Time
+                    </th>
+                    {activeTab === 'all' && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Driver
+                    </th>}
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Route
+                    </th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Odometer
+                    </th>
+                    <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {visibleLogs.length === 0 && (
+                    <tr>
+                      <td colSpan={activeTab === 'all' ? 6 : 5} className="p-4 text-center text-gray-500 dark:text-gray-400">No logs found.</td>
+                    </tr>
+                  )}
+                  {visibleLogs.slice(0, visibleCount).map((log) => (
+                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <td className="p-4 whitespace-nowrap">
+                        <ClientDate timestamp={log.created_at} />
+                      </td>
+                      {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
+                      <td className="p-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                        }`}>
+                          {log.trip_type}
+                        </span>
+                      </td>
+                      <td className="p-4 whitespace-nowrap text-gray-900 dark:text-white">{log.route_id}</td>
+                      <td className="p-4 whitespace-nowrap text-gray-900 dark:text-white">{log.odometer}</td>
+                      <td className="p-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end gap-2">
+                          {canEditOrDelete(log) && (
+                            <>
+                              <button onClick={() => handleEditClick(log)} className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Edit</button>
+                              <button onClick={() => handleDelete(log.id)} className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Delete</button>
+                            </>
+                          )}
+                          <Link href={`/logs/${log.id}`} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300">View</Link>
+                          <button onClick={() => downloadCSV(log)} className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">CSV</button>
+                          <button onClick={() => printLog(log)} className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300">Print</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {visibleLogs.length > visibleCount && (
+              <div className="text-center mt-6">
+                <button onClick={() => setVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
+                  Load More
+                </button>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* Main Form */}
+      <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
           <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
           </h2>
@@ -975,6 +1179,7 @@ export default function Dashboard() {
             </div>
           </form>
         </div>
+
 
           </div>
   );
