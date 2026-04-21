@@ -41,7 +41,7 @@ describe('Nav Component', () => {
     render(<Nav />)
     
     // There are two login links (Desktop and Mobile)
-    const loginLinks = screen.getAllByRole('link', { name: /Login/i })
+    const loginLinks = screen.getAllByRole('link', { name: /Complete Pre\/Post-Trip/i })
     expect(loginLinks.length).toBeGreaterThan(0)
     
     // Should NOT show Dashboard link

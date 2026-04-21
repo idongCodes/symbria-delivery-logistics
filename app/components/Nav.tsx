@@ -72,20 +72,33 @@ export default function Nav() {
                 </button>
               </>
             ) : (
-              <Link href="/login" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
-                Login
-              </Link>
+              <>
+                <Link href="/dashboard" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
+                  Complete Pre/Post-Trip
+                </Link>
+                <Link href="/login" className="bg-transparent border border-white text-white px-4 py-2 rounded hover:bg-white/10 transition">
+                  Admin Login
+                </Link>
+              </>
             )}
           </div>
 
           {/* MOBILE LOGIN BUTTON (Visible only on mobile when logged OUT) */}
           {!loggedIn && (
-            <Link 
-              href="/login" 
-              className="md:hidden bg-white text-blue-800 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition"
-            >
-              Login
-            </Link>
+            <div className="md:hidden flex gap-2">
+              <Link 
+                href="/dashboard" 
+                className="bg-white text-blue-800 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition"
+              >
+                Complete Pre/Post-Trip
+              </Link>
+              <Link 
+                href="/login" 
+                className="bg-transparent border border-white text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-white/10 transition"
+              >
+                Admin Login
+              </Link>
+            </div>
           )}
         </div>
       </nav>

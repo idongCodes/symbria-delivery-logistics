@@ -115,6 +115,8 @@ export default function Dashboard() {
   const [routeId, setRouteId] = useState("");
   const [odometer, setOdometer] = useState("");
   const [notes, setNotes] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const resetForm = useCallback(() => {
     setTripType("Pre-Trip");
@@ -482,6 +484,9 @@ export default function Dashboard() {
   const handleEditClick = (log: TripLog) => {
     setEditingLog(log);
     setTripType(log.trip_type);
+    const nameParts = (log.driver_name || "").split(" ");
+    setFirstName(nameParts[0] || "");
+    setLastName(nameParts.slice(1).join(" ") || "");
     setRouteId(log.route_id || "");
     setOdometer(log.odometer?.toString() || "");
     setNotes(log.notes || "");
@@ -516,7 +521,7 @@ export default function Dashboard() {
   const fetchData = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.replace('/login'); return; }
+      if (!session) { return; }
 
       const { user } = session;
       const metadata = user.user_metadata || {};
@@ -530,6 +535,8 @@ export default function Dashboard() {
         phone: metadata.phone || "N/A",
         jobTitle: metadata.job_title || "N/A"
       });
+      setFirstName(metadata.first_name || "");
+      setLastName(metadata.last_name || "");
 
       const { data: routeData, error: routeError } = await supabase
         .from('routes')
@@ -625,7 +632,7 @@ export default function Dashboard() {
         notes: notes,
         checklist: finalChecklist,
         images: {}, // Start with empty images
-        driver_name: `${userProfile.firstName} ${userProfile.lastName}`,
+        driver_name: `${firstName} ${lastName}`.trim(),
         updated_at: new Date().toISOString(),
       };
   
@@ -826,6 +833,16 @@ export default function Dashboard() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">First Name</span>
+                <input name="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+              </label>
+              <label className="flex flex-col gap-1 flex-1">
+                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Last Name</span>
+                <input name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+              </label>
+            </div>
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Trip Type</span>
               <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
