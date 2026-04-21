@@ -40,12 +40,26 @@ describe('Nav Component', () => {
     
     render(<Nav />)
     
-    // There are two login links (Desktop and Mobile)
-    const loginLinks = screen.getAllByRole('link', { name: /Complete Pre\/Post-Trip/i })
-    expect(loginLinks.length).toBeGreaterThan(0)
+    // Open the menu
+    const menuBtn = screen.getByRole('button', { name: /Menu/i })
+    fireEvent.click(menuBtn)
     
-    // Should NOT show Dashboard link
-    expect(screen.queryByRole('link', { name: /Dashboard/i })).not.toBeInTheDocument()
+    // Verify menu items are visible
+    expect(screen.getByRole('link', { name: /Complete Pre\/Post-Trip/i })).toBeInTheDocument()
+    
+    // Simulate click outside
+    fireEvent.mouseDown(document.body)
+    
+    // Verify menu items are no longer visible
+    await waitFor(() => {
+      expect(screen.queryByRole('link', { name: /Complete Pre\/Post-Trip/i })).not.toBeInTheDocument()
+    })
+    
+    // Should NOT show Trip Log link (from desktop authenticated view)
+    expect(screen.queryByRole('link', { name: /Trip Log/i, hidden: false })).not.toBeInTheDocument()
+    
+    // Should NOT show Contacts link directly (it's inside the menu)
+    expect(screen.queryByRole('link', { name: /Contacts/i, hidden: false })).not.toBeInTheDocument()
   })
 
   it('renders dashboard links when authenticated', async () => {
@@ -55,7 +69,7 @@ describe('Nav Component', () => {
     
     await waitFor(() => {
       // There are two dashboard links (Desktop and Mobile)
-      const dashboardLinks = screen.getAllByRole('link', { name: /Dashboard/i })
+      const dashboardLinks = screen.getAllByRole('link', { name: /Trip Log/i })
       expect(dashboardLinks.length).toBeGreaterThan(0)
       
       const feedbackLinks = screen.getAllByRole('link', { name: /Feedback/i })

@@ -9,13 +9,17 @@ import {
   HomeIcon, 
   ChatBubbleLeftRightIcon, 
   PhoneIcon, 
-  ArrowRightOnRectangleIcon 
+  ArrowRightOnRectangleIcon,
+  EllipsisVerticalIcon
 } from "@heroicons/react/24/outline";
+import { useRef } from "react";
 
 export default function Nav() {
   const router = useRouter();
   const pathname = usePathname();
   const [loggedIn, setLoggedIn] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -34,6 +38,24 @@ export default function Nav() {
 
     return () => subscription.unsubscribe();
   }, [supabase, pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuOpen]);
 
   const handleLogout = async () => {
     localStorage.removeItem("tripLogFormState");
@@ -60,44 +82,56 @@ export default function Nav() {
             Symbria RX Logistics
           </Link>
           
-          {/* DESKTOP MENU (Hidden on Mobile) */}
+          {/* DESKTOP MENU (Visible only when logged IN) */}
           <div className="hidden md:flex gap-6 text-sm font-medium items-center">
-            {loggedIn ? (
+            {loggedIn && (
               <>
-                <Link href="/dashboard" className="hover:text-blue-200 transition">Dashboard</Link>
+                <Link href="/trip-log" className="hover:text-blue-200 transition">Trip Log</Link>
                 <Link href="/admin/feedback" className="hover:text-blue-200 transition">Feedback</Link>
-                <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
                 <button onClick={handleLogout} className="bg-white text-blue-800 px-3 py-1 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
                   Logout
                 </button>
-              </>
-            ) : (
-              <>
-                <Link href="/dashboard" className="bg-white text-blue-800 px-4 py-2 rounded hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition">
-                  Complete Pre/Post-Trip
-                </Link>
-                <Link href="/login" className="bg-transparent border border-white text-white px-4 py-2 rounded hover:bg-white/10 transition">
-                  Admin Login
-                </Link>
+                <Link href="/contacts" className="hover:text-blue-200 transition">Contacts</Link>
               </>
             )}
           </div>
 
-          {/* MOBILE LOGIN BUTTON (Visible only on mobile when logged OUT) */}
+          {/* UNAUTHENTICATED MENU (Visible for unauthenticated users, both desktop and mobile) */}
           {!loggedIn && (
-            <div className="md:hidden flex gap-2">
-              <Link 
-                href="/dashboard" 
-                className="bg-white text-blue-800 px-3 py-1.5 rounded text-sm font-bold hover:bg-gray-100 dark:bg-gray-800 dark:text-blue-200 dark:hover:bg-gray-700 transition"
+            <div className="relative flex items-center" ref={menuRef}>
+              <button 
+                onClick={() => setMenuOpen(!menuOpen)} 
+                className="text-white hover:text-blue-200 transition p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300"
+                aria-label="Menu"
               >
-                Complete Pre/Post-Trip
-              </Link>
-              <Link 
-                href="/login" 
-                className="bg-transparent border border-white text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-white/10 transition"
-              >
-                Admin Login
-              </Link>
+                <EllipsisVerticalIcon className="w-7 h-7" />
+              </button>
+              
+              {menuOpen && (
+                <div className="absolute top-full right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                  <Link 
+                    href="/trip-log" 
+                    onClick={() => setMenuOpen(false)}
+                    className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    Complete Pre/Post-Trip
+                  </Link>
+                  <Link 
+                    href="/login" 
+                    onClick={() => setMenuOpen(false)}
+                    className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    Admin Login
+                  </Link>
+                  <Link 
+                    href="/contacts" 
+                    onClick={() => setMenuOpen(false)}
+                    className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                  >
+                    Contacts
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -107,9 +141,9 @@ export default function Nav() {
       {showBottomNav && (
         <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-fit min-w-[40%] bg-blue-900/80 dark:bg-blue-950/80 backdrop-blur-md border border-blue-700 dark:border-blue-800 shadow-2xl rounded-full flex justify-between items-center px-6 py-3 gap-6 animate-in slide-in-from-bottom-4 fade-in duration-500 whitespace-nowrap">
           
-          <Link href="/dashboard" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
+          <Link href="/trip-log" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">
             <HomeIcon className="w-6 h-6 group-hover:scale-110 transition-transform" />
-            <span className="text-[10px] font-medium">Dashboard</span>
+            <span className="text-[10px] font-medium">Trip Log</span>
           </Link>
           
           <Link href="/admin/feedback" className="flex flex-col items-center gap-1 text-blue-100 hover:text-white transition group">

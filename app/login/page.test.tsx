@@ -51,7 +51,7 @@ describe('LoginPage', () => {
         email: 'lholden@symbria.com',
         options: expect.objectContaining({ 
           shouldCreateUser: false,
-          emailRedirectTo: expect.stringContaining('/auth/callback?next=/dashboard')
+          emailRedirectTo: expect.stringContaining('/auth/callback?next=/trip-log')
         })
       })
     );
