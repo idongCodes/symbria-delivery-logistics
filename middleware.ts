@@ -36,9 +36,7 @@ export async function middleware(request: NextRequest) {
   // --- 🔒 PROTECTED ROUTES ---
   // Only protect specific routes. The landing page "/" is public by default.
   if (
-    (request.nextUrl.pathname.startsWith('/dashboard') || 
-     request.nextUrl.pathname.startsWith('/contacts') || 
-     request.nextUrl.pathname.startsWith('/admin')) 
+    (request.nextUrl.pathname.startsWith('/admin')) 
     && !user
   ) {
     // Redirect unauthenticated users to the Login page, NOT the landing page
