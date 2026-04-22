@@ -542,7 +542,7 @@ export default function Dashboard() {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user.id)
+        .eq('email', user.email)
         .single();
       
       if (profileError) {
