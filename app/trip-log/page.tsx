@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, EyeSlashIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
@@ -886,8 +886,8 @@ export default function Dashboard() {
 
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
+              <table className="w-full block md:table divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700 hidden md:table-header-group">
                   <tr>
                     <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                       Date / Time
@@ -909,38 +909,62 @@ export default function Dashboard() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                <tbody className="bg-transparent md:bg-white md:dark:bg-gray-800 divide-y divide-transparent md:divide-gray-200 dark:divide-gray-700 block md:table-row-group">
                   {visibleLogs.length === 0 && (
-                    <tr>
-                      <td colSpan={activeTab === 'all' ? 6 : 5} className="p-4 text-center text-gray-500 dark:text-gray-400">No logs found.</td>
+                    <tr className="block md:table-row bg-white dark:bg-gray-800 rounded-lg shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 p-4">
+                      <td colSpan={activeTab === 'all' ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 dark:text-gray-400">No logs found.</td>
                     </tr>
                   )}
                   {visibleLogs.slice(0, visibleCount).map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                      <td className="p-4 whitespace-nowrap">
-                        <ClientDate timestamp={log.created_at} />
+                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 mb-4 md:mb-0">
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Date / Time</div>
+                        <div className="whitespace-nowrap"><ClientDate timestamp={log.created_at} /></div>
                       </td>
-                      {activeTab === 'all' && <td className="p-4 font-medium text-gray-900 dark:text-white">{log.driver_name}</td>}
-                      <td className="p-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      {activeTab === 'all' && (
+                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                          <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Driver</div>
+                          <div className="font-medium text-gray-900 dark:text-white whitespace-nowrap">{log.driver_name}</div>
+                        </td>
+                      )}
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Type</div>
+                        <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
                         }`}>
                           {log.trip_type}
                         </span>
                       </td>
-                      <td className="p-4 whitespace-nowrap text-gray-900 dark:text-white">{log.route_id}</td>
-                      <td className="p-4 whitespace-nowrap text-gray-900 dark:text-white">{log.odometer}</td>
-                      <td className="p-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Route</div>
+                        <div className="whitespace-nowrap text-gray-900 dark:text-white">{log.route_id}</div>
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Odometer</div>
+                        <div className="whitespace-nowrap text-gray-900 dark:text-white">{log.odometer}</div>
+                      </td>
+                      <td className="p-4 block md:table-cell text-right text-sm font-medium">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 text-left">Actions</div>
+                        <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
                           {canEditOrDelete(log) && (
                             <>
-                              <button onClick={() => handleEditClick(log)} className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Edit</button>
-                              <button onClick={() => handleDelete(log.id)} className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Delete</button>
+                              <button onClick={() => handleEditClick(log)} className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors" title="Edit">
+                                <PencilSquareIcon className="w-5 h-5" />
+                              </button>
+                              <button onClick={() => handleDelete(log.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors" title="Delete">
+                                <TrashIcon className="w-5 h-5" />
+                              </button>
                             </>
                           )}
-                          <Link href={`/logs/${log.id}`} className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300">View</Link>
-                          <button onClick={() => downloadCSV(log)} className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">CSV</button>
-                          <button onClick={() => printLog(log)} className="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300">Print</button>
+                          <Link href={`/logs/${log.id}`} className="p-2 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="View">
+                            <EyeIcon className="w-5 h-5" />
+                          </Link>
+                          <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-lg transition-colors" title="CSV">
+                            <DocumentArrowDownIcon className="w-5 h-5" />
+                          </button>
+                          <button onClick={() => printLog(log)} className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-lg transition-colors" title="Print">
+                            <PrinterIcon className="w-5 h-5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
