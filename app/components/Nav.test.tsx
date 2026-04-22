@@ -67,19 +67,30 @@ describe('Nav Component', () => {
     
     render(<Nav />)
     
+    // Wait for the auth session to set loggedIn to true
     await waitFor(() => {
-      // There are two dashboard links (Desktop and Mobile)
-      const dashboardLinks = screen.getAllByRole('link', { name: /Trip Log/i })
-      expect(dashboardLinks.length).toBeGreaterThan(0)
-      
-      const feedbackLinks = screen.getAllByRole('link', { name: /Feedback/i })
-      expect(feedbackLinks.length).toBeGreaterThan(0)
+      // Find the menu button. It's the same button for both states now.
+      const menuBtn = screen.getByRole('button', { name: /Menu/i })
+      expect(menuBtn).toBeInTheDocument()
+    })
 
-      const contactsLinks = screen.getAllByRole('link', { name: /Contacts/i })
-      expect(contactsLinks.length).toBeGreaterThan(0)
+    // Open the menu
+    const menuBtn = screen.getByRole('button', { name: /Menu/i })
+    fireEvent.click(menuBtn)
+    
+    await waitFor(() => {
+      // There is now only one of each link since desktop inline and mobile bottom are gone
+      const dashboardLink = screen.getByRole('link', { name: /Trip Log/i })
+      expect(dashboardLink).toBeInTheDocument()
       
-      const logoutBtns = screen.getAllByRole('button', { name: /Logout/i })
-      expect(logoutBtns.length).toBeGreaterThan(0)
+      const feedbackLink = screen.getByRole('link', { name: /Feedback/i })
+      expect(feedbackLink).toBeInTheDocument()
+
+      const contactsLink = screen.getByRole('link', { name: /Contacts/i })
+      expect(contactsLink).toBeInTheDocument()
+      
+      const logoutBtn = screen.getByRole('button', { name: /Logout/i })
+      expect(logoutBtn).toBeInTheDocument()
     })
   })
 
@@ -88,9 +99,19 @@ describe('Nav Component', () => {
     
     render(<Nav />)
     
+    // Wait for the auth session to resolve
     await waitFor(() => {
-      const logoutBtns = screen.getAllByRole('button', { name: /Logout/i })
-      fireEvent.click(logoutBtns[0]) // Click the first one found
+      const menuBtn = screen.getByRole('button', { name: /Menu/i })
+      expect(menuBtn).toBeInTheDocument()
+    })
+
+    // Open the menu
+    const menuBtn = screen.getByRole('button', { name: /Menu/i })
+    fireEvent.click(menuBtn)
+    
+    await waitFor(() => {
+      const logoutBtn = screen.getByRole('button', { name: /Logout/i })
+      fireEvent.click(logoutBtn) 
     })
 
     expect(mockSignOut).toHaveBeenCalled()
