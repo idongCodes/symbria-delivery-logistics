@@ -14,12 +14,12 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock Supabase
-const mockSignInWithOtp = vi.fn();
+const mockSignInWithPassword = vi.fn();
 
 vi.mock('@/lib/supabase/client', () => ({
   createClient: () => ({
     auth: {
-      signInWithOtp: mockSignInWithOtp,
+      signInWithPassword: mockSignInWithPassword,
     },
   }),
 }));
@@ -31,33 +31,33 @@ describe('LoginPage', () => {
 
   it('renders login view by default', () => {
     render(<LoginPage />);
-    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admin Login' })).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send Magic Link' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Login' })).toBeInTheDocument();
   });
 
-  it('calls signInWithOtp on login submission', async () => {
-    mockSignInWithOtp.mockResolvedValue({ error: null });
+  it('calls signInWithPassword on login submission', async () => {
+    mockSignInWithPassword.mockResolvedValue({ error: null });
     render(<LoginPage />);
     
     const emailInput = screen.getByPlaceholderText('Email');
-    fireEvent.change(emailInput, { target: { value: 'lholden@symbria.com' } });
+    const passwordInput = screen.getByPlaceholderText('Password');
     
-    const submitBtn = screen.getByRole('button', { name: /Send Magic Link/i });
+    fireEvent.change(emailInput, { target: { value: 'lholden@symbria.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'Symbria123' } });
+    
+    const submitBtn = screen.getByRole('button', { name: 'Login' });
     fireEvent.click(submitBtn);
     
-    expect(mockSignInWithOtp).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: 'lholden@symbria.com',
-        options: expect.objectContaining({ 
-          shouldCreateUser: false,
-          emailRedirectTo: expect.stringContaining('/auth/callback?next=/trip-log')
-        })
-      })
-    );
+    expect(mockSignInWithPassword).toHaveBeenCalledWith({
+      email: 'lholden@symbria.com',
+      password: 'Symbria123'
+    });
     
     await waitFor(() => {
-      expect(screen.getByText('Success! Please check your email for a magic link to log in.')).toBeInTheDocument();
+      expect(screen.getByText('Success! Logging you in...')).toBeInTheDocument();
+      expect(pushMock).toHaveBeenCalledWith('/trip-log');
     });
   });
 
@@ -65,12 +65,15 @@ describe('LoginPage', () => {
     render(<LoginPage />);
     
     const emailInput = screen.getByPlaceholderText('Email');
-    fireEvent.change(emailInput, { target: { value: 'unauthorized@example.com' } });
+    const passwordInput = screen.getByPlaceholderText('Password');
     
-    const submitBtn = screen.getByRole('button', { name: /Send Magic Link/i });
+    fireEvent.change(emailInput, { target: { value: 'unauthorized@example.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'Symbria123' } });
+    
+    const submitBtn = screen.getByRole('button', { name: 'Login' });
     fireEvent.click(submitBtn);
     
-    expect(mockSignInWithOtp).not.toHaveBeenCalled();
+    expect(mockSignInWithPassword).not.toHaveBeenCalled();
     
     await waitFor(() => {
       expect(screen.getByText('Error: Unauthorized email. Please use the public dashboard access.')).toBeInTheDocument();
