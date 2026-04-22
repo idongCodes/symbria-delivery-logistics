@@ -854,50 +854,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {userProfile && activeTab === 'my-info' && (
-        <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
-          
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
-              {userProfile.firstName[0]}{userProfile.lastName[0]}
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{userProfile.firstName} {userProfile.lastName}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.jobTitle}</p>
-            </div>
-          </div>
-
-          <div className="grid gap-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">First Name</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.firstName}</div>
-               </div>
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Last Name</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.lastName}</div>
-               </div>
-            </div>
-
-            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Company Position</label>
-               <div className="font-medium text-gray-900 dark:text-white">{userProfile.jobTitle}</div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.phone}</div>
-               </div>
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Email</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.email}</div>
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {userProfile && (activeTab === 'history' || activeTab === 'all') && (
         <div className="flex flex-col gap-4">
           {activeTab === 'all' && (
@@ -1006,7 +962,8 @@ export default function Dashboard() {
       )}
 
       {/* Main Form */}
-      <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
+      {(!userProfile || activeTab === 'new') && (
+        <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
           <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
           </h2>
@@ -1190,7 +1147,7 @@ export default function Dashboard() {
             </div>
           </form>
         </div>
-
+      )}
 
           </div>
   );
