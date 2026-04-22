@@ -558,7 +558,15 @@ export default function Dashboard() {
           jobTitle: 'Driver'
         });
       } else if (profileData) {
-        setUserProfile(profileData);
+        setUserProfile({
+          id: profileData.id,
+          firstName: profileData.first_name || '',
+          lastName: profileData.last_name || '',
+          role: profileData.role || 'Driver',
+          email: profileData.email || '',
+          phone: profileData.phone || '',
+          jobTitle: profileData.job_title || 'Driver'
+        });
       }
 
       const { data: logsData, error: logsError } = await supabase
@@ -757,6 +765,9 @@ export default function Dashboard() {
       <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Pre/Post-Trip Log</h1>
+          {userProfile && (
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back, {userProfile.firstName}</p>
+          )}
         </div>
         {userProfile && (
           <h3 className="text-gray-400 dark:text-gray-500 font-medium text-left md:text-right">
