@@ -119,6 +119,8 @@ export default function Dashboard() {
   const [notes, setNotes] = useState("");
 
   const resetForm = useCallback(() => {
+    setFirstName("");
+    setLastName("");
     setTripType("Pre-Trip");
     setChecklistData({});
     setChecklistComments({});
