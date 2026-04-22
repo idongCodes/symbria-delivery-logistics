@@ -881,6 +881,20 @@ export default function Dashboard() {
                 <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Date</label>
                 <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
+              <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
+                <button 
+                  onClick={() => {
+                    setFilterDriver("");
+                    setFilterRoute("");
+                    setFilterType("");
+                    setFilterDate("");
+                  }}
+                  className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded transition-colors h-[38px] md:self-end"
+                  aria-label="Clear Filters"
+                >
+                  Clear Filters
+                </button>
+              </div>
             </div>
           )}
 
@@ -1161,10 +1175,20 @@ export default function Dashboard() {
               <textarea name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" rows={3} placeholder="General notes..." />
             </label>
             
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               <button type="submit" disabled={submitting} className={`flex-1 font-bold py-3 px-6 rounded text-white flex items-center justify-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
                 {submitting ? ( <>Uploading Images...</> ) : ( editingLog ? "Update Log" : "Submit Log" )}
               </button>
+              {editingLog && (
+                <button 
+                  type="button" 
+                  onClick={() => { setEditingLog(null); resetForm(); setActiveTab('history'); }} 
+                  disabled={submitting} 
+                  className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-all"
+                >
+                  Cancel Edit
+                </button>
+              )}
               <button type="button" onClick={resetForm} disabled={submitting} className="font-bold py-3 px-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all">
                 Reset
               </button>
