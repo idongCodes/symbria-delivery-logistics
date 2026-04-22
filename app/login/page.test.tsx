@@ -60,4 +60,20 @@ describe('LoginPage', () => {
       expect(screen.getByText('Success! Please check your email for a magic link to log in.')).toBeInTheDocument();
     });
   });
+
+  it('rejects unauthorized emails', async () => {
+    render(<LoginPage />);
+    
+    const emailInput = screen.getByPlaceholderText('Email');
+    fireEvent.change(emailInput, { target: { value: 'unauthorized@example.com' } });
+    
+    const submitBtn = screen.getByRole('button', { name: /Send Magic Link/i });
+    fireEvent.click(submitBtn);
+    
+    expect(mockSignInWithOtp).not.toHaveBeenCalled();
+    
+    await waitFor(() => {
+      expect(screen.getByText('Error: Unauthorized email. Please use the public dashboard access.')).toBeInTheDocument();
+    });
+  });
 });
