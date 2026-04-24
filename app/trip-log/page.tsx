@@ -96,7 +96,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'breaks'>('new');
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
@@ -799,6 +799,15 @@ export default function Dashboard() {
           <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
             All Logs
           </button>
+
+          {(userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
+            <button 
+              onClick={() => { setActiveTab('breaks'); setEditingLog(null); }} 
+              className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'breaks' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
+            >
+              Breaks
+            </button>
+          )}
           
           <button 
             onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
