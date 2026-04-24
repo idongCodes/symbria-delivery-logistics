@@ -111,6 +111,13 @@ export default function Nav() {
                     >
                       Contacts
                     </Link>
+                    <Link 
+                      href="/breaks" 
+                      onClick={() => setMenuOpen(false)}
+                      className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    >
+                      Breaks
+                    </Link>
                     <button 
                       onClick={() => { setMenuOpen(false); handleLogout(); }}
                       className="px-4 py-3 text-left text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition w-full"
@@ -140,6 +147,13 @@ export default function Nav() {
                       className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
                     >
                       Contacts
+                    </Link>
+                    <Link 
+                      href="/breaks" 
+                      onClick={() => setMenuOpen(false)}
+                      className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    >
+                      Breaks
                     </Link>
                   </>
                 )}
