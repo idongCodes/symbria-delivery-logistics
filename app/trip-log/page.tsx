@@ -65,6 +65,16 @@ type TripLog = {
   driver_name?: string; 
 };
 
+type BreakLog = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  start_time: string;
+  end_time: string | null;
+  duration: number | null;
+  status: string;
+};
+
 type UserProfile = {
   id: string;
   firstName: string;
@@ -94,6 +104,7 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
   const [logs, setLogs] = useState<TripLog[]>([]);
+  const [breakLogs, setBreakLogs] = useState<BreakLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'breaks'>('new');
@@ -579,6 +590,14 @@ export default function Dashboard() {
       if (logsError) throw logsError;
       setLogs(logsData || []);
 
+      const { data: breakLogsData, error: breakLogsError } = await supabase
+        .from('break_logs')
+        .select('*')
+        .order('start_time', { ascending: false });
+
+      if (breakLogsError) throw breakLogsError;
+      setBreakLogs(breakLogsData || []);
+
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
@@ -862,6 +881,57 @@ export default function Dashboard() {
 
 
 
+        </div>
+      )}
+
+      {activeTab === 'breaks' && userProfile && (userProfile.role === 'Admin' || userProfile.role === 'Management') && (
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="overflow-x-auto">
+            <table className="w-full block md:table divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-700 hidden md:table-header-group">
+                <tr>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Driver</th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Start Time</th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">End Time</th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
+                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="bg-transparent md:bg-white md:dark:bg-gray-800 divide-y divide-transparent md:divide-gray-200 dark:divide-gray-700 block md:table-row-group">
+                {breakLogs.length === 0 && (
+                  <tr className="block md:table-row bg-white dark:bg-gray-800 p-4">
+                    <td colSpan={5} className="block md:table-cell p-4 text-center text-gray-500 dark:text-gray-400">No break logs found.</td>
+                  </tr>
+                )}
+                {breakLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 mb-4 md:mb-0">
+                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Driver</div>
+                      <div className="font-medium text-gray-900 dark:text-white whitespace-nowrap">{log.first_name} {log.last_name}</div>
+                    </td>
+                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Start Time</div>
+                      <div className="whitespace-nowrap"><ClientDate timestamp={log.start_time} /></div>
+                    </td>
+                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">End Time</div>
+                      <div className="whitespace-nowrap">{log.end_time ? <ClientDate timestamp={log.end_time} /> : '-'}</div>
+                    </td>
+                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Duration</div>
+                      <div className="whitespace-nowrap">{log.duration} min</div>
+                    </td>
+                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Status</div>
+                      <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
+                        {log.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
