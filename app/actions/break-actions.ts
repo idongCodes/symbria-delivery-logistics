@@ -19,6 +19,18 @@ export async function startBreak(data: { firstName: string, lastName: string, du
   }
 }
 
+export async function getBreakLogs() {
+  try {
+    const breakLogs = await prisma.breakLog.findMany({
+      orderBy: { start_time: 'desc' },
+    });
+    return { success: true, breakLogs };
+  } catch (error) {
+    console.error("Error fetching break logs:", error);
+    return { success: false, error: "Failed to fetch break logs", breakLogs: [] };
+  }
+}
+
 export async function endBreak(breakLogId: string) {
   try {
     const breakLog = await prisma.breakLog.update({
@@ -34,3 +46,4 @@ export async function endBreak(breakLogId: string) {
     return { success: false, error: "Failed to end break" };
   }
 }
+
