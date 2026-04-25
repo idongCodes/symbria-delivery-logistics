@@ -47,3 +47,43 @@ export async function endBreak(breakLogId: string) {
   }
 }
 
+export async function deleteBreakLog(breakLogId: string) {
+  try {
+    await prisma.breakLog.delete({
+      where: { id: breakLogId },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting break:", error);
+    return { success: false, error: "Failed to delete break" };
+  }
+}
+
+export async function updateBreakLog(breakLogId: string, data: { start_time?: string, end_time?: string | null }) {
+  try {
+    const updateData: any = {};
+    if (data.start_time !== undefined) {
+      updateData.start_time = new Date(data.start_time);
+    }
+    // allow null for end_time
+    if (data.end_time !== undefined) {
+      updateData.end_time = data.end_time ? new Date(data.end_time) : null;
+      if (data.end_time === null) {
+         updateData.status = "In Progress";
+      } else if (data.end_time !== null) {
+         updateData.status = "Completed";
+      }
+    }
+
+    const breakLog = await prisma.breakLog.update({
+      where: { id: breakLogId },
+      data: updateData,
+    });
+    return { success: true, breakLog };
+  } catch (error) {
+    console.error("Error updating break:", error);
+    return { success: false, error: "Failed to update break" };
+  }
+}
+
+

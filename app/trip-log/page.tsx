@@ -92,7 +92,7 @@ type RouteOption = {
 };
 
 import { saveImageToDB, loadImagesFromDB, clearImagesFromDB } from "@/app/lib/indexedDB";
-import { getBreakLogs } from "@/app/actions/break-actions";
+import { getBreakLogs, deleteBreakLog, updateBreakLog, endBreak } from "@/app/actions/break-actions";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -118,6 +118,19 @@ export default function Dashboard() {
   const [filterRoute, setFilterRoute] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterDate, setFilterDate] = useState("");
+
+  // Break Filtering State
+  const [filterBreakFirstName, setFilterBreakFirstName] = useState("");
+  const [filterBreakLastName, setFilterBreakLastName] = useState("");
+  const [filterBreakDate, setFilterBreakDate] = useState("");
+  const [filterBreakStatus, setFilterBreakStatus] = useState("");
+  const [filterBreakDuration, setFilterBreakDuration] = useState("");
+
+  // Break Editing State
+  const [editingBreakId, setEditingBreakId] = useState<string | null>(null);
+  const [editBreakStartTime, setEditBreakStartTime] = useState("");
+  const [editBreakEndTime, setEditBreakEndTime] = useState("");
+
 
   // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
@@ -488,6 +501,55 @@ export default function Dashboard() {
     printWindow.document.close();
   };
 
+  const mainAdminEmails = ['idongesit_essien@ymail.com', 'ressien1@symbria.com'];
+  const isMainAdmin = userProfile?.email && mainAdminEmails.includes(userProfile.email);
+
+  const handleBreakDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this break log?")) return;
+    const res = await deleteBreakLog(id);
+    if (res.success) {
+      alert("Break log deleted");
+      fetchData();
+    } else {
+      alert("Failed to delete break log: " + res.error);
+    }
+  };
+
+  const handleBreakEnd = async (id: string) => {
+    if (!confirm("Are you sure you want to end this break?")) return;
+    const res = await endBreak(id);
+    if (res.success) {
+      alert("Break ended");
+      fetchData();
+    } else {
+      alert("Failed to end break: " + res.error);
+    }
+  };
+
+  const handleBreakEditClick = (log: BreakLog) => {
+    setEditingBreakId(log.id);
+    setEditBreakStartTime(log.start_time ? new Date(log.start_time).toISOString().slice(0, 16) : "");
+    setEditBreakEndTime(log.end_time ? new Date(log.end_time).toISOString().slice(0, 16) : "");
+  };
+
+  const handleBreakEditSave = async (id: string) => {
+    if (!editBreakStartTime) {
+      alert("Start time is required");
+      return;
+    }
+    const res = await updateBreakLog(id, { 
+      start_time: editBreakStartTime ? new Date(editBreakStartTime).toISOString() : undefined, 
+      end_time: editBreakEndTime ? new Date(editBreakEndTime).toISOString() : null 
+    });
+    if (res.success) {
+      alert("Break updated");
+      setEditingBreakId(null);
+      fetchData();
+    } else {
+      alert("Failed to update break: " + res.error);
+    }
+  };
+
   const handleDelete = async (logId: number) => {
     if (!confirm("Are you sure? This cannot be undone.")) return;
     const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
@@ -761,6 +823,19 @@ export default function Dashboard() {
     }
   }
 
+  const visibleBreakLogs = breakLogs.filter(log => {
+    if (activeTab !== 'breaks') return false;
+    if (filterBreakFirstName && !log.first_name.toLowerCase().includes(filterBreakFirstName.toLowerCase())) return false;
+    if (filterBreakLastName && !log.last_name.toLowerCase().includes(filterBreakLastName.toLowerCase())) return false;
+    if (filterBreakDate) {
+      const logDate = new Date(log.start_time).toISOString().split('T')[0];
+      if (logDate !== filterBreakDate) return false;
+    }
+    if (filterBreakStatus && log.status !== filterBreakStatus) return false;
+    if (filterBreakDuration && log.duration?.toString() !== filterBreakDuration) return false;
+    return true;
+  });
+
   const visibleLogs = logs.filter(log => {
     let match = true;
 
@@ -891,52 +966,134 @@ export default function Dashboard() {
       )}
 
       {activeTab === 'breaks' && userProfile && (userProfile.role === 'Admin' || userProfile.role === 'Management') && (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="overflow-x-auto">
-            <table className="w-full block md:table divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700 hidden md:table-header-group">
-                <tr>
-                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Driver</th>
-                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Start Time</th>
-                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">End Time</th>
-                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
-                  <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-transparent md:bg-white md:dark:bg-gray-800 divide-y divide-transparent md:divide-gray-200 dark:divide-gray-700 block md:table-row-group">
-                {breakLogs.length === 0 && (
-                  <tr className="block md:table-row bg-white dark:bg-gray-800 p-4">
-                    <td colSpan={5} className="block md:table-cell p-4 text-center text-gray-500 dark:text-gray-400">No break logs found.</td>
+        <div className="flex flex-col gap-4">
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap gap-4 items-end mb-2">
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">First Name</label>
+              <input type="text" placeholder="First Name..." value={filterBreakFirstName} onChange={(e) => setFilterBreakFirstName(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+            </div>
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Last Name</label>
+              <input type="text" placeholder="Last Name..." value={filterBreakLastName} onChange={(e) => setFilterBreakLastName(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+            </div>
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Status</label>
+              <select value={filterBreakStatus} onChange={(e) => setFilterBreakStatus(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <option value="">All Statuses</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[100px]">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Duration</label>
+              <select value={filterBreakDuration} onChange={(e) => setFilterBreakDuration(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <option value="">All</option>
+                <option value="15">15 min</option>
+                <option value="30">30 min</option>
+              </select>
+            </div>
+            <div className="flex-1 min-w-[120px]">
+              <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Date</label>
+              <input type="date" value={filterBreakDate} onChange={(e) => setFilterBreakDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+            </div>
+            <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
+              <button 
+                onClick={() => {
+                  setFilterBreakFirstName("");
+                  setFilterBreakLastName("");
+                  setFilterBreakStatus("");
+                  setFilterBreakDuration("");
+                  setFilterBreakDate("");
+                }}
+                className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded transition-colors h-[38px] md:self-end"
+                aria-label="Clear Filters"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <div className="overflow-x-auto">
+              <table className="w-full block md:table divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700 hidden md:table-header-group">
+                  <tr>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Driver</th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Start Time</th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">End Time</th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    {isMainAdmin && <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>}
                   </tr>
-                )}
-                {breakLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 mb-4 md:mb-0">
-                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Driver</div>
-                      <div className="font-medium text-gray-900 dark:text-white whitespace-nowrap">{log.first_name} {log.last_name}</div>
-                    </td>
-                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Start Time</div>
-                      <div className="whitespace-nowrap"><ClientDate timestamp={log.start_time} /></div>
-                    </td>
-                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">End Time</div>
-                      <div className="whitespace-nowrap">{log.end_time ? <ClientDate timestamp={log.end_time} /> : '-'}</div>
-                    </td>
-                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Duration</div>
-                      <div className="whitespace-nowrap">{log.duration} min</div>
-                    </td>
-                    <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                      <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Status</div>
-                      <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
-                        {log.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-transparent md:bg-white md:dark:bg-gray-800 divide-y divide-transparent md:divide-gray-200 dark:divide-gray-700 block md:table-row-group">
+                  {visibleBreakLogs.length === 0 && (
+                    <tr className="block md:table-row bg-white dark:bg-gray-800 p-4">
+                      <td colSpan={isMainAdmin ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 dark:text-gray-400">No break logs found.</td>
+                    </tr>
+                  )}
+                  {visibleBreakLogs.map((log) => (
+                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 mb-4 md:mb-0">
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Driver</div>
+                        <div className="font-medium text-gray-900 dark:text-white whitespace-nowrap">{log.first_name} {log.last_name}</div>
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Start Time</div>
+                        {editingBreakId === log.id ? (
+                          <input type="datetime-local" value={editBreakStartTime} onChange={e => setEditBreakStartTime(e.target.value)} className="border p-1 rounded text-sm" />
+                        ) : (
+                          <div className="whitespace-nowrap"><ClientDate timestamp={log.start_time} /></div>
+                        )}
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">End Time</div>
+                        {editingBreakId === log.id ? (
+                          <input type="datetime-local" value={editBreakEndTime} onChange={e => setEditBreakEndTime(e.target.value)} className="border p-1 rounded text-sm" />
+                        ) : (
+                          <div className="whitespace-nowrap">{log.end_time ? <ClientDate timestamp={log.end_time} /> : '-'}</div>
+                        )}
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Duration</div>
+                        <div className="whitespace-nowrap">{log.duration} min</div>
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Status</div>
+                        <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.status === 'Completed' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
+                          {log.status}
+                        </span>
+                      </td>
+                      {isMainAdmin && (
+                        <td className="p-4 block md:table-cell text-right text-sm font-medium">
+                          <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 text-left">Actions</div>
+                          <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
+                            {editingBreakId === log.id ? (
+                              <>
+                                <button onClick={() => handleBreakEditSave(log.id)} className="p-1 px-2 bg-green-500 text-white rounded text-xs hover:bg-green-600">Save</button>
+                                <button onClick={() => setEditingBreakId(null)} className="p-1 px-2 bg-gray-500 text-white rounded text-xs hover:bg-gray-600">Cancel</button>
+                              </>
+                            ) : (
+                              <>
+                                {log.status === 'In Progress' && (
+                                  <button onClick={() => handleBreakEnd(log.id)} className="p-1 px-2 bg-orange-500 text-white rounded text-xs hover:bg-orange-600">End Break</button>
+                                )}
+                                <button onClick={() => handleBreakEditClick(log)} className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors" title="Edit">
+                                  <PencilSquareIcon className="w-5 h-5" />
+                                </button>
+                                <button onClick={() => handleBreakDelete(log.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors" title="Delete">
+                                  <TrashIcon className="w-5 h-5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
