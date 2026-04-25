@@ -1,21 +1,56 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { startBreak, endBreak } from "@/app/actions/break-actions";
 
 export default function BreaksPage() {
   const [isOnBreak, setIsOnBreak] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [breakDuration, setBreakDuration] = useState("15");
   const [timeLeft, setTimeLeft] = useState(0);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [activeBreakId, setActiveBreakId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load existing break state from localStorage on mount
+  useEffect(() => {
+    const savedBreakId = localStorage.getItem("activeBreakId");
+    const savedBreakEnd = localStorage.getItem("activeBreakEnd");
+    
+    if (savedBreakId && savedBreakEnd) {
+      const endTime = parseInt(savedBreakEnd, 10);
+      const now = Date.now();
+      
+      if (now < endTime) {
+        setIsOnBreak(true);
+        setActiveBreakId(savedBreakId);
+        setTimeLeft(Math.floor((endTime - now) / 1000));
+        
+        // Optionally load saved name and duration
+        const savedFirstName = localStorage.getItem("breakFirstName");
+        const savedLastName = localStorage.getItem("breakLastName");
+        if (savedFirstName) setFirstName(savedFirstName);
+        if (savedLastName) setLastName(savedLastName);
+      } else {
+        // Break has already ended natively
+        localStorage.removeItem("activeBreakId");
+        localStorage.removeItem("activeBreakEnd");
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: NodeJS.Timeout | undefined;
     if (isOnBreak && timeLeft > 0) {
       interval = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
+    } else if (isOnBreak && timeLeft <= 0) {
+      // Time is up, auto-end maybe or just leave it at 0
+      if (interval) clearInterval(interval);
     }
-    return () => clearInterval(interval);
+    return () => { if (interval) clearInterval(interval); };
   }, [isOnBreak, timeLeft]);
 
   const formatTime = (seconds: number) => {
@@ -24,21 +59,65 @@ export default function BreaksPage() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const toggleBreak = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleStartBreak = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newBreakState = !isOnBreak;
-    setIsOnBreak(newBreakState);
-    
-    if (newBreakState) {
-      setTimeLeft(parseInt(breakDuration, 10) * 60);
-    } else {
-      setTimeLeft(0);
+    if (!firstName || !lastName) {
+      setNotification("Please enter your first and last name.");
+      setTimeout(() => setNotification(null), 3000);
+      return;
     }
 
-    setNotification(newBreakState ? "You have started your break!" : "You have ended your break!");
-    setTimeout(() => {
-      setNotification(null);
-    }, 3000);
+    setIsLoading(true);
+    const durationNum = parseInt(breakDuration, 10);
+    
+    const result = await startBreak({ firstName, lastName, duration: durationNum });
+    
+    if (result.success && result.breakLogId) {
+      const endTime = Date.now() + durationNum * 60 * 1000;
+      
+      setIsOnBreak(true);
+      setActiveBreakId(result.breakLogId);
+      setTimeLeft(durationNum * 60);
+      
+      // Save to localStorage so it persists on reload
+      localStorage.setItem("activeBreakId", result.breakLogId);
+      localStorage.setItem("activeBreakEnd", endTime.toString());
+      localStorage.setItem("breakFirstName", firstName);
+      localStorage.setItem("breakLastName", lastName);
+      
+      setNotification("You have started your break!");
+      setTimeout(() => setNotification(null), 3000);
+    } else {
+      setNotification("Failed to start break. Please try again.");
+      setTimeout(() => setNotification(null), 3000);
+    }
+    setIsLoading(false);
+  };
+
+  const handleEndBreak = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!activeBreakId) return;
+
+    setIsLoading(true);
+    const result = await endBreak(activeBreakId);
+    
+    if (result.success) {
+      setIsOnBreak(false);
+      setActiveBreakId(null);
+      setTimeLeft(0);
+      
+      localStorage.removeItem("activeBreakId");
+      localStorage.removeItem("activeBreakEnd");
+      
+      setNotification("You have ended your break!");
+      setFirstName("");
+      setLastName("");
+      setTimeout(() => setNotification(null), 3000);
+    } else {
+      setNotification("Failed to end break. Please try again.");
+      setTimeout(() => setNotification(null), 3000);
+    }
+    setIsLoading(false);
   };
 
   return (
@@ -51,12 +130,12 @@ export default function BreaksPage() {
       </p>
 
       {notification && (
-        <div className="mt-6 p-4 rounded-md text-center text-white bg-green-600 transition-opacity animate-in fade-in duration-300">
+        <div className={`mt-6 p-4 rounded-md text-center text-white transition-opacity animate-in fade-in duration-300 ${notification.includes("Failed") || notification.includes("Please") ? "bg-red-600" : "bg-green-600"}`}>
           {notification}
         </div>
       )}
       
-      <form className="mt-8 max-w-md mx-auto flex flex-col gap-4">
+      <form onSubmit={isOnBreak ? (e) => e.preventDefault() : handleStartBreak} className="mt-8 max-w-md mx-auto flex flex-col gap-4">
         <div>
           <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             First Name
@@ -65,8 +144,11 @@ export default function BreaksPage() {
             type="text" 
             id="firstName" 
             name="firstName" 
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:text-sm p-2 border transition-colors" 
             required
+            disabled={isOnBreak || isLoading}
           />
         </div>
         <div>
@@ -77,8 +159,11 @@ export default function BreaksPage() {
             type="text" 
             id="lastName" 
             name="lastName" 
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:text-sm p-2 border transition-colors" 
             required
+            disabled={isOnBreak || isLoading}
           />
         </div>
         <div>
@@ -92,22 +177,30 @@ export default function BreaksPage() {
             onChange={(e) => setBreakDuration(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white sm:text-sm p-2 border transition-colors"
             required
-            disabled={isOnBreak}
+            disabled={isOnBreak || isLoading}
           >
             <option value="15">15 Minutes</option>
             <option value="30">30 Minutes</option>
           </select>
         </div>
-        <button
-          onClick={toggleBreak}
-          className={`mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-            isOnBreak 
-              ? "bg-red-600 hover:bg-red-700 focus:ring-red-500" 
-              : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
-          }`}
-        >
-          {isOnBreak ? "End Break" : "Start Break"}
-        </button>
+        
+        {isOnBreak ? (
+          <button
+            onClick={handleEndBreak}
+            disabled={isLoading}
+            className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-600 hover:bg-red-700 focus:ring-red-500 disabled:bg-gray-400"
+          >
+            {isLoading ? "Processing..." : "End Break"}
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-4 w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 disabled:bg-gray-400"
+          >
+             {isLoading ? "Processing..." : "Start Break"}
+          </button>
+        )}
       </form>
 
       {isOnBreak && (
