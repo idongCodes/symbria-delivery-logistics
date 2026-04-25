@@ -92,6 +92,7 @@ type RouteOption = {
 };
 
 import { saveImageToDB, loadImagesFromDB, clearImagesFromDB } from "@/app/lib/indexedDB";
+import { getBreakLogs } from "@/app/actions/break-actions";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -590,13 +591,18 @@ export default function Dashboard() {
       if (logsError) throw logsError;
       setLogs(logsData || []);
 
-      const { data: breakLogsData, error: breakLogsError } = await supabase
-        .from('break_logs')
-        .select('*')
-        .order('start_time', { ascending: false });
-
-      if (breakLogsError) throw breakLogsError;
-      setBreakLogs(breakLogsData || []);
+      const breakLogResult = await getBreakLogs();
+      if (breakLogResult.success && breakLogResult.breakLogs) {
+        // Map the datetime values to strings so that it works with the client components if they expect strings, or just rely on ClientDate handling dates
+        const formattedLogs = breakLogResult.breakLogs.map(log => ({
+           ...log,
+           start_time: new Date(log.start_time).toISOString(),
+           end_time: log.end_time ? new Date(log.end_time).toISOString() : null,
+        }));
+        setBreakLogs(formattedLogs as any);
+      } else {
+        setBreakLogs([]);
+      }
 
     } catch (error) {
       console.error("Error loading dashboard:", error);
