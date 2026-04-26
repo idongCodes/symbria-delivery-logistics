@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { startBreak, endBreak, getUserBreaks } from "@/app/actions/break-actions";
+import { startBreak, endBreak, getUserBreaks, getBreakStatus } from "@/app/actions/break-actions";
 
 export default function BreaksPage() {
   const [isOnBreak, setIsOnBreak] = useState(false);
@@ -71,6 +71,27 @@ export default function BreaksPage() {
     }
     return () => { if (interval) clearInterval(interval); };
   }, [isOnBreak, timeLeft]);
+
+  // Poll server to check if an admin ended the break remotely
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+    if (isOnBreak && activeBreakId) {
+      interval = setInterval(async () => {
+        const result = await getBreakStatus(activeBreakId);
+        if (result.success && result.status === "Completed") {
+          setIsOnBreak(false);
+          setActiveBreakId(null);
+          setTimeLeft(0);
+          localStorage.removeItem("activeBreakId");
+          localStorage.removeItem("activeBreakEnd");
+          setNotification("Your break was ended by an administrator.");
+          setTimeout(() => setNotification(null), 5000);
+          if (interval) clearInterval(interval);
+        }
+      }, 5000); // Check every 5 seconds
+    }
+    return () => { if (interval) clearInterval(interval); };
+  }, [isOnBreak, activeBreakId]);
 
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
