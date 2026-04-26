@@ -31,6 +31,22 @@ export async function getBreakLogs() {
   }
 }
 
+export async function getBreakStatus(breakLogId: string) {
+  try {
+    const breakLog = await prisma.breakLog.findUnique({
+      where: { id: breakLogId },
+      select: { status: true },
+    });
+    if (!breakLog) {
+      return { success: false, error: "Break not found" };
+    }
+    return { success: true, status: breakLog.status };
+  } catch (error) {
+    console.error("Error fetching break status:", error);
+    return { success: false, error: "Failed to fetch break status" };
+  }
+}
+
 export async function getUserBreaks(firstName: string, lastName: string) {
   try {
     const breakLogs = await prisma.breakLog.findMany({
