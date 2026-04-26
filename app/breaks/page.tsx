@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { startBreak, endBreak } from "@/app/actions/break-actions";
+import { startBreak, endBreak, getUserBreaks } from "@/app/actions/break-actions";
 
 export default function BreaksPage() {
   const [isOnBreak, setIsOnBreak] = useState(false);
@@ -12,6 +12,25 @@ export default function BreaksPage() {
   const [lastName, setLastName] = useState("");
   const [activeBreakId, setActiveBreakId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [myBreaks, setMyBreaks] = useState<any[]>([]);
+  const [isFetchingBreaks, setIsFetchingBreaks] = useState(false);
+
+  const fetchMyBreaks = async () => {
+    if (!firstName || !lastName) {
+      setNotification("Please enter first and last name to view history.");
+      setTimeout(() => setNotification(null), 3000);
+      return;
+    }
+    setIsFetchingBreaks(true);
+    const result = await getUserBreaks(firstName, lastName);
+    if (result.success) {
+      setMyBreaks(result.breakLogs || []);
+    } else {
+      setNotification("Failed to load break history.");
+      setTimeout(() => setNotification(null), 3000);
+    }
+    setIsFetchingBreaks(false);
+  };
 
   // Load existing break state from localStorage on mount
   useEffect(() => {
@@ -217,6 +236,46 @@ export default function BreaksPage() {
           </div>
         </div>
       )}
+
+      <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700 max-w-md mx-auto">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4 text-center">
+          My Break History
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
+          Enter your first and last name above, then click below to view your past breaks.
+        </p>
+        <button
+          onClick={fetchMyBreaks}
+          disabled={isFetchingBreaks || !firstName || !lastName}
+          className="w-full flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {isFetchingBreaks ? "Loading..." : "Load My Breaks"}
+        </button>
+
+        {myBreaks.length > 0 && (
+          <div className="mt-6 space-y-4">
+            {myBreaks.map((b) => (
+              <div key={b.id} className="p-4 border rounded-md shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-semibold text-gray-800 dark:text-gray-200">
+                    {b.first_name} {b.last_name}
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    b.status === "Completed" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+                  }`}>
+                    {b.status}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <p>Started: {new Date(b.start_time).toLocaleString()}</p>
+                  {b.end_time && <p>Ended: {new Date(b.end_time).toLocaleString()}</p>}
+                  <p>Duration: {b.duration} mins</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
