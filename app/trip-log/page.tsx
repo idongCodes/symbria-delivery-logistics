@@ -112,6 +112,7 @@ export default function Dashboard() {
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleBreakCount, setVisibleBreakCount] = useState(5);
 
   // Filtering State
   const [filterDriver, setFilterDriver] = useState("");
@@ -902,7 +903,7 @@ export default function Dashboard() {
 
           {(userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
             <button 
-              onClick={() => { setActiveTab('breaks'); setEditingLog(null); }} 
+              onClick={() => { setActiveTab('breaks'); setEditingLog(null); setVisibleBreakCount(5); }} 
               className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'breaks' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
             >
               Breaks
@@ -1032,7 +1033,7 @@ export default function Dashboard() {
                       <td colSpan={isMainAdmin ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 dark:text-gray-400">No break logs found.</td>
                     </tr>
                   )}
-                  {visibleBreakLogs.map((log) => (
+                  {visibleBreakLogs.slice(0, visibleBreakCount).map((log) => (
                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 mb-4 md:mb-0">
                       <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
                         <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Driver</div>
@@ -1093,6 +1094,25 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="flex justify-center gap-4 mt-6">
+              {visibleBreakCount < visibleBreakLogs.length && (
+                <button
+                  onClick={() => setVisibleBreakCount((prev) => prev + 5)}
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                >
+                  See More
+                </button>
+              )}
+              {visibleBreakCount > 5 && (
+                <button
+                  onClick={() => setVisibleBreakCount((prev) => Math.max(5, prev - 5))}
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                >
+                  See Less
+                </button>
+              )}
             </div>
           </div>
         </div>
