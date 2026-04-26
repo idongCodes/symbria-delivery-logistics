@@ -14,6 +14,7 @@ export default function BreaksPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [myBreaks, setMyBreaks] = useState<any[]>([]);
   const [isFetchingBreaks, setIsFetchingBreaks] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const fetchMyBreaks = async () => {
     if (!firstName || !lastName) {
@@ -25,6 +26,7 @@ export default function BreaksPage() {
     const result = await getUserBreaks(firstName, lastName);
     if (result.success) {
       setMyBreaks(result.breakLogs || []);
+      setVisibleCount(5);
     } else {
       setNotification("Failed to load break history.");
       setTimeout(() => setNotification(null), 3000);
@@ -275,7 +277,7 @@ export default function BreaksPage() {
 
         {myBreaks.length > 0 && (
           <div className="mt-6 space-y-4">
-            {myBreaks.map((b) => (
+            {myBreaks.slice(0, visibleCount).map((b) => (
               <div key={b.id} className="p-4 border rounded-md shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-semibold text-gray-800 dark:text-gray-200">
@@ -294,6 +296,25 @@ export default function BreaksPage() {
                 </div>
               </div>
             ))}
+            
+            <div className="flex justify-center gap-4 mt-4">
+              {visibleCount < myBreaks.length && (
+                <button
+                  onClick={() => setVisibleCount((prev) => prev + 5)}
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                >
+                  See More
+                </button>
+              )}
+              {visibleCount > 5 && (
+                <button
+                  onClick={() => setVisibleCount((prev) => Math.max(5, prev - 5))}
+                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                >
+                  See Less
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
