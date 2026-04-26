@@ -31,6 +31,22 @@ export async function getBreakLogs() {
   }
 }
 
+export async function getUserBreaks(firstName: string, lastName: string) {
+  try {
+    const breakLogs = await prisma.breakLog.findMany({
+      where: {
+        first_name: { equals: firstName, mode: 'insensitive' },
+        last_name: { equals: lastName, mode: 'insensitive' },
+      },
+      orderBy: { start_time: 'desc' },
+    });
+    return { success: true, breakLogs };
+  } catch (error) {
+    console.error("Error fetching user breaks:", error);
+    return { success: false, error: "Failed to fetch user breaks", breakLogs: [] };
+  }
+}
+
 export async function endBreak(breakLogId: string) {
   try {
     const breakLog = await prisma.breakLog.update({
