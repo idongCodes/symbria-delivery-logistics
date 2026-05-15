@@ -686,8 +686,8 @@ export default function Dashboard() {
   
   const uploadImage = async (file: File, quality: number = 0.6) => {
     const options = {
-      maxSizeMB: 1,
-      maxWidthOrHeight: 1920,
+      maxSizeMB: 0.2, // Compressed down to ~200kb for faster uploads on weak networks
+      maxWidthOrHeight: 1024,
       useWebWorker: true,
       initialQuality: quality,
     };
@@ -750,14 +750,12 @@ export default function Dashboard() {
       if (editingLog) {
         // --- EDIT MODE ---
         const imageUrls = { ...(editingLog.images || {}) };
-        const uploadPromises = Object.entries(imageFiles)
-          .filter(([, file]) => file)
-          .map(async ([key, file]) => {
-            const url = await uploadImage(file!);
-            imageUrls[key as keyof typeof imageUrls] = url;
-          });
-      
-        await Promise.all(uploadPromises);
+        const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
+        
+        for (const [key, file] of imagesToUpload) {
+          const url = await uploadImage(file!);
+          imageUrls[key as keyof typeof imageUrls] = url;
+        }
       
         const response = await supabase.from('trip_logs').update({
           ...baseData,
@@ -775,11 +773,11 @@ export default function Dashboard() {
         const imageUrls: Record<string, string> = {};
 
         if (imagesToUpload.length > 0) {
-          await Promise.all(imagesToUpload.map(async ([key, file]) => {
+          for (const [key, file] of imagesToUpload) {
             const url = await uploadImage(file!);
             imageUrls[key] = url;
             console.log(`Uploaded ${key}.`);
-          }));
+          }
         }
 
         // 1. Insert log with text data and image URLs
@@ -1360,22 +1358,22 @@ export default function Dashboard() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Front Tire</span>
-                              <input type="file" accept="image/*" onChange={(e) => handleFileChange('driverFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverFrontTire} />
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverFrontTire} />
                               {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Front Tire</span>
-                              <input type="file" accept="image/*" onChange={(e) => handleFileChange('passengerFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerFrontTire} />
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerFrontTire} />
                               {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Rear Tire</span>
-                              <input type="file" accept="image/*" onChange={(e) => handleFileChange('driverRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverRearTire} />
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverRearTire} />
                               {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Rear Tire</span>
-                              <input type="file" accept="image/*" onChange={(e) => handleFileChange('passengerRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerRearTire} />
+                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerRearTire} />
                               {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                           </div>
@@ -1387,22 +1385,22 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
 		  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front of Vehicle</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
                   {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Side</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('driverSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverSide} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverSide} />
                   {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rear of Vehicle</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('rear', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.rear} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('rear', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.rear} />
                   {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Side</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('passengerSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerSide} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerSide} />
                   {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
@@ -1416,17 +1414,17 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seat Area</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('frontSeat', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.frontSeat} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('frontSeat', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.frontSeat} />
                   {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seat</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.back} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.back} />
                   {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Trunk</span>
-                  <input type="file" accept="image/*" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.trunk} />
+                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.trunk} />
                   {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
