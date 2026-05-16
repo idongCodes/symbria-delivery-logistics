@@ -8,6 +8,7 @@ import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
 import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
+import ImageUploadInput from "@/app/components/ImageUploadInput";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
 
@@ -1358,22 +1359,22 @@ export default function Dashboard() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Front Tire</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverFrontTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('driverFrontTire', file)} file={imageFiles.driverFrontTire} required={!editingLog?.images?.driverFrontTire} />
                               {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Front Tire</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerFrontTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerFrontTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('passengerFrontTire', file)} file={imageFiles.passengerFrontTire} required={!editingLog?.images?.passengerFrontTire} />
                               {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Rear Tire</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverRearTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('driverRearTire', file)} file={imageFiles.driverRearTire} required={!editingLog?.images?.driverRearTire} />
                               {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                               <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Rear Tire</span>
-                              <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerRearTire', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerRearTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('passengerRearTire', file)} file={imageFiles.passengerRearTire} required={!editingLog?.images?.passengerRearTire} />
                               {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                             </div>
                           </div>
@@ -1385,22 +1386,22 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
 		  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front of Vehicle</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('front', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.front} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('front', file)} file={imageFiles.front} required={!editingLog?.images?.front} />
                   {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Side</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('driverSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.driverSide} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('driverSide', file)} file={imageFiles.driverSide} required={!editingLog?.images?.driverSide} />
                   {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rear of Vehicle</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('rear', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.rear} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('rear', file)} file={imageFiles.rear} required={!editingLog?.images?.rear} />
                   {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Side</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('passengerSide', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.passengerSide} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('passengerSide', file)} file={imageFiles.passengerSide} required={!editingLog?.images?.passengerSide} />
                   {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
@@ -1414,17 +1415,17 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seat Area</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('frontSeat', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.frontSeat} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('frontSeat', file)} file={imageFiles.frontSeat} required={!editingLog?.images?.frontSeat} />
                   {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seat</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('back', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.back} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('back', file)} file={imageFiles.back} required={!editingLog?.images?.back} />
                   {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
                   <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Trunk</span>
-                  <input type="file" accept="image/*" capture="environment" onChange={(e) => handleFileChange('trunk', e.target.files?.[0] || null)} className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-200" required={!editingLog?.images?.trunk} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('trunk', file)} file={imageFiles.trunk} required={!editingLog?.images?.trunk} />
                   {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
