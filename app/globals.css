@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@variant dark (&:is(.never-use-dark-mode *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -10,14 +12,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-/* Ensure dark mode sets the correct base colors */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0f172a; /* Dark Slate 900 */
-    --foreground: #f8fafc; /* Slate 50 */
-  }
 }
 
 body {
