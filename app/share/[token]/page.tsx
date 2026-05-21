@@ -27,8 +27,8 @@ export default async function PublicLogPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+    <div className="min-h-screen bg-gray-50  p-4 md:p-8">
+      <div className="max-w-4xl mx-auto bg-white  shadow-lg rounded-xl overflow-hidden border border-gray-200 ">
         
         {/* PUBLIC HEADER */}
         <div className="bg-blue-900 text-white p-6 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -44,7 +44,7 @@ export default async function PublicLogPage({
         {/* REUSED VIEWER */}
         <LogViewer log={serializableLog} />
         
-        <div className="bg-gray-50 dark:bg-gray-800 p-4 text-center text-xs text-gray-500">
+        <div className="bg-gray-50  p-4 text-center text-xs text-gray-500">
           Symbria RX Logistics • Public Record
         </div>
       </div>

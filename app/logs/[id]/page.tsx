@@ -32,24 +32,24 @@ export default async function LogPreviewPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 p-4 md:p-8 pb-32">
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-900 shadow-lg rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+    <div className="min-h-screen bg-gray-50  p-4 md:p-8 pb-32">
+      <div className="max-w-4xl mx-auto bg-white  shadow-lg rounded-xl overflow-hidden border border-gray-200 ">
         
         {/* HEADER */}
-        <div className="bg-white dark:bg-gray-800 p-6 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-white  p-6 border-b border-gray-200  flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <div className="flex items-center gap-3">
-               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Trip Log #{log.id}</h1>
+               <h1 className="text-2xl font-bold text-gray-900 ">Trip Log #{log.id}</h1>
                <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide ${
                  log.trip_type === 'Pre-Trip' 
-                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' 
-                   : 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
+                   ? 'bg-blue-100 text-blue-700  ' 
+                   : 'bg-orange-100 text-orange-700  '
                }`}>
                  {log.trip_type}
                </span>
             </div>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-              Submitted by <span className="font-medium text-gray-800 dark:text-gray-200">{log.driver_name || 'Unknown'}</span>
+            <p className="text-gray-500  text-sm mt-1">
+              Submitted by <span className="font-medium text-gray-800 ">{log.driver_name || 'Unknown'}</span>
             </p>
           </div>
           
@@ -60,7 +60,7 @@ export default async function LogPreviewPage({
             {/* DOWNLOAD BUTTON */}
             <LogDownloadButton log={serializableLog} />
             
-            <Link href="/trip-log" className="bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            <Link href="/trip-log" className="bg-gray-100 hover:bg-gray-200 text-gray-700    px-4 py-2 rounded-lg text-sm font-medium transition-colors">
               Back
             </Link>
           </div>
