@@ -25,13 +25,12 @@ const ROUTE_DATA = [
   },
   {
     id: "002",
-    region: "West (W)",
+    region: "South West (SW)",
     regionColor: "text-purple-600 ",
     scannerPhone: "331-329-2166",
-    duration: "9.5 Hrs", // Updated: 4.5h Drive + 4h Stops + 1h Break
+    duration: "9.0 Hrs", // Updated: 4.5h Drive + 3.5h Stops + 1h Break
     stops: [
       { name: "The Overlook", address: "88 Masonic Home rd, Charlton, MA 01507", phone: "508-202-4090" },
-      { name: "St. Joseph", address: "14 Club Rd, Windham, CT 06280", phone: "860-456-1107" },
       { name: "Livewell", address: "1261 S Main St, Plantsville, CT 06479", phone: "508-628-9000" },
       { name: "Health Center at the Willows", address: "101 Barry Rd, Worcester, MA 01609", phone: "508-755-0088" },
       { name: "Holy Trinity", address: "300 Barber Ave, Worcester, MA 01606", phone: "508-852-1000" },

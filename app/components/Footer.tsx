@@ -8,7 +8,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="w-full py-6 text-center text-sm text-gray-400 border-t border-gray-200 bg-white mt-auto">
+      <footer className="w-full pt-6 pb-8 text-center text-sm text-gray-400 border-t border-gray-200 bg-white mt-auto">
         <p>
           &copy; {currentYear}{" "}
           {/* Clickable Name Trigger */}
