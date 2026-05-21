@@ -37,7 +37,7 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
 
   return (
     <div className={className}>
-      {label && <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{label}</span>}
+      {label && <span className="block text-sm font-semibold text-gray-700  mb-2">{label}</span>}
       
       {/* Hidden inputs */}
       <input 
@@ -60,7 +60,7 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
         <button 
           type="button" 
           onClick={() => setShowPopup(true)} 
-          className="py-2 px-4 rounded-full border-0 text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 transition-colors"
+          className="py-2 px-4 rounded-full border-0 text-sm font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100   transition-colors"
         >
           Choose File
         </button>
@@ -70,10 +70,10 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
             <img 
               src={previewUrl} 
               alt="Preview" 
-              className="w-10 h-10 object-cover rounded-md shadow-sm border border-gray-200 dark:border-gray-700" 
+              className="w-10 h-10 object-cover rounded-md shadow-sm border border-gray-200 " 
             />
           )}
-          <span className="text-sm text-gray-500 dark:text-gray-400 break-all">
+          <span className="text-sm text-gray-500  break-all">
             {file ? file.name : "No file chosen"}
           </span>
         </div>
@@ -85,7 +85,7 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
       )}
 
       {currentImage && !previewUrl && (
-        <a href={currentImage} target="_blank" rel="noreferrer" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">
+        <a href={currentImage} target="_blank" rel="noreferrer" className="text-xs text-blue-600  mt-2 block underline">
           View Current Image
         </a>
       )}
@@ -93,8 +93,8 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
       {/* Popup Modal */}
       {showPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg max-w-xs w-full animate-in fade-in zoom-in-95">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">Select Image Source</h3>
+          <div className="bg-white  p-6 rounded-xl shadow-lg max-w-xs w-full animate-in fade-in zoom-in-95">
+            <h3 className="text-lg font-semibold text-gray-900  mb-4 text-center">Select Image Source</h3>
             <div className="flex flex-col gap-3">
               <button 
                 type="button" 
@@ -107,7 +107,7 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
               <button 
                 type="button" 
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex items-center justify-center gap-2 py-3 px-4 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white rounded-lg transition-colors font-medium"
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-gray-200 hover:bg-gray-300   text-gray-800  rounded-lg transition-colors font-medium"
               >
                 <ArrowUpTrayIcon className="w-5 h-5" />
                 Upload Photo
@@ -115,7 +115,7 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
               <button 
                 type="button" 
                 onClick={() => setShowPopup(false)}
-                className="mt-2 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 underline"
+                className="mt-2 py-2 text-sm text-gray-500  hover:text-gray-700  underline"
               >
                 Cancel
               </button>

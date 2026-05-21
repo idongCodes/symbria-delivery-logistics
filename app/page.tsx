@@ -63,7 +63,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
+    <div className="flex flex-col min-h-screen bg-gray-50  transition-colors">
       
       {/* 1. HERO IMAGE SECTION */}
       <section className="relative w-full bg-gray-900">
@@ -104,64 +104,64 @@ export default function Home() {
       </section>
 
       {/* 3. BENEFITS SECTION */}
-      <section className="bg-gray-50 dark:bg-gray-900 py-20 px-6 transition-colors">
+      <section className="bg-gray-50  py-20 px-6 transition-colors">
         <div className="max-w-6xl mx-auto">
            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4">Why Go Digital?</h2>
-              <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">Replacing paper logs with this platform improves accuracy, accountability, and speed.</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-800  mb-4">Why Go Digital?</h2>
+              <p className="text-gray-500  max-w-2xl mx-auto">Replacing paper logs with this platform improves accuracy, accountability, and speed.</p>
            </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Card 1 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">👁️</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Instant Visibility</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Admins see inspection status in real-time. No waiting for paper logs at the end of the shift.</p>
+            <div className="bg-white  p-8 rounded-2xl shadow-sm border border-gray-100  hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100  rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 ">👁️</div>
+              <h3 className="text-xl font-bold text-gray-800  mb-3">Instant Visibility</h3>
+              <p className="text-gray-600  text-base leading-relaxed">Admins see inspection status in real-time. No waiting for paper logs at the end of the shift.</p>
             </div>
             {/* Card 2 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">📸</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Photo Evidence</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Mandatory photo uploads for vehicle conditions create an indisputable history of the fleet.</p>
+            <div className="bg-white  p-8 rounded-2xl shadow-sm border border-gray-100  hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100  rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 ">📸</div>
+              <h3 className="text-xl font-bold text-gray-800  mb-3">Photo Evidence</h3>
+              <p className="text-gray-600  text-base leading-relaxed">Mandatory photo uploads for vehicle conditions create an indisputable history of the fleet.</p>
             </div>
             {/* Card 3 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">🧠</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Smart Forms</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Dynamic checklists adapt to &quot;Pre-Trip&quot; or &quot;Post-Trip&quot; contexts and enforce descriptions for defects.</p>
+            <div className="bg-white  p-8 rounded-2xl shadow-sm border border-gray-100  hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100  rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 ">🧠</div>
+              <h3 className="text-xl font-bold text-gray-800  mb-3">Smart Forms</h3>
+              <p className="text-gray-600  text-base leading-relaxed">Dynamic checklists adapt to &quot;Pre-Trip&quot; or &quot;Post-Trip&quot; contexts and enforce descriptions for defects.</p>
             </div>
             {/* Card 4 */}
-            <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition duration-300">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 dark:text-blue-400">🔒</div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">Secure Records</h3>
-              <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">Role-based access ensures data integrity. Search, filter, and export PDF reports instantly.</p>
+            <div className="bg-white  p-8 rounded-2xl shadow-sm border border-gray-100  hover:shadow-md transition duration-300">
+              <div className="w-12 h-12 bg-blue-100  rounded-full flex items-center justify-center text-2xl mb-6 text-blue-600 ">🔒</div>
+              <h3 className="text-xl font-bold text-gray-800  mb-3">Secure Records</h3>
+              <p className="text-gray-600  text-base leading-relaxed">Role-based access ensures data integrity. Search, filter, and export PDF reports instantly.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* 4. FEEDBACK SECTION */}
-      <section id="contact" className="w-[90%] mx-auto bg-white dark:bg-gray-800 rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
+      <section id="contact" className="w-[90%] mx-auto bg-white  rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
         <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-4">We Value Your Feedback</h2>
-          <p className="text-gray-500 dark:text-gray-400 mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
+          <h2 className="text-3xl font-bold text-gray-800  mb-4">We Value Your Feedback</h2>
+          <p className="text-gray-500  mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
           
           <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-left">
             
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700  mb-1">Name</label>
               <input 
                 id="name" 
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
+                className="w-full border border-gray-300  p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white  text-black "
                 placeholder="Your Name"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700  mb-1">Email</label>
               <input 
                 id="email" 
                 type="email"
@@ -170,26 +170,26 @@ export default function Home() {
                   setFormData({...formData, email: e.target.value});
                   if (errorMsg) setErrorMsg(""); 
                 }}
-                className={`w-full border p-3 rounded-lg focus:ring-2 outline-none bg-white dark:bg-gray-700 text-black dark:text-white ${
-                  errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                className={`w-full border p-3 rounded-lg focus:ring-2 outline-none bg-white  text-black  ${
+                  errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300  focus:ring-blue-500'
                 }`}
                 placeholder="name@symbria.com"
                 required
               />
               {errorMsg && (
-                <p className="text-red-500 dark:text-red-400 text-sm mt-1 animate-in slide-in-from-top-1">
+                <p className="text-red-500  text-sm mt-1 animate-in slide-in-from-top-1">
                   {errorMsg}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+              <label htmlFor="subject" className="block text-sm font-medium text-gray-700  mb-1">Subject</label>
               <select 
                 id="subject" 
                 value={formData.subject}
                 onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
+                className="w-full border border-gray-300  p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white  text-black "
               >
                 <option>General Suggestion</option>
                 <option>Report a Bug</option>
@@ -199,13 +199,13 @@ export default function Home() {
             </div>
             
             <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Message</label>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700  mb-1">Message</label>
               <textarea 
                 id="message" 
                 value={formData.message}
                 onChange={(e) => setFormData({...formData, message: e.target.value})}
                 rows={4} 
-                className="w-full border border-gray-300 dark:border-gray-600 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-700 text-black dark:text-white"
+                className="w-full border border-gray-300  p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white  text-black "
                 placeholder="Type your feedback here..."
                 required
               />

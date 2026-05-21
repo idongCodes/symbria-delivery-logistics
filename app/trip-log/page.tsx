@@ -759,24 +759,24 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-  if (loading) return <div className="p-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>;
+  if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto bg-gray-50 dark:bg-gray-950 min-h-screen transition-colors">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto bg-gray-50  min-h-screen transition-colors">
       <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Pre/Post-Trip Log</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 ">Pre/Post-Trip Log</h1>
           {userProfile && (
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Welcome back, {userProfile.firstName}</p>
+            <p className="text-gray-500  mt-1">Welcome back, {userProfile.firstName}</p>
           )}
         </div>
         {userProfile && (
-          <h3 className="text-gray-400 dark:text-gray-500 font-medium text-left md:text-right">
+          <h3 className="text-gray-400  font-medium text-left md:text-right">
             {userProfile.firstName} {userProfile.lastName} <br />
             <span className={`uppercase text-xs tracking-wider border px-2 py-0.5 rounded-full mt-1 inline-block ${
-              userProfile.role === 'Admin' ? 'border-red-300 dark:border-red-900 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20' : 
-              userProfile.role === 'Management' ? 'border-purple-300 dark:border-purple-900 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20' : 
-              'border-gray-300 dark:border-gray-600'
+              userProfile.role === 'Admin' ? 'border-red-300  text-red-600  bg-red-50 ' : 
+              userProfile.role === 'Management' ? 'border-purple-300  text-purple-600  bg-purple-50 ' : 
+              'border-gray-300 '
             }`}>
               {userProfile.role}
             </span>
@@ -785,23 +785,23 @@ export default function Dashboard() {
       </header>
 
       {userProfile && ( // Only show tabs if user is authenticated
-        <div className="flex border-b border-gray-300 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap pb-1">
+        <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
           <button onClick={() => { setActiveTab('new');
             setEditingLog(null); setVisibleCount(5); 
-          }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}>
             {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
           </button>
           <button onClick={() => { setActiveTab('history');
-            setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+            setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}>
             My Logs
           </button>
-          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600  border-b-2 border-purple-600 ' : 'text-gray-500 '}`}>
             All Logs
           </button>
           
           <button 
             onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
-            className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-500 dark:text-gray-400'}`}
+            className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}
           >
             My Info
           </button>
@@ -809,43 +809,43 @@ export default function Dashboard() {
       )}
       
       {activeTab === 'my-info' && userProfile && (
-        <div className="bg-white dark:bg-gray-800 p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
           
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
+            <div className="w-16 h-16 bg-blue-100  text-blue-600  rounded-full flex items-center justify-center text-2xl font-bold shadow-sm">
               {userProfile.firstName[0]}{userProfile.lastName[0]}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{userProfile.firstName} {userProfile.lastName}</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{userProfile.jobTitle}</p>
+              <h2 className="text-xl font-bold text-gray-900 ">{userProfile.firstName} {userProfile.lastName}</h2>
+              <p className="text-sm text-gray-500 ">{userProfile.jobTitle}</p>
             </div>
           </div>
 
           <div className="grid gap-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">First Name</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.firstName}</div>
+               <div className="p-4 bg-gray-50  rounded-lg border border-gray-200 ">
+                 <label className="text-xs font-bold text-gray-500  uppercase tracking-wide block mb-1">First Name</label>
+                 <div className="font-medium text-gray-900 ">{userProfile.firstName}</div>
                </div>
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Last Name</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.lastName}</div>
+               <div className="p-4 bg-gray-50  rounded-lg border border-gray-200 ">
+                 <label className="text-xs font-bold text-gray-500  uppercase tracking-wide block mb-1">Last Name</label>
+                 <div className="font-medium text-gray-900 ">{userProfile.lastName}</div>
                </div>
             </div>
 
-            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Company Position</label>
-               <div className="font-medium text-gray-900 dark:text-white">{userProfile.jobTitle}</div>
+            <div className="p-4 bg-gray-50  rounded-lg border border-gray-200 ">
+               <label className="text-xs font-bold text-gray-500  uppercase tracking-wide block mb-1">Company Position</label>
+               <div className="font-medium text-gray-900 ">{userProfile.jobTitle}</div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Phone Number</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.phone}</div>
+               <div className="p-4 bg-gray-50  rounded-lg border border-gray-200 ">
+                 <label className="text-xs font-bold text-gray-500  uppercase tracking-wide block mb-1">Phone Number</label>
+                 <div className="font-medium text-gray-900 ">{userProfile.phone}</div>
                </div>
-               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
-                 <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1">Email</label>
-                 <div className="font-medium text-gray-900 dark:text-white">{userProfile.email}</div>
+               <div className="p-4 bg-gray-50  rounded-lg border border-gray-200 ">
+                 <label className="text-xs font-bold text-gray-500  uppercase tracking-wide block mb-1">Email</label>
+                 <div className="font-medium text-gray-900 ">{userProfile.email}</div>
                </div>
             </div>
           </div>
@@ -858,29 +858,29 @@ export default function Dashboard() {
       {userProfile && (activeTab === 'history' || activeTab === 'all') && (
         <div className="flex flex-col gap-4">
           {activeTab === 'all' && (
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-wrap gap-4 items-end mb-2">
+            <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100  flex flex-wrap gap-4 items-end mb-2">
               <div className="flex-1 min-w-[150px]">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Driver Name</label>
-                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Driver Name</label>
+                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
               <div className="flex-1 min-w-[150px]">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Route</label>
-                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Route</label>
+                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                   <option value="">All Routes</option>
                   {routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
                 </select>
               </div>
               <div className="flex-1 min-w-[120px]">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Trip Type</label>
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Trip Type</label>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                   <option value="">All Types</option>
                   <option value="Pre-Trip">Pre-Trip</option>
                   <option value="Post-Trip">Post-Trip</option>
                 </select>
               </div>
               <div className="flex-1 min-w-[120px]">
-                <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Date</label>
-                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50 dark:bg-gray-700 dark:text-white dark:border-gray-600 outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Date</label>
+                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
               <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
                 <button 
@@ -890,7 +890,7 @@ export default function Dashboard() {
                     setFilterType("");
                     setFilterDate("");
                   }}
-                  className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm font-bold rounded transition-colors h-[38px] md:self-end"
+                  className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300   text-gray-700  text-sm font-bold rounded transition-colors h-[38px] md:self-end"
                   aria-label="Clear Filters"
                 >
                   Clear Filters
@@ -899,85 +899,85 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100 ">
             <div className="overflow-x-auto">
-              <table className="w-full block md:table divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700 hidden md:table-header-group">
+              <table className="w-full block md:table divide-y divide-gray-200 ">
+                <thead className="bg-gray-50  hidden md:table-header-group">
                   <tr>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Date / Time
                     </th>
-                    {activeTab === 'all' && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    {activeTab === 'all' && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Driver
                     </th>}
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Type
                     </th>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Route
                     </th>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Odometer
                     </th>
-                    <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-transparent md:bg-white md:dark:bg-gray-800 divide-y divide-transparent md:divide-gray-200 dark:divide-gray-700 block md:table-row-group">
+                <tbody className="bg-transparent md:bg-white md: divide-y divide-transparent md:divide-gray-200  block md:table-row-group">
                   {visibleLogs.length === 0 && (
-                    <tr className="block md:table-row bg-white dark:bg-gray-800 rounded-lg shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 p-4">
-                      <td colSpan={activeTab === 'all' ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 dark:text-gray-400">No logs found.</td>
+                    <tr className="block md:table-row bg-white  rounded-lg shadow-sm md:shadow-none border border-gray-100  md:border-0 p-4">
+                      <td colSpan={activeTab === 'all' ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
                     </tr>
                   )}
                   {visibleLogs.slice(0, visibleCount).map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100 dark:border-gray-700 md:border-0 mb-4 md:mb-0">
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Date / Time</div>
+                    <tr key={log.id} className="hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100  md:border-0 mb-4 md:mb-0">
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Date / Time</div>
                         <div className="whitespace-nowrap"><ClientDate timestamp={log.created_at} /></div>
                       </td>
                       {activeTab === 'all' && (
-                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                          <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Driver</div>
-                          <div className="font-medium text-gray-900 dark:text-white whitespace-nowrap">{log.driver_name}</div>
+                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
+                          <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
                         </td>
                       )}
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Type</div>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Type</div>
                         <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                          log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800  ' : 'bg-orange-100 text-orange-800  '
                         }`}>
                           {log.trip_type}
                         </span>
                       </td>
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Route</div>
-                        <div className="whitespace-nowrap text-gray-900 dark:text-white">{log.route_id}</div>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Route</div>
+                        <div className="whitespace-nowrap text-gray-900 ">{log.route_id}</div>
                       </td>
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 dark:border-gray-800">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Odometer</div>
-                        <div className="whitespace-nowrap text-gray-900 dark:text-white">{log.odometer}</div>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Odometer</div>
+                        <div className="whitespace-nowrap text-gray-900 ">{log.odometer}</div>
                       </td>
                       <td className="p-4 block md:table-cell text-right text-sm font-medium">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-3 text-left">Actions</div>
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-3 text-left">Actions</div>
                         <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
                           {canEditOrDelete(log) && (
                             <>
-                              <button onClick={() => handleEditClick(log)} className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors" title="Edit">
+                              <button onClick={() => handleEditClick(log)} className="p-2 bg-blue-50  text-blue-600  hover:bg-blue-100  rounded-lg transition-colors" title="Edit">
                                 <PencilSquareIcon className="w-5 h-5" />
                               </button>
-                              <button onClick={() => handleDelete(log.id)} className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors" title="Delete">
+                              <button onClick={() => handleDelete(log.id)} className="p-2 bg-red-50  text-red-600  hover:bg-red-100  rounded-lg transition-colors" title="Delete">
                                 <TrashIcon className="w-5 h-5" />
                               </button>
                             </>
                           )}
-                          <Link href={`/logs/${log.id}`} className="p-2 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="View">
+                          <Link href={`/logs/${log.id}`} className="p-2 bg-gray-50  text-gray-600  hover:bg-gray-100  rounded-lg transition-colors" title="View">
                             <EyeIcon className="w-5 h-5" />
                           </Link>
-                          <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-lg transition-colors" title="CSV">
+                          <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50  text-green-600  hover:bg-green-100  rounded-lg transition-colors" title="CSV">
                             <DocumentArrowDownIcon className="w-5 h-5" />
                           </button>
-                          <button onClick={() => printLog(log)} className="p-2 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-lg transition-colors" title="Print">
+                          <button onClick={() => printLog(log)} className="p-2 bg-purple-50  text-purple-600  hover:bg-purple-100  rounded-lg transition-colors" title="Print">
                             <PrinterIcon className="w-5 h-5" />
                           </button>
                         </div>
@@ -1002,33 +1002,33 @@ export default function Dashboard() {
 
       {/* Main Form */}
       {(!userProfile || activeTab === 'new') && (
-        <div className="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-4xl">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">
+        <div className="bg-white  p-4 md:p-6 rounded-xl shadow-sm border border-gray-100  max-w-4xl">
+          <h2 className="text-xl font-semibold mb-2 text-gray-900 ">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
+          <p className="text-sm text-gray-500  mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
           
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             <div className="flex flex-col md:flex-row gap-4">
               <label className="flex flex-col gap-1 flex-1">
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">First Name</span>
-                <input name="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                <span className="text-sm font-semibold text-gray-700 ">First Name</span>
+                <input name="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded bg-white   " required />
               </label>
               <label className="flex flex-col gap-1 flex-1">
-                <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Last Name</span>
-                <input name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+                <span className="text-sm font-semibold text-gray-700 ">Last Name</span>
+                <input name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded bg-white   " required />
               </label>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Trip Type</span>
-              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
+              <span className="text-sm font-semibold text-gray-700 ">Trip Type</span>
+              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white   " required>
                 <option value="Pre-Trip">Pre-Trip Inspection</option>
                 <option value="Post-Trip">Post-Trip Inspection</option>
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Select Route</span>
-              <select name="route_id" value={routeId} onChange={(e) => setRouteId(e.target.value)} className="border p-3 rounded-lg bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required>
+              <span className="text-sm font-semibold text-gray-700 ">Select Route</span>
+              <select name="route_id" value={routeId} onChange={(e) => setRouteId(e.target.value)} className="border p-3 rounded-lg bg-white   " required>
                 <option value="" disabled>-- Choose a Route --</option>
                 {routeOptions.length > 0 ? (
                   routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)
@@ -1038,37 +1038,37 @@ export default function Dashboard() {
               </select>
             </div>
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Odometer</span>
-              <input name="odometer" type="number" value={odometer} onChange={(e) => setOdometer(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required />
+              <span className="text-sm font-semibold text-gray-700 ">Odometer</span>
+              <input name="odometer" type="number" value={odometer} onChange={(e) => setOdometer(e.target.value)} className="border p-3 rounded bg-white   " required />
             </label>
 
-            <hr className="border-gray-200 dark:border-gray-700" />
+            <hr className="border-gray-200 " />
             
             <div>
-               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Inspection Checklist</h3>
+               <h3 className="text-lg font-bold text-gray-800  mb-4">Inspection Checklist</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {currentQuestions.map((question, index) => {
                    const answer = checklistData[question];
                    const showComment = requiresDescription(question, answer);
                    const isBad = showComment;
                    return (
-                     <div key={index} className={`flex flex-col bg-gray-50 dark:bg-gray-700/50 p-3 rounded border ${isBad ? 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20' : 'border-gray-100 dark:border-gray-700'}`}>
+                     <div key={index} className={`flex flex-col bg-gray-50  p-3 rounded border ${isBad ? 'border-red-200  bg-red-50 ' : 'border-gray-100 '}`}>
                        <div className="flex justify-between items-start mb-2">
-                         <span className="text-sm text-gray-700 dark:text-gray-200 font-medium max-w-[70%]">{question}</span>
+                         <span className="text-sm text-gray-700  font-medium max-w-[70%]">{question}</span>
                          <div className="flex gap-4">
                            <label className="flex items-center gap-1 cursor-pointer">
                              <input type="radio" name={`q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
-                             <span className="text-sm dark:text-gray-300">Yes</span>
+                             <span className="text-sm ">Yes</span>
                            </label>
                            <label className="flex items-center gap-1 cursor-pointer">
                              <input type="radio" name={`q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
-                             <span className="text-sm dark:text-gray-300">No</span>
+                             <span className="text-sm ">No</span>
                            </label>
                          </div>
                        </div>
                        {showComment && (
                          <div className="mt-1 animate-in fade-in slide-in-from-top-1">
-                           <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700 dark:text-red-300 placeholder-red-300 dark:placeholder-red-700 bg-white dark:bg-gray-800" required />
+                           <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
                          </div>
                        )}
                      </div>
@@ -1077,103 +1077,103 @@ export default function Dashboard() {
                </div>
             </div>
 
-                        <hr className="border-gray-200 dark:border-gray-700" />
+                        <hr className="border-gray-200 " />
                         
                         <div>
-                          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-4">Tire Pressure (PSI) (Required)</h3>
+                          <h3 className="text-lg font-bold text-gray-800  mb-4">Tire Pressure (PSI) (Required)</h3>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 dark:text-gray-400">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
+                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
                           </div>
                         </div>
             
-                        <hr className="border-gray-200 dark:border-gray-700" />
+                        <hr className="border-gray-200 " />
                         
                         <div>
-                          <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Tire Photos (Required)</h3>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+                          <h3 className="text-lg font-bold text-gray-800  mb-2">Tire Photos (Required)</h3>
+                          <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Front Tire</span>
+                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                              <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Front Tire</span>
                               <ImageUploadInput onChange={(file) => handleFileChange('driverFrontTire', file)} file={imageFiles.driverFrontTire} required={!editingLog?.images?.driverFrontTire} />
-                              {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                              {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Front Tire</span>
+                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                              <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Front Tire</span>
                               <ImageUploadInput onChange={(file) => handleFileChange('passengerFrontTire', file)} file={imageFiles.passengerFrontTire} required={!editingLog?.images?.passengerFrontTire} />
-                              {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                              {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Rear Tire</span>
+                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                              <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Rear Tire</span>
                               <ImageUploadInput onChange={(file) => handleFileChange('driverRearTire', file)} file={imageFiles.driverRearTire} required={!editingLog?.images?.driverRearTire} />
-                              {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                              {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
-                            <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                              <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Rear Tire</span>
+                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                              <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Rear Tire</span>
                               <ImageUploadInput onChange={(file) => handleFileChange('passengerRearTire', file)} file={imageFiles.passengerRearTire} required={!editingLog?.images?.passengerRearTire} />
-                              {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                              {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
                           </div>
                         </div>
             
                                     <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Exterior Photos (Required)</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+              <h3 className="text-lg font-bold text-gray-800  mb-2">Exterior Photos (Required)</h3>
+              <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-		  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front of Vehicle</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+		  <span className="block text-sm font-semibold text-gray-700  mb-2">Front of Vehicle</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('front', file)} file={imageFiles.front} required={!editingLog?.images?.front} />
-                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Driver Side</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                  <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Side</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('driverSide', file)} file={imageFiles.driverSide} required={!editingLog?.images?.driverSide} />
-                  {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Rear of Vehicle</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                  <span className="block text-sm font-semibold text-gray-700  mb-2">Rear of Vehicle</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('rear', file)} file={imageFiles.rear} required={!editingLog?.images?.rear} />
-                  {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Passenger Side</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                  <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Side</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('passengerSide', file)} file={imageFiles.passengerSide} required={!editingLog?.images?.passengerSide} />
-                  {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
             </div>
 
-            <hr className="border-gray-200 dark:border-gray-700" />
+            <hr className="border-gray-200 " />
 
             <div>
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Interior Photos (Required)</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Ensure photos are well lit and not blurry.</p>
+              <h3 className="text-lg font-bold text-gray-800  mb-2">Interior Photos (Required)</h3>
+              <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Front Seat Area</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                  <span className="block text-sm font-semibold text-gray-700  mb-2">Front Seat Area</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('frontSeat', file)} file={imageFiles.frontSeat} required={!editingLog?.images?.frontSeat} />
-                  {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Back Seat</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                  <span className="block text-sm font-semibold text-gray-700  mb-2">Back Seat</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('back', file)} file={imageFiles.back} required={!editingLog?.images?.back} />
-                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded border border-gray-200 dark:border-gray-700">
-                  <span className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Trunk</span>
+                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
+                  <span className="block text-sm font-semibold text-gray-700  mb-2">Trunk</span>
                   <ImageUploadInput onChange={(file) => handleFileChange('trunk', file)} file={imageFiles.trunk} required={!editingLog?.images?.trunk} />
-                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600 dark:text-blue-400 mt-2 block underline">View Current Image</a>}
+                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
             </div>
 
-            <hr className="border-gray-200 dark:border-gray-700" />
+            <hr className="border-gray-200 " />
             
             <label className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Additional Notes / Defects</span>
-              <textarea name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="border p-3 rounded bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600" rows={3} placeholder="General notes..." />
+              <span className="text-sm font-semibold text-gray-700 ">Additional Notes / Defects</span>
+              <textarea name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="border p-3 rounded bg-white   " rows={3} placeholder="General notes..." />
             </label>
             
             <div className="flex flex-col sm:flex-row gap-4">
@@ -1185,12 +1185,12 @@ export default function Dashboard() {
                   type="button" 
                   onClick={() => { setEditingLog(null); resetForm(); setActiveTab('history'); }} 
                   disabled={submitting} 
-                  className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50 transition-all"
+                  className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200    transition-all"
                 >
                   Cancel Edit
                 </button>
               )}
-              <button type="button" onClick={resetForm} disabled={submitting} className="font-bold py-3 px-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all">
+              <button type="button" onClick={resetForm} disabled={submitting} className="font-bold py-3 px-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300    transition-all">
                 Reset
               </button>
             </div>
