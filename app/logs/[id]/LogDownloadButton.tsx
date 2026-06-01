@@ -89,22 +89,31 @@ export default function LogDownloadButton({ log }: { log: any }) {
       `;
     }).join('');
     
-    let tireHtml = "";
-    if (log.trip_type === 'Pre-Trip') {
-      const tDF = checklist["Tire Pressure (Driver Front)"] || "-";
-      const tPF = checklist["Tire Pressure (Passenger Front)"] || "-";
-      const tDR = checklist["Tire Pressure (Driver Rear)"] || "-";
-      const tPR = checklist["Tire Pressure (Passenger Rear)"] || "-";
-      tireHtml = `
-        <div class="section-box page-break-inside-avoid">
-            <h3>Tire Pressure (PSI)</h3>
-            <table class="tire-table">
-                <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
-                <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
-            </table>
-        </div>
-      `;
+    let checklistObj: Record<string, string> = {};
+    try {
+      if (typeof checklist === 'string') {
+        checklistObj = JSON.parse(checklist);
+      } else if (checklist && typeof checklist === 'object') {
+        checklistObj = checklist as Record<string, string>;
+      }
+    } catch (e) {
+      console.error("Error parsing checklist in LogDownloadButton:", e);
     }
+
+    let tireHtml = "";
+    const tDF = checklistObj["Tire Pressure (Driver Front)"] || "-";
+    const tPF = checklistObj["Tire Pressure (Passenger Front)"] || "-";
+    const tDR = checklistObj["Tire Pressure (Driver Rear)"] || "-";
+    const tPR = checklistObj["Tire Pressure (Passenger Rear)"] || "-";
+    tireHtml = `
+      <div class="section-box page-break-inside-avoid">
+          <h3>Tire Pressure (PSI)</h3>
+          <table class="tire-table">
+              <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
+              <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
+          </table>
+      </div>
+    `;
 
     const imageTitles: { [key: string]: string } = {
       front: "Front of Vehicle",

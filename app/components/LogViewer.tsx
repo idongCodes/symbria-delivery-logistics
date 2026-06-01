@@ -40,7 +40,19 @@ const DAMAGE_QUESTIONS = [
 
 export default function LogViewer({ log }: { log: any }) {
   const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
-  const checklist = (log.checklist as Record<string, string>) || {};
+  
+  // Robust checklist parsing
+  let checklist: Record<string, string> = {};
+  try {
+    if (typeof log.checklist === 'string') {
+      checklist = JSON.parse(log.checklist);
+    } else if (log.checklist && typeof log.checklist === 'object') {
+      checklist = log.checklist as Record<string, string>;
+    }
+  } catch (e) {
+    console.error("Error parsing checklist:", e);
+  }
+
   const images = (log.images as Record<string, string>) || {};
 
   const imageTitles: { [key: string]: string } = {
@@ -104,20 +116,18 @@ export default function LogViewer({ log }: { log: any }) {
         </div>
       </div>
 
-      {/* TIRE PRESSURE (PRE-TRIP ONLY) */}
-      {log.trip_type === 'Pre-Trip' && (
-        <div>
-          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Tire Pressure (PSI)</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {["Driver Front", "Passenger Front", "Driver Rear", "Passenger Rear"].map((pos) => (
-              <div key={pos} className="bg-blue-50  p-3 rounded text-center border border-blue-100 ">
-                <span className="block text-xs text-blue-600  font-bold mb-1">{pos}</span>
-                <span className="text-lg font-mono text-blue-900 ">{checklist[`Tire Pressure (${pos})`] || '-'}</span>
-              </div>
-            ))}
-          </div>
+      {/* TIRE PRESSURE */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Tire Pressure (PSI)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {["Driver Front", "Passenger Front", "Driver Rear", "Passenger Rear"].map((pos) => (
+            <div key={pos} className="bg-blue-50  p-3 rounded text-center border border-blue-100 ">
+              <span className="block text-xs text-blue-600  font-bold mb-1">{pos}</span>
+              <span className="text-lg font-mono text-blue-900 ">{checklist[`Tire Pressure (${pos})`] || '-'}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* CHECKLIST */}
       <div>

@@ -18,13 +18,24 @@ export async function POST(req: Request) {
 
     // --- 1. Format Checklist for Email ---
     // We'll convert the JSON checklist into HTML table rows
+    let checklistObj: Record<string, string> = {};
+    try {
+      if (typeof checklist === 'string') {
+        checklistObj = JSON.parse(checklist);
+      } else if (checklist && typeof checklist === 'object') {
+        checklistObj = checklist as Record<string, string>;
+      }
+    } catch (e) {
+      console.error("Error parsing checklist in email route:", e);
+    }
+
     let checklistRows = "";
-    if (checklist) {
-      Object.entries(checklist).forEach(([key, value]) => {
+    if (checklistObj) {
+      Object.entries(checklistObj).forEach(([key, value]) => {
         if (key.endsWith("_COMMENT") || key.includes("Tire Pressure")) return; // Skip comments/tires for main list
         
         const commentKey = `${key}_COMMENT`;
-        const comment = checklist[commentKey] ? `<br/><span style="color:red; font-size:12px;">⚠️ ${checklist[commentKey]}</span>` : "";
+        const comment = checklistObj[commentKey] ? `<br/><span style="color:red; font-size:12px;">⚠️ ${checklistObj[commentKey]}</span>` : "";
         
         // Style "No" or "Yes" (for damage) as bold/red if it's an issue
         // Assuming "No" is bad for safety checks, "Yes" is bad for damage checks
@@ -44,18 +55,18 @@ export async function POST(req: Request) {
       });
     }
 
-    // --- 2. Format Tire Pressure (if Pre-Trip) ---
+    // --- 2. Format Tire Pressure ---
     let tireSection = "";
-    if (trip_type === "Pre-Trip" && checklist) {
+    if (checklistObj) {
        tireSection = `
          <div style="background:#f0f9ff; padding:15px; margin:20px 0; border-radius:8px;">
            <h3 style="margin-top:0; color:#004a8f;">Tire Pressure (PSI)</h3>
            <table width="100%" cellpadding="5">
              <tr>
-               <td><strong>DF:</strong> ${checklist["Tire Pressure (Driver Front)"] || '-'}</td>
-               <td><strong>PF:</strong> ${checklist["Tire Pressure (Passenger Front)"] || '-'}</td>
-               <td><strong>DR:</strong> ${checklist["Tire Pressure (Driver Rear)"] || '-'}</td>
-               <td><strong>PR:</strong> ${checklist["Tire Pressure (Passenger Rear)"] || '-'}</td>
+               <td><strong>DF:</strong> ${checklistObj["Tire Pressure (Driver Front)"] || '-'}</td>
+               <td><strong>PF:</strong> ${checklistObj["Tire Pressure (Passenger Front)"] || '-'}</td>
+               <td><strong>DR:</strong> ${checklistObj["Tire Pressure (Driver Rear)"] || '-'}</td>
+               <td><strong>PR:</strong> ${checklistObj["Tire Pressure (Passenger Rear)"] || '-'}</td>
              </tr>
            </table>
          </div>
