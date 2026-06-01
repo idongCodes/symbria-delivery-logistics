@@ -941,13 +941,18 @@ export default function Dashboard() {
                       <td colSpan={activeTab === 'all' ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
                     </tr>
                   )}
-                  {visibleLogs.slice(0, visibleCount).map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border border-gray-100  md:border-0 mb-4 md:mb-0">
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Date / Time</div>
-                        <div className="whitespace-nowrap"><ClientDate timestamp={log.created_at} /></div>
-                      </td>
-                      {activeTab === 'all' && (
+                  {visibleLogs.slice(0, visibleCount).map((log) => {
+                    const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
+                    return (
+                      <tr key={log.id} className={`hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border ${hasIssue ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-100 '} md:border-0 mb-4 md:mb-0 relative`}>
+                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Date / Time</div>
+                          <div className="whitespace-nowrap flex items-center gap-2">
+                            {hasIssue && <span className="text-lg" title="Issue Reported">🚨</span>}
+                            <ClientDate timestamp={log.created_at} />
+                          </div>
+                        </td>
+                        {activeTab === 'all' && (
                         <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
                           <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
                           <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
@@ -994,8 +999,9 @@ export default function Dashboard() {
                         </div>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
+                  );
+                })}
+              </tbody>
               </table>
             </div>
             
