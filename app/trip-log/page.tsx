@@ -730,6 +730,7 @@ export default function Dashboard() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 ...baseData,
+                images: imageUrls,
                 created_at: newLog.created_at,
                 shareLink
             })
