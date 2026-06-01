@@ -204,12 +204,72 @@ export async function POST(req: Request) {
       },
     });
 
+    // Send Main Confirmation Email
     await transporter.sendMail({
       from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
       to: 'idongesit_essien@ymail.com',
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
     });
+
+    // --- 7. Check for Issues/Notes and Send Alert Email if needed ---
+    const issueComments = Object.entries(checklistObj)
+      .filter(([key]) => key.endsWith("_COMMENT"))
+      .map(([key, val]) => {
+        const question = key.replace("_COMMENT", "");
+        return `<li><strong>${question}:</strong> ${val}</li>`;
+      })
+      .join("");
+
+    if (notes || issueComments) {
+      const alertHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333; border: 2px solid #dc2626; padding: 20px; border-radius: 10px;">
+          <h1 style="color: #dc2626; border-bottom: 2px solid #dc2626; padding-bottom: 10px;">Alert 🚨: Driver Submitted Issue</h1>
+          
+          <p>An issue or additional note was reported by <strong>${driver_name}</strong> during a <strong>${trip_type}</strong>.</p>
+          
+          <table width="100%" style="margin: 20px 0; background: #fef2f2; padding: 15px; border-radius: 8px;">
+            <tr>
+              <td><strong>Driver:</strong> ${driver_name}</td>
+              <td style="text-align:right;"><strong>Route:</strong> ${route_id || 'N/A'}</td>
+            </tr>
+          </table>
+
+          ${notes ? `
+            <div style="margin-bottom: 20px;">
+              <h3 style="color: #991b1b; margin-bottom: 5px;">📝 Additional Notes:</h3>
+              <div style="background: #fffbeb; padding: 15px; border: 1px solid #fcd34d; border-radius: 5px; color: #92400e;">
+                ${notes}
+              </div>
+            </div>
+          ` : ''}
+
+          ${issueComments ? `
+            <div style="margin-bottom: 20px;">
+              <h3 style="color: #991b1b; margin-bottom: 5px;">⚠️ Reported Checklist Issues:</h3>
+              <ul style="background: #fef2f2; padding: 15px 15px 15px 35px; border: 1px solid #fecaca; border-radius: 5px; color: #991b1b; margin: 0;">
+                ${issueComments}
+              </ul>
+            </div>
+          ` : ''}
+
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="${shareLink}" style="background-color: #dc2626; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">Review Full Trip Log</a>
+          </div>
+
+          <p style="margin-top:30px; font-size:12px; color:#999; text-align:center; border-top: 1px solid #eee; padding-top: 15px;">
+            This is an automated priority alert from Symbria Delivery Logistics System.
+          </p>
+        </div>
+      `;
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
+        to: 'idongesit_essien@ymail.com',
+        subject: `Alert 🚨: Driver Submitted Issue - ${driver_name}`,
+        html: alertHtml,
+      });
+    }
 
     return NextResponse.json({ success: true });
 
