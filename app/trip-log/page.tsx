@@ -299,22 +299,31 @@ export default function Dashboard() {
       `;
     }).join('');
     
-    let tireHtml = "";
-    if (log.trip_type === 'Pre-Trip') {
-      const tDF = log.checklist?.["Tire Pressure (Driver Front)"] || "-";
-      const tPF = log.checklist?.["Tire Pressure (Passenger Front)"] || "-";
-      const tDR = log.checklist?.["Tire Pressure (Driver Rear)"] || "-";
-      const tPR = log.checklist?.["Tire Pressure (Passenger Rear)"] || "-";
-      tireHtml = `
-        <div class="section-box page-break-inside-avoid">
-            <h3>Tire Pressure (PSI)</h3>
-            <table class="tire-table">
-                <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
-                <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
-            </table>
-        </div>
-      `;
+    let checklistObj: Record<string, string> = {};
+    try {
+      if (typeof log.checklist === 'string') {
+        checklistObj = JSON.parse(log.checklist);
+      } else if (log.checklist && typeof log.checklist === 'object') {
+        checklistObj = log.checklist as Record<string, string>;
+      }
+    } catch (e) {
+      console.error("Error parsing checklist in generatePDF:", e);
     }
+
+    let tireHtml = "";
+    const tDF = checklistObj["Tire Pressure (Driver Front)"] || "-";
+    const tPF = checklistObj["Tire Pressure (Passenger Front)"] || "-";
+    const tDR = checklistObj["Tire Pressure (Driver Rear)"] || "-";
+    const tPR = checklistObj["Tire Pressure (Passenger Rear)"] || "-";
+    tireHtml = `
+      <div class="section-box page-break-inside-avoid">
+          <h3>Tire Pressure (PSI)</h3>
+          <table class="tire-table">
+              <tr><th>Driver Front</th><th>Passenger Front</th><th>Driver Rear</th><th>Passenger Rear</th></tr>
+              <tr><td>${tDF}</td><td>${tPF}</td><td>${tDR}</td><td>${tPR}</td></tr>
+          </table>
+      </div>
+    `;
 
     const imageTitles: { [key: string]: string } = {
       front: "Front of Vehicle",
@@ -714,7 +723,8 @@ export default function Dashboard() {
   
         // 4. Trigger email notification
         const token = await generateShareToken(newLog.id);
-        const shareLink = `https://symbria-delivery-logistics.vercel.app/share/${token}`;
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://symbria-delivery-logistics.vercel.app';
+        const shareLink = `${origin}/share/${token}`;
         fetch('/api/email-log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
