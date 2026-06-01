@@ -83,6 +83,7 @@ export async function POST(req: Request) {
       passengerFrontTire: "Passenger Front Tire",
       driverRearTire: "Driver Rear Tire",
       passengerRearTire: "Passenger Rear Tire",
+      frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
     };
@@ -94,19 +95,19 @@ export async function POST(req: Request) {
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["back", "trunk"];
+      const interiorKeys = ["frontSeat", "back", "trunk"];
 
 
       const generateImageHtml = (keys: string[]) => {
-        let html = '<div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:10px;">';
+        let html = '<div style="margin-top:10px;">';
         let count = 0;
         for (const key of keys) {
           if (images[key]) {
             html += `
-              <div style="flex:1; min-width: 200px; max-width: 250px;">
+              <div style="display: inline-block; width: 45%; min-width: 200px; margin-right: 10px; margin-bottom: 20px; vertical-align: top;">
                 <p style="font-size:13px; font-weight:bold; margin-bottom:5px; color:#555;">${imageTitles[key] || key}</p>
                 <a href="${images[key]}" target="_blank">
-                  <img src="${images[key]}" style="width:100%; border-radius:6px; border:1px solid #ccc;" />
+                  <img src="${images[key]}" style="width:100%; max-width: 280px; border-radius:6px; border:1px solid #ccc;" />
                 </a>
               </div>
             `;
