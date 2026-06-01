@@ -107,6 +107,7 @@ export default function Dashboard() {
   const [filterRoute, setFilterRoute] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [filterIssuesOnly, setFilterIssuesOnly] = useState(false);
 
   // Form State for Trip Logs
   const [tripType, setTripType] = useState<string>("Pre-Trip");
@@ -761,6 +762,10 @@ export default function Dashboard() {
         const logDate = new Date(log.created_at).toISOString().split('T')[0];
         if (logDate !== filterDate) match = false;
       }
+      if (filterIssuesOnly) {
+        const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
+        if (!hasIssue) match = false;
+      }
     } else {
       // If activeTab is 'new' or 'my-info', no logs should be displayed in this table context
       return false;
@@ -893,6 +898,18 @@ export default function Dashboard() {
                 <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Date</label>
                 <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
               </div>
+              <div className="flex items-center gap-2 mb-2 md:mb-1">
+                <input 
+                  type="checkbox" 
+                  id="filterIssuesOnly" 
+                  checked={filterIssuesOnly} 
+                  onChange={(e) => setFilterIssuesOnly(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="filterIssuesOnly" className="text-xs font-bold text-gray-700 cursor-pointer uppercase tracking-wide">
+                  Issues Only 🚨
+                </label>
+              </div>
               <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
                 <button 
                   onClick={() => {
@@ -900,6 +917,7 @@ export default function Dashboard() {
                     setFilterRoute("");
                     setFilterType("");
                     setFilterDate("");
+                    setFilterIssuesOnly(false);
                   }}
                   className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300   text-gray-700  text-sm font-bold rounded transition-colors h-[38px] md:self-end"
                   aria-label="Clear Filters"
