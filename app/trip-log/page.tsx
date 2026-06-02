@@ -676,6 +676,7 @@ export default function Dashboard() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
   
+    const formElement = e.currentTarget;
     setSubmitting(true);
   
     try {
