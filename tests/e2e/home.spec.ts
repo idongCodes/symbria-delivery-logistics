@@ -11,4 +11,5 @@ test('homepage has title and main elements', async ({ page }) => {
   
   // Check for login link
   await expect(page.getByRole('link', { name: /Complete Pre\/Post-Trip/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Med Carts/i })).toBeVisible();
 });
