@@ -37,8 +37,7 @@ const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
   "Synchronize Scanner, End Route, Log Off",
-  "Scanner returned",
-  "Tackle boxes returned"
+  "Scanner returned"
 ];
 
 const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS]));
@@ -48,6 +47,22 @@ const DAMAGE_QUESTIONS = [
   "Cracks/chips on any windows",
   "Dashboard warning lights on"
 ];
+
+const ROUTE_STOPS: Record<string, string[]> = {
+  "North East (NE)": [
+    "Beaumont at Northborough", "Beaumont at Westborough", "Whitney Place at Natick", 
+    "Lasell Village", "Campion", "Newbury Court", "Edgewood at the Meadows", 
+    "Sherrill House", "South Cove", "Dwyer Home"
+  ],
+  "South West (SW)": [
+    "The Overlook", "Livewell", "Health Center at the Willows", 
+    "Holy Trinity", "Dodge Park", "Oasis at Dodge Park", "Knollwood"
+  ],
+  "South East (SE)": [
+    "Madonna Manor", "Marian Manor", "Catholic Memorial", 
+    "Summit ElderCare", "Sacred Heart", "Our Lady's Haven"
+  ]
+};
 
 // Define Trip Log Shape
 type TripLog = {
@@ -61,7 +76,7 @@ type TripLog = {
   odometer: number;
   trip_type: string;
   notes: string;
-  checklist: Record<string, string>; 
+  checklist: Record<string, unknown>; 
   images: Record<string, string>; 
   driver_name?: string; 
 };
@@ -80,6 +95,17 @@ type UserProfile = {
 type RouteOption = {
   id: number;
   name: string;
+};
+
+type TackleBoxDelivery = {
+  location: string;
+  deliveredCount: string;
+  nurseEmptied: 'Yes' | 'No' | null;
+  emptiedReturnedCount: string;
+  returnedToPharmacy: boolean;
+  unemptiedReturnedCount: string;
+  medsNeedRefrigeration: 'Yes' | 'No' | null;
+  medsMovedToFridge: boolean;
 };
 
 import { saveImageToDB, loadImagesFromDB, clearImagesFromDB } from "@/app/lib/indexedDB";
@@ -120,6 +146,10 @@ export default function Dashboard() {
   const [odometer, setOdometer] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Tackle Box State
+  const [tackleBoxesIncluded, setTackleBoxesIncluded] = useState<'Yes' | 'No' | null>(null);
+  const [tackleBoxDeliveries, setTackleBoxDeliveries] = useState<TackleBoxDelivery[]>([]);
+
   const resetForm = useCallback(() => {
     setFirstName("");
     setLastName("");
@@ -130,6 +160,8 @@ export default function Dashboard() {
     setRouteId("");
     setOdometer("");
     setNotes("");
+    setTackleBoxesIncluded(null);
+    setTackleBoxDeliveries([]);
     setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
     localStorage.removeItem("tripLogFormState");
     clearImagesFromDB();
@@ -137,12 +169,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (editingLog) return;
-    const stateToSave = { tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes };
-    const isEmpty = Object.keys(checklistData).length === 0 && Object.keys(checklistComments).length === 0 && !routeId && !odometer && !notes && tripType === "Pre-Trip";
+    const stateToSave = { tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, tackleBoxesIncluded, tackleBoxDeliveries };
+    const isEmpty = Object.keys(checklistData).length === 0 && Object.keys(checklistComments).length === 0 && !routeId && !odometer && !notes && tripType === "Pre-Trip" && !tackleBoxesIncluded && tackleBoxDeliveries.length === 0;
     if (!isEmpty) {
       localStorage.setItem("tripLogFormState", JSON.stringify(stateToSave));
     }
-  }, [tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, editingLog]);
+  }, [tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, tackleBoxesIncluded, tackleBoxDeliveries, editingLog]);
 
   useEffect(() => {
     if (editingLog) return;
@@ -157,6 +189,8 @@ export default function Dashboard() {
         setRouteId(parsed.routeId || "");
         setOdometer(parsed.odometer || "");
         setNotes(parsed.notes || "");
+        setTackleBoxesIncluded(parsed.tackleBoxesIncluded || null);
+        setTackleBoxDeliveries(parsed.tackleBoxDeliveries || []);
       } catch (e) {
         console.error("Failed to parse saved form state", e);
       }
@@ -639,12 +673,10 @@ export default function Dashboard() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
   
-    const formElement = e.currentTarget;
-    const formData = new FormData(formElement);
     setSubmitting(true);
   
     try {
-      const finalChecklist = { ...checklistData };
+      const finalChecklist: Record<string, unknown> = { ...checklistData };
       Object.keys(checklistComments).forEach(q => {
         const answer = checklistData[q];
         if (requiresDescription(q, answer) && checklistComments[q]) {
@@ -656,6 +688,13 @@ export default function Dashboard() {
       finalChecklist["Tire Pressure (Passenger Front)"] = tirePressures.pf;
       finalChecklist["Tire Pressure (Driver Rear)"] = tirePressures.dr;
       finalChecklist["Tire Pressure (Passenger Rear)"] = tirePressures.pr;
+
+      if (tripType === 'Post-Trip' && tackleBoxesIncluded) {
+        finalChecklist["Tackle Boxes Included"] = tackleBoxesIncluded;
+        if (tackleBoxesIncluded === 'Yes') {
+          finalChecklist["Tackle Box Deliveries"] = tackleBoxDeliveries;
+        }
+      }
   
       const baseData = {
         user_id: userProfile?.id || "e04fde02-765b-40d0-8cdb-3449b2b21eca", // Use Guest Driver ID for public forms
@@ -1124,6 +1163,257 @@ export default function Dashboard() {
                  })}
                </div>
             </div>
+
+            {tripType === 'Post-Trip' && (
+              <>
+                <hr className="border-gray-200 " />
+                <div className="bg-blue-50/50 p-4 md:p-6 rounded-xl border border-blue-100">
+                  <h3 className="text-lg font-bold text-gray-800  mb-4">Tackle Box Deliveries</h3>
+                  
+                  {/* Step 1: Included? */}
+                  <div className="flex flex-col gap-2 mb-6">
+                    <span className="text-sm font-semibold text-gray-700 ">Were tackle boxes included in today&apos;s delivery?</span>
+                    <div className="flex gap-6">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="tackle-included" value="Yes" checked={tackleBoxesIncluded === 'Yes'} onChange={() => setTackleBoxesIncluded('Yes')} className="accent-blue-600 w-4 h-4" required={tripType === 'Post-Trip'} />
+                        <span className="text-sm font-medium">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="tackle-included" value="No" checked={tackleBoxesIncluded === 'No'} onChange={() => { setTackleBoxesIncluded('No'); setTackleBoxDeliveries([]); }} className="accent-blue-600 w-4 h-4" />
+                        <span className="text-sm font-medium">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {tackleBoxesIncluded === 'Yes' && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
+                      {/* Step 2: Select Locations */}
+                      <div className="flex flex-col gap-2">
+                        <span className="text-sm font-semibold text-gray-700 ">Which locations received tackle boxes?</span>
+                        {!routeId ? (
+                          <p className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-200">Please select a route above first to see available locations.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            {(ROUTE_STOPS[routeId] || []).map(facility => {
+                              const isSelected = tackleBoxDeliveries.some(d => d.location === facility);
+                              return (
+                                <label key={facility} className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 ' : 'bg-white  border-gray-200  hover:bg-gray-50 '}`}>
+                                  <input 
+                                    type="checkbox" 
+                                    checked={isSelected} 
+                                    onChange={(e) => {
+                                      if (e.target.checked) {
+                                        setTackleBoxDeliveries(prev => [...prev, { 
+                                          location: facility, 
+                                          deliveredCount: "", 
+                                          nurseEmptied: null,
+                                          emptiedReturnedCount: "",
+                                          returnedToPharmacy: false,
+                                          unemptiedReturnedCount: "",
+                                          medsNeedRefrigeration: null,
+                                          medsMovedToFridge: false
+                                        }]);
+                                      } else {
+                                        setTackleBoxDeliveries(prev => prev.filter(d => d.location !== facility));
+                                      }
+                                    }}
+                                    className="accent-blue-600 w-4 h-4"
+                                  />
+                                  <span className="text-[10px] md:text-xs font-medium">{facility}</span>
+                                </label>
+                              );
+                            })}
+                            {(!ROUTE_STOPS[routeId] || ROUTE_STOPS[routeId].length === 0) && (
+                              <p className="text-xs text-gray-500 col-span-full italic">No locations configured for this route.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Step 3: Detailed Info for each location */}
+                      {tackleBoxDeliveries.map((delivery, index) => (
+                        <div key={delivery.location} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-4">
+                          <div className="flex justify-between items-center border-b pb-2">
+                            <h4 className="font-bold text-blue-800 ">{delivery.location}</h4>
+                            <button type="button" onClick={() => setTackleBoxDeliveries(prev => prev.filter(d => d.location !== delivery.location))} className="text-red-500 hover:text-red-700 transition-colors">
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <label className="flex flex-col gap-1">
+                              <span className="text-xs font-semibold text-gray-600 ">How many tackle boxes delivered?</span>
+                              <input 
+                                type="number" 
+                                value={delivery.deliveredCount} 
+                                onChange={(e) => {
+                                  const newDeliveries = [...tackleBoxDeliveries];
+                                  newDeliveries[index].deliveredCount = e.target.value;
+                                  setTackleBoxDeliveries(newDeliveries);
+                                }}
+                                className="border p-2 rounded text-sm bg-gray-50  focus:bg-white  transition-colors"
+                                placeholder="Count"
+                                required
+                              />
+                            </label>
+
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs font-semibold text-gray-600 ">Nurse emptied at time of delivery?</span>
+                              <div className="flex gap-4 mt-1">
+                                <label className="flex items-center gap-1 cursor-pointer">
+                                  <input 
+                                    type="radio" 
+                                    name={`emptied-${index}`} 
+                                    checked={delivery.nurseEmptied === 'Yes'} 
+                                    onChange={() => {
+                                      const newDeliveries = [...tackleBoxDeliveries];
+                                      newDeliveries[index].nurseEmptied = 'Yes';
+                                      newDeliveries[index].returnedToPharmacy = false;
+                                      newDeliveries[index].unemptiedReturnedCount = "";
+                                      newDeliveries[index].medsNeedRefrigeration = null;
+                                      newDeliveries[index].medsMovedToFridge = false;
+                                      setTackleBoxDeliveries(newDeliveries);
+                                    }}
+                                    className="accent-green-600"
+                                    required
+                                  />
+                                  <span className="text-xs">Yes</span>
+                                </label>
+                                <label className="flex items-center gap-1 cursor-pointer">
+                                  <input 
+                                    type="radio" 
+                                    name={`emptied-${index}`} 
+                                    checked={delivery.nurseEmptied === 'No'} 
+                                    onChange={() => {
+                                      const newDeliveries = [...tackleBoxDeliveries];
+                                      newDeliveries[index].nurseEmptied = 'No';
+                                      newDeliveries[index].emptiedReturnedCount = "";
+                                      setTackleBoxDeliveries(newDeliveries);
+                                    }}
+                                    className="accent-red-600"
+                                  />
+                                  <span className="text-xs">No</span>
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+
+                          {delivery.nurseEmptied === 'Yes' && (
+                            <label className="flex flex-col gap-1 animate-in slide-in-from-top-1">
+                              <span className="text-xs font-semibold text-gray-600 ">How many empty tackle boxes returned?</span>
+                              <input 
+                                type="number" 
+                                value={delivery.emptiedReturnedCount || ""} 
+                                onChange={(e) => {
+                                  const newDeliveries = [...tackleBoxDeliveries];
+                                  newDeliveries[index].emptiedReturnedCount = e.target.value;
+                                  setTackleBoxDeliveries(newDeliveries);
+                                }}
+                                className="border p-2 rounded text-sm bg-gray-50  focus:bg-white  transition-colors"
+                                placeholder="Count"
+                                required
+                              />
+                            </label>
+                          )}
+
+                          {delivery.nurseEmptied === 'No' && (
+                            <div className="space-y-4 animate-in slide-in-from-top-1">
+                              <div className="bg-red-50  p-3 rounded border border-red-100  space-y-3">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={!!delivery.returnedToPharmacy} 
+                                    onChange={(e) => {
+                                      const newDeliveries = [...tackleBoxDeliveries];
+                                      newDeliveries[index].returnedToPharmacy = e.target.checked;
+                                      setTackleBoxDeliveries(newDeliveries);
+                                    }}
+                                    className="accent-red-600 w-4 h-4"
+                                    required
+                                  />
+                                  <span className="text-xs font-bold text-red-700 ">Tackle box returned to pharmacy?</span>
+                                </label>
+
+                                {delivery.returnedToPharmacy && (
+                                  <label className="flex flex-col gap-1">
+                                    <span className="text-xs font-semibold text-red-600 ">How many unemptied tackle boxes returned?</span>
+                                    <input 
+                                      type="number" 
+                                      value={delivery.unemptiedReturnedCount || ""} 
+                                      onChange={(e) => {
+                                        const newDeliveries = [...tackleBoxDeliveries];
+                                        newDeliveries[index].unemptiedReturnedCount = e.target.value;
+                                        setTackleBoxDeliveries(newDeliveries);
+                                      }}
+                                      className="border p-2 rounded text-sm bg-white  border-red-200"
+                                      placeholder="Count"
+                                      required
+                                    />
+                                  </label>
+                                )}
+                              </div>
+
+                              <div className="flex flex-col gap-1">
+                                <span className="text-xs font-semibold text-gray-600 ">Any meds need refrigeration?</span>
+                                <div className="flex gap-4 mt-1">
+                                  <label className="flex items-center gap-1 cursor-pointer">
+                                    <input 
+                                      type="radio" 
+                                      name={`refrig-${index}`} 
+                                      checked={delivery.medsNeedRefrigeration === 'Yes'} 
+                                      onChange={() => {
+                                        const newDeliveries = [...tackleBoxDeliveries];
+                                        newDeliveries[index].medsNeedRefrigeration = 'Yes';
+                                        setTackleBoxDeliveries(newDeliveries);
+                                      }}
+                                      className="accent-blue-600"
+                                      required
+                                    />
+                                    <span className="text-xs">Yes</span>
+                                  </label>
+                                  <label className="flex items-center gap-1 cursor-pointer">
+                                    <input 
+                                      type="radio" 
+                                      name={`refrig-${index}`} 
+                                      checked={delivery.medsNeedRefrigeration === 'No'} 
+                                      onChange={() => {
+                                        const newDeliveries = [...tackleBoxDeliveries];
+                                        newDeliveries[index].medsNeedRefrigeration = 'No';
+                                        newDeliveries[index].medsMovedToFridge = false;
+                                        setTackleBoxDeliveries(newDeliveries);
+                                      }}
+                                      className="accent-blue-600"
+                                    />
+                                    <span className="text-xs">No</span>
+                                  </label>
+                                </div>
+                              </div>
+
+                              {delivery.medsNeedRefrigeration === 'Yes' && (
+                                <label className="flex items-center gap-2 p-3 bg-blue-50  border border-blue-200 rounded cursor-pointer animate-in slide-in-from-top-1">
+                                  <input 
+                                    type="checkbox" 
+                                    checked={!!delivery.medsMovedToFridge} 
+                                    onChange={(e) => {
+                                      const newDeliveries = [...tackleBoxDeliveries];
+                                      newDeliveries[index].medsMovedToFridge = e.target.checked;
+                                      setTackleBoxDeliveries(newDeliveries);
+                                    }}
+                                    className="accent-blue-600 w-4 h-4"
+                                    required
+                                  />
+                                  <span className="text-xs font-bold text-blue-700 ">Meds taken out of tackle box and put in refrigerator?</span>
+                                </label>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
                         <hr className="border-gray-200 " />
                         
