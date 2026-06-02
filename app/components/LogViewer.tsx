@@ -26,8 +26,13 @@ const PRE_TRIP_QUESTIONS = [
 
 const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
-  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
-  "Synchronize Scanner, End Route, Log Off",
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat"
+];
+
+const SCANNER_QUESTIONS = [
+  "Scanner Synchronized",
+  "Clicked End Route",
+  "Completely Logged off Scanner",
   "Scanner returned"
 ];
 
@@ -37,16 +42,28 @@ const DAMAGE_QUESTIONS = [
   "Dashboard warning lights on"
 ];
 
-export default function LogViewer({ log }: { log: any }) {
+interface LogData {
+  id: number;
+  created_at: string;
+  trip_type: string;
+  route_id: string | null;
+  odometer: number | string | null;
+  notes: string | null;
+  checklist: unknown;
+  images: unknown;
+  driver_name?: string | null;
+}
+
+export default function LogViewer({ log }: { log: LogData }) {
   const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
   
   // Robust checklist parsing
-  let checklist: Record<string, any> = {};
+  let checklist: Record<string, unknown> = {};
   try {
     if (typeof log.checklist === 'string') {
       checklist = JSON.parse(log.checklist);
     } else if (log.checklist && typeof log.checklist === 'object') {
-      checklist = log.checklist as Record<string, any>;
+      checklist = log.checklist as Record<string, unknown>;
     }
   } catch (e) {
     console.error("Error parsing checklist:", e);
@@ -66,11 +83,13 @@ export default function LogViewer({ log }: { log: any }) {
     frontSeat: "Front Seat Area",
     back: "Back Seat",
     trunk: "Trunk",
+    deliveryTrackLoginScreen: "Delivery Track Login Screen",
+    fuelGauge: "Fuel Gauge",
   };
 
   const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
   const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-  const interiorKeys = ["frontSeat", "back", "trunk"];
+  const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
 
   const renderImageSection = (keys: string[], title: string) => {
     const hasImages = keys.some(key => images[key]);
@@ -122,44 +141,44 @@ export default function LogViewer({ log }: { log: any }) {
           {["Driver Front", "Passenger Front", "Driver Rear", "Passenger Rear"].map((pos) => (
             <div key={pos} className="bg-blue-50  p-3 rounded text-center border border-blue-100 ">
               <span className="block text-xs text-blue-600  font-bold mb-1">{pos}</span>
-              <span className="text-lg font-mono text-blue-900 ">{checklist[`Tire Pressure (${pos})`] || '-'}</span>
+              <span className="text-lg font-mono text-blue-900 ">{(checklist[`Tire Pressure (${pos})`] as string) || '-'}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* TACKLE BOX DELIVERIES */}
-        {log.trip_type === 'Post-Trip' && checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) && (
+      {log.trip_type === 'Post-Trip' && checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) && (
         <div className="animate-in fade-in slide-in-from-top-4">
           <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">📦 Tackle Box Deliveries</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(checklist["Tackle Box Deliveries"] as any[]).map((d, idx) => (
+            {(checklist["Tackle Box Deliveries"] as Array<Record<string, unknown>>).map((d, idx) => (
               <div key={idx} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-2">
                 <div className="flex justify-between items-center border-b pb-1 mb-2">
-                  <h4 className="font-bold text-blue-800 ">{d.location}</h4>
+                  <h4 className="font-bold text-blue-800 ">{d.location as string}</h4>
                   <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
-                    Qty: {d.deliveredCount || 0}
+                    Qty: {d.deliveredCount as string || 0}
                   </span>
                 </div>
-
+                
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-gray-500 ">Nurse Emptied:</span>
                     <span className={`font-medium ${d.nurseEmptied === 'Yes' ? 'text-green-600 ' : 'text-red-600 '}`}>
-                      {d.nurseEmptied || 'Unknown'}
+                      {d.nurseEmptied as string || 'Unknown'}
                     </span>
                   </div>
-
+                  
                   {d.nurseEmptied === 'Yes' ? (
                     <div className="flex justify-between text-gray-700 ">
                       <span>Returned to Pharmacy:</span>
-                      <span className="font-bold">{d.emptiedReturnedCount || 0} boxes</span>
+                      <span className="font-bold">{d.emptiedReturnedCount as string || 0} boxes</span>
                     </div>
                   ) : (
                     <>
                       <div className="flex justify-between text-red-700  font-medium bg-red-50  px-2 py-0.5 rounded">
                         <span>Pharmacy Return:</span>
-                        <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount || 0})</span>
+                        <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount as string || 0})</span>
                       </div>
                       <div className="flex justify-between text-gray-700 ">
                         <span>Meds Refrigerated:</span>
@@ -174,9 +193,50 @@ export default function LogViewer({ log }: { log: any }) {
             ))}
           </div>
         </div>
-        )}
+      )}
 
-        {/* CHECKLIST */}
+      {/* SCANNER SECTION */}
+      {log.trip_type === 'Post-Trip' && (
+        <div className="animate-in fade-in slide-in-from-top-4">
+          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Scanner</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 ">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Item</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-600  w-24">Status</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Notes / Defects</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 ">
+                {SCANNER_QUESTIONS.map((q, i) => {
+                  const val = (checklist[q] as string) || "-";
+                  const comment = checklist[`${q}_COMMENT`] as string | undefined;
+                  const isBad = val === "No";
+
+                  return (
+                    <tr key={i} className="hover:bg-gray-50 ">
+                      <td className="px-4 py-3 text-gray-800 ">{q}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isBad ? 'bg-red-100 text-red-800  ' : 'bg-green-100 text-green-800  '
+                        }`}>
+                          {isBad ? 'ISSUE' : 'OK'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {comment ? <span className="text-red-600  font-medium text-xs bg-red-50  px-2 py-1 rounded block w-fit">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* CHECKLIST */}
       <div>
         <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Inspection Checklist</h3>
         <div className="overflow-x-auto">
@@ -190,8 +250,8 @@ export default function LogViewer({ log }: { log: any }) {
             </thead>
             <tbody className="divide-y divide-gray-100 ">
               {relevantQuestions.map((q, i) => {
-                const val = checklist[q] || "-";
-                const comment = checklist[`${q}_COMMENT`];
+                const val = (checklist[q] as string) || "-";
+                const comment = checklist[`${q}_COMMENT`] as string | undefined;
                 const isBad = DAMAGE_QUESTIONS.includes(q) ? (val === "Yes") : (val === "No");
 
                 return (

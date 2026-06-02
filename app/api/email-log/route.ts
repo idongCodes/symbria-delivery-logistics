@@ -18,22 +18,27 @@ export async function POST(req: Request) {
 
     // --- 1. Format Checklist for Email ---
     // We'll convert the JSON checklist into HTML table rows
-    let checklistObj: Record<string, any> = {};
+    let checklistObj: Record<string, unknown> = {};
     try {
       if (typeof checklist === 'string') {
         checklistObj = JSON.parse(checklist);
       } else if (checklist && typeof checklist === 'object') {
-        checklistObj = checklist as Record<string, any>;
+        checklistObj = checklist as Record<string, unknown>;
       }
     } catch (e) {
       console.error("Error parsing checklist in email route:", e);
     }
 
+    const scannerQs = ["Scanner Synchronized", "Clicked End Route", "Completely Logged off Scanner", "Scanner returned"];
+
     let checklistRows = "";
+    let scannerRows = "";
+    
     if (checklistObj) {
       Object.entries(checklistObj).forEach(([key, value]) => {
         if (key.endsWith("_COMMENT") || key.includes("Tire Pressure") || key === "Tackle Boxes Included" || key === "Tackle Box Deliveries") return; // Skip comments/tires/tackle-boxes for main list
         
+        const isScannerQ = scannerQs.includes(key);
         const stringValue = String(value);
         const commentKey = `${key}_COMMENT`;
         const comment = checklistObj[commentKey] ? `<br/><span style="color:red; font-size:12px;">⚠️ ${checklistObj[commentKey]}</span>` : "";
@@ -47,20 +52,37 @@ export async function POST(req: Request) {
             statusStyle = "color:red; font-weight:bold;";
         }
 
-        checklistRows += `
+        const rowHtml = `
           <tr>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;">${key}</td>
             <td style="padding: 8px; border-bottom: 1px solid #ddd; ${statusStyle}">${stringValue} ${comment}</td>
           </tr>
         `;
+
+        if (isScannerQ) {
+          scannerRows += rowHtml;
+        } else {
+          checklistRows += rowHtml;
+        }
       });
+    }
+
+    // --- 2. Format Scanner Section ---
+    let scannerSection = "";
+    if (scannerRows) {
+      scannerSection = `
+        <h3 style="background:#f3f4f6; padding:10px; margin-top: 20px;">Scanner</h3>
+        <table width="100%" cellspacing="0" style="font-size: 14px;">
+          ${scannerRows}
+        </table>
+      `;
     }
 
     // --- 2. Format Tackle Box Deliveries ---
     let tackleBoxSection = "";
     if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
-      const deliveries = checklistObj["Tackle Box Deliveries"] as any[];
-      let deliveryRows = deliveries.map(d => {
+      const deliveries = checklistObj["Tackle Box Deliveries"] as Array<Record<string, unknown>>;
+      const deliveryRows = deliveries.map(d => {
         let details = `<strong>Delivered:</strong> ${d.deliveredCount || 0}<br/>`;
         if (d.nurseEmptied === "Yes") {
           details += `<strong>Nurse Emptied:</strong> Yes (${d.emptiedReturnedCount || 0} returned)`;
@@ -119,6 +141,8 @@ export async function POST(req: Request) {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
+      deliveryTrackLoginScreen: "Delivery Track Login Screen",
+      fuelGauge: "Fuel Gauge",
     };
 
     let exteriorImagesHtml = "";
@@ -128,7 +152,7 @@ export async function POST(req: Request) {
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk"];
+      const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
 
 
       const generateImageHtml = (keys: string[]) => {
@@ -187,6 +211,8 @@ export async function POST(req: Request) {
         ${shareSection}
 
         ${tackleBoxSection}
+
+        ${scannerSection}
 
         ${tireSection}
 
