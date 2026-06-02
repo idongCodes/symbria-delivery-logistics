@@ -46,6 +46,7 @@ describe('Nav Component', () => {
     
     // Verify menu items are visible
     expect(screen.getByRole('link', { name: /Complete Pre\/Post-Trip/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Med Carts/i })).toBeInTheDocument()
     
     // Simulate click outside
     fireEvent.mouseDown(document.body)
@@ -82,6 +83,9 @@ describe('Nav Component', () => {
       // There is now only one of each link since desktop inline and mobile bottom are gone
       const dashboardLink = screen.getByRole('link', { name: /Trip Log/i })
       expect(dashboardLink).toBeInTheDocument()
+
+      const medCartsLink = screen.getByRole('link', { name: /Med Carts/i })
+      expect(medCartsLink).toBeInTheDocument()
       
       const feedbackLink = screen.getByRole('link', { name: /Feedback/i })
       expect(feedbackLink).toBeInTheDocument()

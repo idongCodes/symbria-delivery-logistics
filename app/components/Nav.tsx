@@ -98,6 +98,13 @@ export default function Nav() {
                       Trip Log
                     </Link>
                     <Link 
+                      href="/med-carts" 
+                      onClick={() => setMenuOpen(false)}
+                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
+                    >
+                      Med Carts
+                    </Link>
+                    <Link 
                       href="/admin/feedback" 
                       onClick={() => setMenuOpen(false)}
                       className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
@@ -126,6 +133,13 @@ export default function Nav() {
                       className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
                     >
                       Complete Pre/Post-Trip
+                    </Link>
+                    <Link 
+                      href="/med-carts" 
+                      onClick={() => setMenuOpen(false)}
+                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
+                    >
+                      Med Carts
                     </Link>
                     <Link 
                       href="/login" 
