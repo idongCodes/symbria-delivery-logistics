@@ -97,7 +97,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts'>('new');
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
@@ -815,6 +815,12 @@ export default function Dashboard() {
             All Logs
           </button>
           
+          {userProfile?.role === 'Admin' && (
+            <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+              Med Carts
+            </button>
+          )}
+
           <button 
             onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
             className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}
@@ -868,6 +874,13 @@ export default function Dashboard() {
 
 
 
+        </div>
+      )}
+
+      {activeTab === 'med-carts' && userProfile?.role === 'Admin' && (
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900  mb-4">Med Carts Management</h2>
+          <p className="text-gray-500 ">Med Carts management interface is under development.</p>
         </div>
       )}
 
