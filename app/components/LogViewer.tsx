@@ -42,7 +42,19 @@ const DAMAGE_QUESTIONS = [
   "Dashboard warning lights on"
 ];
 
-export default function LogViewer({ log }: { log: Record<string, unknown> }) {
+interface LogData {
+  id: number;
+  created_at: string;
+  trip_type: string;
+  route_id: string;
+  odometer: number | string;
+  notes: string;
+  checklist: unknown;
+  images: unknown;
+  driver_name?: string;
+}
+
+export default function LogViewer({ log }: { log: LogData }) {
   const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
   
   // Robust checklist parsing
