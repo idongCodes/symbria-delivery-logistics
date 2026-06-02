@@ -28,8 +28,7 @@ const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
   "Synchronize Scanner, End Route, Log Off",
-  "Scanner returned",
-  "Tackle boxes returned"
+  "Scanner returned"
 ];
 
 const DAMAGE_QUESTIONS = [
@@ -42,12 +41,12 @@ export default function LogViewer({ log }: { log: any }) {
   const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
   
   // Robust checklist parsing
-  let checklist: Record<string, string> = {};
+  let checklist: Record<string, any> = {};
   try {
     if (typeof log.checklist === 'string') {
       checklist = JSON.parse(log.checklist);
     } else if (log.checklist && typeof log.checklist === 'object') {
-      checklist = log.checklist as Record<string, string>;
+      checklist = log.checklist as Record<string, any>;
     }
   } catch (e) {
     console.error("Error parsing checklist:", e);
@@ -129,7 +128,55 @@ export default function LogViewer({ log }: { log: any }) {
         </div>
       </div>
 
-      {/* CHECKLIST */}
+      {/* TACKLE BOX DELIVERIES */}
+        {log.trip_type === 'Post-Trip' && checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) && (
+        <div className="animate-in fade-in slide-in-from-top-4">
+          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">📦 Tackle Box Deliveries</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(checklist["Tackle Box Deliveries"] as any[]).map((d, idx) => (
+              <div key={idx} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-2">
+                <div className="flex justify-between items-center border-b pb-1 mb-2">
+                  <h4 className="font-bold text-blue-800 ">{d.location}</h4>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
+                    Qty: {d.deliveredCount || 0}
+                  </span>
+                </div>
+
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 ">Nurse Emptied:</span>
+                    <span className={`font-medium ${d.nurseEmptied === 'Yes' ? 'text-green-600 ' : 'text-red-600 '}`}>
+                      {d.nurseEmptied || 'Unknown'}
+                    </span>
+                  </div>
+
+                  {d.nurseEmptied === 'Yes' ? (
+                    <div className="flex justify-between text-gray-700 ">
+                      <span>Returned to Pharmacy:</span>
+                      <span className="font-bold">{d.emptiedReturnedCount || 0} boxes</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between text-red-700  font-medium bg-red-50  px-2 py-0.5 rounded">
+                        <span>Pharmacy Return:</span>
+                        <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount || 0})</span>
+                      </div>
+                      <div className="flex justify-between text-gray-700 ">
+                        <span>Meds Refrigerated:</span>
+                        <span className={d.medsNeedRefrigeration === 'Yes' ? 'font-bold text-blue-600 ' : ''}>
+                          {d.medsNeedRefrigeration === 'Yes' ? (d.medsMovedToFridge ? 'Yes (Moved to Fridge)' : 'Yes (NOT MOVED)') : 'No'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
+
+        {/* CHECKLIST */}
       <div>
         <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Inspection Checklist</h3>
         <div className="overflow-x-auto">

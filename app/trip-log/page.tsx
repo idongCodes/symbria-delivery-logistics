@@ -544,19 +544,22 @@ export default function Dashboard() {
     
     if (log.checklist) {
       setTirePressures({
-        df: log.checklist["Tire Pressure (Driver Front)"] || "",
-        pf: log.checklist["Tire Pressure (Passenger Front)"] || "",
-        dr: log.checklist["Tire Pressure (Driver Rear)"] || "",
-        pr: log.checklist["Tire Pressure (Passenger Rear)"] || "",
+        df: (log.checklist["Tire Pressure (Driver Front)"] as string) || "",
+        pf: (log.checklist["Tire Pressure (Passenger Front)"] as string) || "",
+        dr: (log.checklist["Tire Pressure (Driver Rear)"] as string) || "",
+        pr: (log.checklist["Tire Pressure (Passenger Rear)"] as string) || "",
       });
 
+      setTackleBoxesIncluded((log.checklist["Tackle Boxes Included"] as 'Yes' | 'No' | null) || null);
+      setTackleBoxDeliveries((log.checklist["Tackle Box Deliveries"] as TackleBoxDelivery[]) || []);
+
       Object.keys(log.checklist).forEach(key => {
-        if (key.includes("Tire Pressure")) return;
+        if (key.includes("Tire Pressure") || key === "Tackle Boxes Included" || key === "Tackle Box Deliveries") return;
         if (key.endsWith('_COMMENT')) {
           const realKey = key.replace('_COMMENT', '');
-          comments[realKey] = log.checklist[key];
+          comments[realKey] = log.checklist[key] as string;
         } else {
-          answers[key] = log.checklist[key];
+          answers[key] = log.checklist[key] as string;
         }
       });
     }
