@@ -46,12 +46,12 @@ interface LogData {
   id: number;
   created_at: string;
   trip_type: string;
-  route_id: string;
-  odometer: number | string;
-  notes: string;
+  route_id: string | null;
+  odometer: number | string | null;
+  notes: string | null;
   checklist: unknown;
   images: unknown;
-  driver_name?: string;
+  driver_name?: string | null;
 }
 
 export default function LogViewer({ log }: { log: LogData }) {
@@ -120,13 +120,13 @@ export default function LogViewer({ log }: { log: LogData }) {
         <div className="col-span-2">
           <span className="block text-xs font-bold text-gray-500  uppercase tracking-wide">Submitted On</span>
           <div className="text-gray-900  font-medium mt-1">
-            <ClientDate timestamp={log.created_at as string} />
+            <ClientDate timestamp={log.created_at} />
           </div>
         </div>
 
         <div>
           <span className="block text-xs font-bold text-gray-500  uppercase tracking-wide">Route</span>
-          <span className="text-gray-900  font-medium">{log.route_id as string || 'N/A'}</span>
+          <span className="text-gray-900  font-medium">{log.route_id || 'N/A'}</span>
         </div>
         <div>
           <span className="block text-xs font-bold text-gray-500  uppercase tracking-wide">Odometer</span>
@@ -279,7 +279,7 @@ export default function LogViewer({ log }: { log: LogData }) {
       {log.notes && (
         <div className="bg-yellow-50  border border-yellow-200  rounded-lg p-4">
           <h4 className="text-sm font-bold text-yellow-800  uppercase tracking-wide mb-2">Additional Notes</h4>
-          <p className="text-yellow-900  text-sm">{log.notes as string}</p>
+          <p className="text-yellow-900  text-sm">{log.notes}</p>
         </div>
       )}
 
