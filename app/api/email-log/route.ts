@@ -18,12 +18,12 @@ export async function POST(req: Request) {
 
     // --- 1. Format Checklist for Email ---
     // We'll convert the JSON checklist into HTML table rows
-    let checklistObj: Record<string, string> = {};
+    let checklistObj: Record<string, any> = {};
     try {
       if (typeof checklist === 'string') {
         checklistObj = JSON.parse(checklist);
       } else if (checklist && typeof checklist === 'object') {
-        checklistObj = checklist as Record<string, string>;
+        checklistObj = checklist as Record<string, any>;
       }
     } catch (e) {
       console.error("Error parsing checklist in email route:", e);
@@ -32,8 +32,9 @@ export async function POST(req: Request) {
     let checklistRows = "";
     if (checklistObj) {
       Object.entries(checklistObj).forEach(([key, value]) => {
-        if (key.endsWith("_COMMENT") || key.includes("Tire Pressure")) return; // Skip comments/tires for main list
+        if (key.endsWith("_COMMENT") || key.includes("Tire Pressure") || key === "Tackle Boxes Included" || key === "Tackle Box Deliveries") return; // Skip comments/tires/tackle-boxes for main list
         
+        const stringValue = String(value);
         const commentKey = `${key}_COMMENT`;
         const comment = checklistObj[commentKey] ? `<br/><span style="color:red; font-size:12px;">⚠️ ${checklistObj[commentKey]}</span>` : "";
         
@@ -42,20 +43,52 @@ export async function POST(req: Request) {
         const isDamageQ = key.includes("damage") || key.includes("Cracks");
         let statusStyle = "color:green; font-weight:bold;";
         
-        if ((isDamageQ && value === "Yes") || (!isDamageQ && value === "No")) {
+        if ((isDamageQ && stringValue === "Yes") || (!isDamageQ && stringValue === "No")) {
             statusStyle = "color:red; font-weight:bold;";
         }
 
         checklistRows += `
           <tr>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;">${key}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd; ${statusStyle}">${value} ${comment}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd; ${statusStyle}">${stringValue} ${comment}</td>
           </tr>
         `;
       });
     }
 
-    // --- 2. Format Tire Pressure ---
+    // --- 2. Format Tackle Box Deliveries ---
+    let tackleBoxSection = "";
+    if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
+      const deliveries = checklistObj["Tackle Box Deliveries"] as any[];
+      let deliveryRows = deliveries.map(d => {
+        let details = `<strong>Delivered:</strong> ${d.deliveredCount || 0}<br/>`;
+        if (d.nurseEmptied === "Yes") {
+          details += `<strong>Nurse Emptied:</strong> Yes (${d.emptiedReturnedCount || 0} returned)`;
+        } else {
+          details += `<span style="color:red;"><strong>Nurse Emptied:</strong> No</span><br/>`;
+          details += `<strong>Returned to Pharmacy:</strong> ${d.returnedToPharmacy ? "Yes" : "No"} (${d.unemptiedReturnedCount || 0} count)<br/>`;
+          details += `<strong>Meds Refrigerated:</strong> ${d.medsNeedRefrigeration === "Yes" ? `Yes (${d.medsMovedToFridge ? "Moved to Fridge" : "NOT MOVED"})` : "No"}`;
+        }
+
+        return `
+          <tr style="border-bottom: 1px solid #eee;">
+            <td style="padding: 10px; vertical-align: top;"><strong>${d.location}</strong></td>
+            <td style="padding: 10px; vertical-align: top; font-size: 13px;">${details}</td>
+          </tr>
+        `;
+      }).join("");
+
+      tackleBoxSection = `
+        <div style="margin: 20px 0; border: 1px solid #1e3a8a; border-radius: 8px; overflow: hidden;">
+          <h3 style="margin: 0; background: #1e3a8a; color: white; padding: 10px;">📦 Tackle Box Deliveries</h3>
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-size: 14px;">
+            ${deliveryRows}
+          </table>
+        </div>
+      `;
+    }
+
+    // --- 3. Format Tire Pressure ---
     let tireSection = "";
     if (checklistObj) {
        tireSection = `
@@ -153,6 +186,8 @@ export async function POST(req: Request) {
 
         ${shareSection}
 
+        ${tackleBoxSection}
+
         ${tireSection}
 
         <h3 style="background:#f3f4f6; padding:10px;">Inspection Checklist</h3>
@@ -208,6 +243,7 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
       to: 'idongesit_essien@ymail.com',
+      cc: 'lesterholden@hotmail.com',
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
     });
@@ -266,6 +302,7 @@ export async function POST(req: Request) {
       await transporter.sendMail({
         from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
         to: 'idongesit_essien@ymail.com',
+        cc: 'lesterholden@hotmail.com',
         subject: `Alert 🚨: Driver Submitted Issue - ${driver_name}`,
         html: alertHtml,
       });
