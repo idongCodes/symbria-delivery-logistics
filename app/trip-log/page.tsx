@@ -35,12 +35,17 @@ const PRE_TRIP_QUESTIONS = [
 
 const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
-  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
-  "Synchronize Scanner, End Route, Log Off",
+  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat"
+];
+
+const SCANNER_QUESTIONS = [
+  "Scanner Synchronized",
+  "Clicked End Route",
+  "Completely Logged off Scanner",
   "Scanner returned"
 ];
 
-const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS]));
+const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS, ...SCANNER_QUESTIONS]));
 
 const DAMAGE_QUESTIONS = [
   "Dings, dents, or other visible damage on interior/exterior",
@@ -162,7 +167,7 @@ export default function Dashboard() {
     setNotes("");
     setTackleBoxesIncluded(null);
     setTackleBoxDeliveries([]);
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null });
     localStorage.removeItem("tripLogFormState");
     clearImagesFromDB();
   }, []);
@@ -214,7 +219,9 @@ export default function Dashboard() {
     driverRearTire: File | null;
     passengerRearTire: File | null;
     frontSeat: File | null;
-  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
+    deliveryTrackLoginScreen: File | null;
+    fuelGauge: File | null;
+  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null });
 
 
 
@@ -248,7 +255,7 @@ export default function Dashboard() {
     const headers = [
       'Log ID', 'Date', 'Time', 'Driver', 'Trip Type', 'Route', 'Odometer', 
       'Tire DF', 'Tire PF', 'Tire DR', 'Tire PR', 
-      'Notes', 'Img Front', 'Img Back', 'Img Trunk', 'Edits', 
+      'Notes', 'Img Front', 'Img Back', 'Img Trunk', 'Img Login Screen', 'Img Fuel Gauge', 'Edits', 
       ...ALL_QUESTIONS_MASTER 
     ];
 
@@ -276,6 +283,8 @@ export default function Dashboard() {
       log.images?.front || "N/A",
       log.images?.back || "N/A",
       log.images?.trunk || "N/A",
+      log.images?.deliveryTrackLoginScreen || "N/A",
+      log.images?.fuelGauge || "N/A",
       log.edit_count,
       ...checklistValues
     ];
@@ -360,6 +369,55 @@ export default function Dashboard() {
       </div>
     `;
 
+    // --- 1. Format Scanner for Print ---
+    let scannerRows = "";
+    SCANNER_QUESTIONS.forEach(q => {
+        const val = checklistObj[q] || "-";
+        const comment = checklistObj[`${q}_COMMENT`];
+        const isBad = val === "No";
+        scannerRows += `
+          <tr>
+            <td class="q-col">${q}</td>
+            <td class="s-col"><span class="badge ${isBad ? 'badge-error' : 'badge-success'}">${isBad ? 'ISSUE' : 'OK'}</span></td>
+            <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '-'}</td>
+          </tr>
+        `;
+    });
+
+    const scannerHtml = `
+      <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+          <h3>Scanner</h3>
+          <table>
+            <thead><tr><th>Protocol Item</th><th style="text-align:center;">Status</th><th>Notes</th></tr></thead>
+            <tbody>${scannerRows}</tbody>
+          </table>
+      </div>
+    `;
+
+    // --- 2. Format Tackle Box for Print ---
+    let tackleBoxHtml = "";
+    if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
+      const deliveries = checklistObj["Tackle Box Deliveries"] as Array<Record<string, unknown>>;
+      const deliveryRows = deliveries.map(d => {
+        let details = `Qty: ${d.deliveredCount || 0} | Nurse Emptied: ${d.nurseEmptied}`;
+        if (d.nurseEmptied === "Yes") {
+          details += ` (${d.emptiedReturnedCount || 0} returned)`;
+        } else {
+          details += ` | Returned Pharmacy: ${d.returnedToPharmacy ? 'YES' : 'NO'} (${d.unemptiedReturnedCount || 0}) | Refrigerated: ${d.medsNeedRefrigeration === "Yes" ? (d.medsMovedToFridge ? 'Moved to Fridge' : 'NOT MOVED') : 'No'}`;
+        }
+        return `<tr><td style="font-weight:bold;">${d.location}</td><td style="font-size:11px;">${details}</td></tr>`;
+      }).join("");
+
+      tackleBoxHtml = `
+        <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+            <h3>📦 Tackle Box Deliveries</h3>
+            <table style="font-size:12px;">
+                ${deliveryRows}
+            </table>
+        </div>
+      `;
+    }
+
     const imageTitles: { [key: string]: string } = {
       front: "Front of Vehicle",
       driverSide: "Driver Side",
@@ -372,6 +430,8 @@ export default function Dashboard() {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
+      deliveryTrackLoginScreen: "Delivery Track Login Screen",
+      fuelGauge: "Fuel Gauge",
     };
 
     let exteriorImagesHtml = "";
@@ -381,7 +441,7 @@ export default function Dashboard() {
     if (log.images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk"];
+      const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
 
       const generateImageHtml = (keys: string[], title: string) => {
         let html = '';
@@ -480,6 +540,8 @@ export default function Dashboard() {
             </div>
           </div>
 
+          ${tackleBoxHtml}
+          ${scannerHtml}
           ${tireHtml}
 
           <h3>Inspection Checklist</h3>
@@ -638,7 +700,7 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => {
+  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'deliveryTrackLoginScreen' | 'fuelGauge', file: File | null) => {
     setImageFiles(prev => ({ ...prev, [key]: file }));
     saveImageToDB(key, file);
   };
@@ -1157,6 +1219,19 @@ export default function Dashboard() {
                            </label>
                          </div>
                        </div>
+
+                       {tripType === 'Post-Trip' && question === "Fuel Tank Full" && answer === "Yes" && (
+                        <div className="mt-2 p-3 bg-blue-50/50 border border-blue-200 rounded-lg animate-in fade-in slide-in-from-top-1">
+                          <span className="block text-[10px] font-bold text-blue-700 uppercase mb-2">📸 Photo of Fuel Gauge (Required)</span>
+                          <ImageUploadInput 
+                            onChange={(file) => handleFileChange('fuelGauge', file)} 
+                            file={imageFiles.fuelGauge} 
+                            required={tripType === 'Post-Trip' && !editingLog?.images?.fuelGauge} 
+                          />
+                          {editingLog?.images?.fuelGauge && <a href={editingLog.images.fuelGauge} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
+                        </div>
+                       )}
+
                        {showComment && (
                          <div className="mt-1 animate-in fade-in slide-in-from-top-1">
                            <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
@@ -1167,6 +1242,57 @@ export default function Dashboard() {
                  })}
                </div>
             </div>
+
+            {tripType === 'Post-Trip' && (
+              <>
+                <hr className="border-gray-200 " />
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800  mb-4">Scanner</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {SCANNER_QUESTIONS.map((question, index) => {
+                      const answer = checklistData[question];
+                      const showComment = requiresDescription(question, answer);
+                      const isBad = showComment;
+                      return (
+                        <div key={`scanner-${index}`} className={`flex flex-col bg-gray-50  p-3 rounded border ${isBad ? 'border-red-200  bg-red-50 ' : 'border-gray-100 '}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm text-gray-700  font-medium max-w-[70%]">{question}</span>
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`scanner-q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
+                                <span className="text-sm ">Yes</span>
+                              </label>
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`scanner-q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
+                                <span className="text-sm ">No</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          {question === "Completely Logged off Scanner" && answer === "Yes" && (
+                            <div className="mt-2 p-3 bg-blue-50/50 border border-blue-200 rounded-lg animate-in fade-in slide-in-from-top-1">
+                              <span className="block text-[10px] font-bold text-blue-700 uppercase mb-2">📸 Photo of Delivery Track Login Screen (Required)</span>
+                              <ImageUploadInput 
+                                onChange={(file) => handleFileChange('deliveryTrackLoginScreen', file)} 
+                                file={imageFiles.deliveryTrackLoginScreen} 
+                                required={tripType === 'Post-Trip' && !editingLog?.images?.deliveryTrackLoginScreen} 
+                              />
+                              {editingLog?.images?.deliveryTrackLoginScreen && <a href={editingLog.images.deliveryTrackLoginScreen} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
+                            </div>
+                          )}
+
+                          {showComment && (
+                            <div className="mt-1 animate-in fade-in slide-in-from-top-1">
+                              <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
 
             {tripType === 'Post-Trip' && (
               <>
