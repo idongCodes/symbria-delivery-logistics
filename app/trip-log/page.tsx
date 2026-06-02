@@ -599,7 +599,7 @@ export default function Dashboard() {
     setRouteId(log.route_id || "");
     setOdometer(log.odometer?.toString() || "");
     setNotes(log.notes || "");
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
