@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -105,6 +105,16 @@ type RouteOption = {
   name: string;
 };
 
+type ModalConfig = {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'confirm' | 'info';
+  onConfirm?: () => void;
+  confirmText?: string;
+  cancelText?: string;
+};
+
 type TackleBoxDelivery = {
   location: string;
   deliveredCount: string;
@@ -132,6 +142,17 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts'>('new');
+
+  // Modal State
+  const [modalConfig, setModalConfig] = useState<ModalConfig>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: 'info'
+  });
+
+  const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
+  const showModal = (config: Omit<ModalConfig, 'isOpen'>) => setModalConfig({ ...config, isOpen: true });
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
@@ -302,9 +323,13 @@ export default function Dashboard() {
     document.body.removeChild(link);
   };
 
-  const printLog = (log: TripLog) => {
+  const handlePrint = (log: TripLog) => {
     const printWindow = window.open('', '_blank');
-    if (!printWindow) return alert("Please allow popups.");
+    if (!printWindow) return showModal({
+      title: "Popup Blocked",
+      message: "Please allow popups to download/print this log.",
+      type: 'info'
+    });
 
     const dateObj = new Date(log.created_at);
     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -640,10 +665,30 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (logId: number) => {
-    if (!confirm("Are you sure? This cannot be undone.")) return;
-    const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
-    if (error) alert("Error: " + error.message);
-    else { alert("Log deleted."); fetchData(); }
+    showModal({
+      title: "Confirm Deletion",
+      message: "Are you sure? This cannot be undone.",
+      type: 'confirm',
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      onConfirm: async () => {
+        const { error } = await supabase.from('trip_logs').delete().eq('id', logId);
+        if (error) {
+          showModal({
+            title: "Error",
+            message: "Error: " + error.message,
+            type: 'error'
+          });
+        } else {
+          showModal({
+            title: "Success",
+            message: "Log deleted successfully.",
+            type: 'success'
+          });
+          fetchData();
+        }
+      }
+    });
   };
 
   const handleEditClick = (log: TripLog) => {
@@ -848,7 +893,11 @@ export default function Dashboard() {
       
         if (response.error) throw response.error;
       
-        alert("Log updated successfully!");
+        showModal({
+          title: "Update Successful",
+          message: "The trip log has been updated successfully.",
+          type: 'success'
+        });
   
       } else {
         // --- NEW LOG MODE (SYNC) ---
@@ -891,7 +940,11 @@ export default function Dashboard() {
         }).catch(err => console.error("Email trigger failed:", err));
 
         // 2. Give feedback
-        alert("Success! Log submitted.");
+        showModal({
+          title: "Submission Successful",
+          message: "Your trip log has been submitted successfully.",
+          type: 'success'
+        });
 
         // 3. Reset form and navigate away
         formElement.reset();
@@ -901,7 +954,11 @@ export default function Dashboard() {
   
     } catch (err) {
       const errorMessage = (err as Error).message || "An unknown error occurred";
-      alert("Submission Failed: " + errorMessage);
+      showModal({
+        title: "Submission Failed",
+        message: errorMessage,
+        type: 'error'
+      });
     } finally {
       setSubmitting(false);
       setEditingLog(null);
@@ -1185,7 +1242,7 @@ export default function Dashboard() {
                           <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50  text-green-600  hover:bg-green-100  rounded-lg transition-colors" title="CSV">
                             <DocumentArrowDownIcon className="w-5 h-5" />
                           </button>
-                          <button onClick={() => printLog(log)} className="p-2 bg-purple-50  text-purple-600  hover:bg-purple-100  rounded-lg transition-colors" title="Print">
+                          <button onClick={() => handlePrint(log)} className="p-2 bg-purple-50  text-purple-600  hover:bg-purple-100  rounded-lg transition-colors" title="Print">
                             <PrinterIcon className="w-5 h-5" />
                           </button>
                         </div>
@@ -1771,6 +1828,64 @@ export default function Dashboard() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* CUSTOM MODAL */}
+      {modalConfig.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`p-3 rounded-full ${
+                  modalConfig.type === 'success' ? 'bg-green-100 text-green-600' :
+                  modalConfig.type === 'error' ? 'bg-red-100 text-red-600' :
+                  modalConfig.type === 'confirm' ? 'bg-orange-100 text-orange-600' :
+                  'bg-blue-100 text-blue-600'
+                }`}>
+                  {modalConfig.type === 'success' && <CheckCircleIcon className="w-8 h-8" />}
+                  {modalConfig.type === 'error' && <XCircleIcon className="w-8 h-8" />}
+                  {modalConfig.type === 'confirm' && <ExclamationTriangleIcon className="w-8 h-8" />}
+                  {modalConfig.type === 'info' && <InformationCircleIcon className="w-8 h-8" />}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">{modalConfig.title}</h3>
+              </div>
+              <p className="text-gray-600 leading-relaxed">{modalConfig.message}</p>
+            </div>
+            
+            <div className="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3">
+              <button
+                onClick={() => {
+                  const callback = modalConfig.onConfirm;
+                  setModalConfig(prev => ({ ...prev, isOpen: false }));
+                  if (callback) {
+                    // Small delay to allow state to settle if opening another modal
+                    setTimeout(() => callback(), 100);
+                  }
+                }}
+                className={`px-5 py-2.5 rounded-lg font-bold text-white transition-all ${
+                  modalConfig.type === 'success' ? 'bg-green-600 hover:bg-green-700' :
+                  modalConfig.type === 'error' ? 'bg-red-600 hover:bg-red-700' :
+                  modalConfig.type === 'confirm' ? 'bg-orange-600 hover:bg-orange-700' :
+                  'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {modalConfig.confirmText || 'OK'}
+              </button>
+              
+              {modalConfig.type === 'confirm' && (
+                <button
+                  onClick={closeModal}
+                  className="px-5 py-2.5 rounded-lg font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-all"
+                >
+                  {modalConfig.cancelText || 'Cancel'}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
