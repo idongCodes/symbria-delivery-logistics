@@ -26,6 +26,7 @@ const indexedDB = {
   open: vi.fn(() => {
     setTimeout(() => {
       if (mockIDBRequest.onsuccess) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (mockIDBRequest.onsuccess as any)({ target: mockIDBRequest });
       }
     }, 0);

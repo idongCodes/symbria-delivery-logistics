@@ -28,7 +28,7 @@ const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
   "Synchronize Scanner, End Route, Log Off",
-  "Scanner returned",
+  "Scanner returned & plugged in",
   "Tackle boxes returned"
 ];
 
@@ -38,6 +38,7 @@ const DAMAGE_QUESTIONS = [
   "Dashboard warning lights on"
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function LogDownloadButton({ log }: { log: any }) {
 
   const printLog = () => {
@@ -114,6 +115,41 @@ export default function LogDownloadButton({ log }: { log: any }) {
           </table>
       </div>
     `;
+
+    // --- Format Tackle Box for Print ---
+    let tackleBoxHtml = "";
+    if (checklistObj["Tackle Boxes Included"]) {
+      if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
+        const deliveries = checklistObj["Tackle Box Deliveries"] as Array<Record<string, unknown>>;
+        const deliveryRows = deliveries.map(d => {
+          let details = `Qty: ${d.deliveredCount || 0} | Nurse Emptied: ${d.nurseEmptied}`;
+          if (d.nurseEmptied === "Yes") {
+            details += ` (${d.emptiedReturnedCount || 0} returned)`;
+          } else {
+            details += ` | Returned Pharmacy: ${d.returnedToPharmacy ? 'YES' : 'NO'} (${d.unemptiedReturnedCount || 0}) | Refrigerated: ${d.medsNeedRefrigeration === "Yes" ? (d.medsMovedToFridge ? 'Moved to Fridge' : 'NOT MOVED') : 'No'}`;
+          }
+          return `<tr><td style="font-weight:bold;">${d.location}</td><td style="font-size:11px;">${details}</td></tr>`;
+        }).join("");
+
+        tackleBoxHtml = `
+          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+              <h3>📦 Tackle Box Deliveries</h3>
+              <table style="font-size:12px;">
+                  ${deliveryRows}
+              </table>
+          </div>
+        `;
+      } else {
+        tackleBoxHtml = `
+          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+              <h3>📦 Tackle Box Deliveries</h3>
+              <div style="font-size:13px; font-weight:bold; margin-top:10px;">
+                Tackle Boxes Included: ${checklistObj["Tackle Boxes Included"]}
+              </div>
+          </div>
+        `;
+      }
+    }
 
     const imageTitles: { [key: string]: string } = {
       front: "Front of Vehicle",
@@ -235,6 +271,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
             </div>
           </div>
 
+          ${tackleBoxHtml}
           ${tireHtml}
 
           <h3>Inspection Checklist</h3>

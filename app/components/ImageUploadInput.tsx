@@ -22,9 +22,11 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
   useEffect(() => {
     if (file) {
       const objectUrl = URL.createObjectURL(file);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreviewUrl(objectUrl);
       return () => URL.revokeObjectURL(objectUrl);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPreviewUrl(null);
     }
   }, [file]);

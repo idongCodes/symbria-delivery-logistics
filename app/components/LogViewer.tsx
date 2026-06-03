@@ -33,7 +33,11 @@ const SCANNER_QUESTIONS = [
   "Scanner Synchronized",
   "Clicked End Route",
   "Completely Logged off Scanner",
-  "Scanner returned"
+  "Scanner returned & plugged in"
+];
+
+const KEY_QUESTIONS = [
+  "Vehicle key returned to lockbox"
 ];
 
 const DAMAGE_QUESTIONS = [
@@ -123,6 +127,11 @@ export default function LogViewer({ log }: { log: LogData }) {
             <ClientDate timestamp={log.created_at} />
           </div>
         </div>
+        
+        <div className="col-span-2">
+          <span className="block text-xs font-bold text-gray-500  uppercase tracking-wide">Driver</span>
+          <span className="text-gray-900  font-medium mt-1 inline-block">{log.driver_name || 'Unknown'}</span>
+        </div>
 
         <div>
           <span className="block text-xs font-bold text-gray-500  uppercase tracking-wide">Route</span>
@@ -148,50 +157,56 @@ export default function LogViewer({ log }: { log: LogData }) {
       </div>
 
       {/* TACKLE BOX DELIVERIES */}
-      {log.trip_type === 'Post-Trip' && checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) && (
+      {log.trip_type === 'Post-Trip' && !!checklist["Tackle Boxes Included"] && (
         <div className="animate-in fade-in slide-in-from-top-4">
           <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">📦 Tackle Box Deliveries</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {(checklist["Tackle Box Deliveries"] as Array<Record<string, unknown>>).map((d, idx) => (
-              <div key={idx} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-2">
-                <div className="flex justify-between items-center border-b pb-1 mb-2">
-                  <h4 className="font-bold text-blue-800 ">{d.location as string}</h4>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
-                    Qty: {d.deliveredCount as string || 0}
-                  </span>
-                </div>
-                
-                <div className="text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 ">Nurse Emptied:</span>
-                    <span className={`font-medium ${d.nurseEmptied === 'Yes' ? 'text-green-600 ' : 'text-red-600 '}`}>
-                      {d.nurseEmptied as string || 'Unknown'}
+          {checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(checklist["Tackle Box Deliveries"] as Array<Record<string, unknown>>).map((d, idx) => (
+                <div key={idx} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-2">
+                  <div className="flex justify-between items-center border-b pb-1 mb-2">
+                    <h4 className="font-bold text-blue-800 ">{d.location as string}</h4>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
+                      Qty: {d.deliveredCount as string || 0}
                     </span>
                   </div>
                   
-                  {d.nurseEmptied === 'Yes' ? (
-                    <div className="flex justify-between text-gray-700 ">
-                      <span>Returned to Pharmacy:</span>
-                      <span className="font-bold">{d.emptiedReturnedCount as string || 0} boxes</span>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 ">Nurse Emptied:</span>
+                      <span className={`font-medium ${d.nurseEmptied === 'Yes' ? 'text-green-600 ' : 'text-red-600 '}`}>
+                        {d.nurseEmptied as string || 'Unknown'}
+                      </span>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex justify-between text-red-700  font-medium bg-red-50  px-2 py-0.5 rounded">
-                        <span>Pharmacy Return:</span>
-                        <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount as string || 0})</span>
-                      </div>
+                    
+                    {d.nurseEmptied === 'Yes' ? (
                       <div className="flex justify-between text-gray-700 ">
-                        <span>Meds Refrigerated:</span>
-                        <span className={d.medsNeedRefrigeration === 'Yes' ? 'font-bold text-blue-600 ' : ''}>
-                          {d.medsNeedRefrigeration === 'Yes' ? (d.medsMovedToFridge ? 'Yes (Moved to Fridge)' : 'Yes (NOT MOVED)') : 'No'}
-                        </span>
+                        <span>Returned to Pharmacy:</span>
+                        <span className="font-bold">{d.emptiedReturnedCount as string || 0} boxes</span>
                       </div>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <div className="flex justify-between text-red-700  font-medium bg-red-50  px-2 py-0.5 rounded">
+                          <span>Pharmacy Return:</span>
+                          <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount as string || 0})</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700 ">
+                          <span>Meds Refrigerated:</span>
+                          <span className={d.medsNeedRefrigeration === 'Yes' ? 'font-bold text-blue-600 ' : ''}>
+                            {d.medsNeedRefrigeration === 'Yes' ? (d.medsMovedToFridge ? 'Yes (Moved to Fridge)' : 'Yes (NOT MOVED)') : 'No'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700">
+              <strong>Tackle Boxes Included:</strong> {String(checklist["Tackle Boxes Included"])}
+            </div>
+          )}
         </div>
       )}
 
@@ -210,6 +225,47 @@ export default function LogViewer({ log }: { log: LogData }) {
               </thead>
               <tbody className="divide-y divide-gray-100 ">
                 {SCANNER_QUESTIONS.map((q, i) => {
+                  const val = (checklist[q] as string) || "-";
+                  const comment = checklist[`${q}_COMMENT`] as string | undefined;
+                  const isBad = val === "No";
+
+                  return (
+                    <tr key={i} className="hover:bg-gray-50 ">
+                      <td className="px-4 py-3 text-gray-800 ">{q}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          isBad ? 'bg-red-100 text-red-800  ' : 'bg-green-100 text-green-800  '
+                        }`}>
+                          {isBad ? 'ISSUE' : 'OK'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {comment ? <span className="text-red-600  font-medium text-xs bg-red-50  px-2 py-1 rounded block w-fit">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* KEY SECTION */}
+      {log.trip_type === 'Post-Trip' && (
+        <div className="animate-in fade-in slide-in-from-top-4">
+          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Keys</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 ">
+                <tr>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Item</th>
+                  <th className="px-4 py-3 text-center font-semibold text-gray-600  w-24">Status</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Notes / Defects</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 ">
+                {KEY_QUESTIONS.map((q, i) => {
                   const val = (checklist[q] as string) || "-";
                   const comment = checklist[`${q}_COMMENT`] as string | undefined;
                   const isBad = val === "No";
