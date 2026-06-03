@@ -1,6 +1,8 @@
 "use client";
 
 import ClientDate from "@/app/components/ClientDate";
+import { useState, useEffect } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION ---
 const PRE_TRIP_QUESTIONS = [
@@ -59,6 +61,18 @@ interface LogData {
 }
 
 export default function LogViewer({ log }: { log: LogData }) {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // Disable scrolling when modal is open
+  useEffect(() => {
+    if (selectedImage) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [selectedImage]);
+
   const relevantQuestions = log.trip_type === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
   
   // Robust checklist parsing
@@ -107,8 +121,11 @@ export default function LogViewer({ log }: { log: LogData }) {
           {keys.map((key) => images[key] && (
             <div key={key} className="space-y-2">
               <p className="text-xs font-bold text-gray-500  text-center uppercase">{imageTitles[key] || key}</p>
-              <div className="aspect-video bg-gray-100  rounded-lg overflow-hidden border border-gray-200 ">
-                <img src={images[key]} alt={key} className="w-full h-full object-cover" />
+              <div 
+                className="aspect-video bg-gray-100  rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in group"
+                onClick={() => setSelectedImage(images[key])}
+              >
+                <img src={images[key]} alt={key} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
               </div>
             </div>
           ))}
@@ -118,7 +135,30 @@ export default function LogViewer({ log }: { log: LogData }) {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-8">
+    <div className="p-6 md:p-8 space-y-8 relative">
+      {/* IMAGE MODAL */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 md:p-10 animate-in fade-in duration-200"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white hover:text-gray-300 transition-colors z-50 bg-black/20 rounded-full p-2"
+            onClick={(e) => { e.stopPropagation(); setSelectedImage(null); }}
+          >
+            <XMarkIcon className="w-8 h-8" />
+          </button>
+          
+          <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={selectedImage} 
+              alt="Full Resolution" 
+              className="max-w-full max-h-full object-contain rounded shadow-2xl animate-in zoom-in-95 duration-300" 
+            />
+          </div>
+        </div>
+      )}
+
       {/* INFO GRID */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-4 bg-gray-50  rounded-lg border border-gray-100 ">
         
@@ -339,10 +379,13 @@ export default function LogViewer({ log }: { log: LogData }) {
             <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
             <div className="flex-1">
               <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule?</span>
-              <p className="text-xs text-gray-500 italic">Photo evidence provided below</p>
+              <p className="text-xs text-gray-500 italic">Photo evidence provided below (Click to enlarge)</p>
             </div>
-            <div className="w-full md:w-64 aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
-              <img src={images.vestibuleTrashPhoto} alt="Vestibule Trash" className="w-full h-full object-cover" />
+            <div 
+              className="w-full md:w-64 aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in group"
+              onClick={() => setSelectedImage(images.vestibuleTrashPhoto)}
+            >
+              <img src={images.vestibuleTrashPhoto} alt="Vestibule Trash" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             </div>
             </div>
             </div>
