@@ -35,10 +35,19 @@ export async function POST(req: Request) {
     let checklistRows = "";
     let scannerRows = "";
     let keyRows = "";
+
+    type MedReturn = {
+      hadReturns: 'Yes' | 'No' | null;
+      reason?: string;
+      facilityPatient: string;
+      handedToPharmacy: 'Yes' | 'No' | null;
+      needsRefrigeration: 'Yes' | 'No' | null;
+      placedInFridge: 'Yes' | 'No' | null;
+    };
     
     if (checklistObj) {
       Object.entries(checklistObj).forEach(([key, value]) => {
-        if (key.endsWith("_COMMENT") || key.includes("Tire Pressure") || key === "Tackle Boxes Included" || key === "Tackle Box Deliveries") return; // Skip comments/tires/tackle-boxes for main list
+        if (key.endsWith("_COMMENT") || key.includes("Tire Pressure") || key === "Tackle Boxes Included" || key === "Tackle Box Deliveries" || key === "Med Returns") return; // Skip specialized sections for main list
         
         const isScannerQ = scannerQs.includes(key);
         const isKeyQ = keyQs.includes(key);
@@ -92,6 +101,33 @@ export async function POST(req: Request) {
           ${keyRows}
         </table>
       `;
+    }
+
+    // --- Format Med Returns ---
+    let medReturnsSection = "";
+    const medReturns = checklistObj["Med Returns"] as MedReturn | undefined;
+    if (medReturns) {
+        if (medReturns.hadReturns === 'Yes') {
+            medReturnsSection = `
+                <div style="margin: 20px 0; border: 1px solid #ea580c; border-radius: 8px; overflow: hidden;">
+                    <h3 style="margin: 0; background: #ea580c; color: white; padding: 10px;">💊 Med Returns</h3>
+                    <div style="padding: 15px; font-size: 14px;">
+                        <p style="margin: 0 0 8px 0;"><strong>Reason:</strong> ${medReturns.reason || 'N/A'}</p>
+                        <p style="margin: 0 0 8px 0;"><strong>Facility/Nurse Station:</strong> ${medReturns.facilityPatient}</p>
+                        <p style="margin: 0 0 8px 0;"><strong>Handed to Pharmacy/Dropbox:</strong> ${medReturns.handedToPharmacy}</p>
+                        <p style="margin: 0 0 8px 0;"><strong>Require Refrigeration:</strong> ${medReturns.needsRefrigeration}</p>
+                        ${medReturns.needsRefrigeration === 'Yes' ? `<p style="margin: 0; color: #2563eb; font-weight:bold;">Placed in Refrigerator: ${medReturns.placedInFridge}</p>` : ''}
+                    </div>
+                </div>
+            `;
+        } else {
+            medReturnsSection = `
+                <div style="margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <h3 style="margin: 0; background: #f3f4f6; padding: 10px;">💊 Med Returns</h3>
+                    <div style="padding: 10px; font-size: 14px;"><strong>Had Returns:</strong> No</div>
+                </div>
+            `;
+        }
     }
 
     // --- 2. Format Tackle Box Deliveries ---
@@ -250,6 +286,10 @@ export async function POST(req: Request) {
         </table>
 
         ${shareSection}
+
+        ${keySection}
+
+        ${medReturnsSection}
 
         ${tackleBoxSection}
 

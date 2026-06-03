@@ -50,6 +50,15 @@ const DAMAGE_QUESTIONS = [
   "Any new damage to vehicle?"
 ];
 
+type MedReturn = {
+  hadReturns: 'Yes' | 'No' | null;
+  reason?: string;
+  facilityPatient: string;
+  handedToPharmacy: 'Yes' | 'No' | null;
+  needsRefrigeration: 'Yes' | 'No' | null;
+  placedInFridge: 'Yes' | 'No' | null;
+};
+
 interface LogData {
   id: number;
   created_at: string;
@@ -186,73 +195,6 @@ export default function LogViewer({ log }: { log: LogData }) {
         </div>
       </div>
 
-      {/* TIRE PRESSURE */}
-      <div>
-        <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Tire Pressure (PSI)</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {["Driver Front", "Passenger Front", "Driver Rear", "Passenger Rear"].map((pos) => (
-            <div key={pos} className="bg-blue-50  p-3 rounded text-center border border-blue-100 ">
-              <span className="block text-xs text-blue-600  font-bold mb-1">{pos}</span>
-              <span className="text-lg font-mono text-blue-900 ">{(checklist[`Tire Pressure (${pos})`] as string) || '-'}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* TACKLE BOX DELIVERIES */}
-      {log.trip_type === 'Post-Trip' && !!checklist["Tackle Boxes Included"] && (
-        <div className="animate-in fade-in slide-in-from-top-4">
-          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">📦 Tackle Box Deliveries</h3>
-          {checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {(checklist["Tackle Box Deliveries"] as Array<Record<string, unknown>>).map((d, idx) => (
-                <div key={idx} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-2">
-                  <div className="flex justify-between items-center border-b pb-1 mb-2">
-                    <h4 className="font-bold text-blue-800 ">{d.location as string}</h4>
-                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
-                      Qty: {d.deliveredCount as string || 0}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 ">Nurse Emptied:</span>
-                      <span className={`font-medium ${d.nurseEmptied === 'Yes' ? 'text-green-600 ' : 'text-red-600 '}`}>
-                        {d.nurseEmptied as string || 'Unknown'}
-                      </span>
-                    </div>
-                    
-                    {d.nurseEmptied === 'Yes' ? (
-                      <div className="flex justify-between text-gray-700 ">
-                        <span>Returned to Pharmacy:</span>
-                        <span className="font-bold">{d.emptiedReturnedCount as string || 0} boxes</span>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex justify-between text-red-700  font-medium bg-red-50  px-2 py-0.5 rounded">
-                          <span>Pharmacy Return:</span>
-                          <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount as string || 0})</span>
-                        </div>
-                        <div className="flex justify-between text-gray-700 ">
-                          <span>Meds Refrigerated:</span>
-                          <span className={d.medsNeedRefrigeration === 'Yes' ? 'font-bold text-blue-600 ' : ''}>
-                            {d.medsNeedRefrigeration === 'Yes' ? (d.medsMovedToFridge ? 'Yes (Moved to Fridge)' : 'Yes (NOT MOVED)') : 'No'}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700">
-              <strong>Tackle Boxes Included:</strong> {String(checklist["Tackle Boxes Included"])}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* SCANNER SECTION */}
       {log.trip_type === 'Post-Trip' && (
         <div className="animate-in fade-in slide-in-from-top-4">
@@ -335,6 +277,119 @@ export default function LogViewer({ log }: { log: LogData }) {
         </div>
       )}
 
+      {/* MED RETURNS SECTION */}
+      {log.trip_type === 'Post-Trip' && !!checklist["Med Returns"] && (
+        <div className="animate-in fade-in slide-in-from-top-4">
+          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">💊 Med Returns</h3>
+          {(() => {
+            const m = checklist["Med Returns"] as MedReturn;
+            if (m.hadReturns === 'Yes') {
+              return (
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 md:p-6 space-y-4 shadow-sm">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <span className="block text-xs font-bold text-orange-600 uppercase mb-1">Reason for Return</span>
+                      <p className="text-gray-900 font-medium">{m.reason || 'No reason provided'}</p>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-orange-600 uppercase mb-1">Facility / Nurse Station</span>
+                      <p className="text-gray-900 font-medium">{m.facilityPatient}</p>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-orange-600 uppercase mb-1">Handed to Pharmacy/Dropbox</span>
+                      <p className={`font-bold ${m.handedToPharmacy === 'Yes' ? 'text-green-600' : 'text-red-600'}`}>{m.handedToPharmacy}</p>
+                    </div>
+                    <div>
+                      <span className="block text-xs font-bold text-orange-600 uppercase mb-1">Refrigeration Required</span>
+                      <p className="text-gray-900 font-medium">{m.needsRefrigeration}</p>
+                      {m.needsRefrigeration === 'Yes' && (
+                        <div className="mt-2 flex items-center gap-2 text-blue-700 bg-blue-100/50 px-3 py-1 rounded-full w-fit">
+                          <span className="text-[10px] font-bold uppercase tracking-wider">Status:</span>
+                          <span className="text-xs font-bold uppercase">Placed in Fridge: {m.placedInFridge}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <span className="text-gray-700 font-medium">Any Med Returns:</span>
+                <span className="ml-2 font-bold text-gray-900">No</span>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* TACKLE BOX DELIVERIES */}
+      {log.trip_type === 'Post-Trip' && !!checklist["Tackle Boxes Included"] && (
+        <div className="animate-in fade-in slide-in-from-top-4">
+          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">📦 Tackle Box Deliveries</h3>
+          {checklist["Tackle Boxes Included"] === "Yes" && Array.isArray(checklist["Tackle Box Deliveries"]) ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(checklist["Tackle Box Deliveries"] as Array<Record<string, unknown>>).map((d, idx) => (
+                <div key={idx} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-2">
+                  <div className="flex justify-between items-center border-b pb-1 mb-2">
+                    <h4 className="font-bold text-blue-800 ">{d.location as string}</h4>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-bold">
+                      Qty: {d.deliveredCount as string || 0}
+                    </span>
+                  </div>
+                  
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 ">Nurse Emptied:</span>
+                      <span className={`font-medium ${d.nurseEmptied === 'Yes' ? 'text-green-600 ' : 'text-red-600 '}`}>
+                        {d.nurseEmptied as string || 'Unknown'}
+                      </span>
+                    </div>
+                    
+                    {d.nurseEmptied === 'Yes' ? (
+                      <div className="flex justify-between text-gray-700 ">
+                        <span>Returned to Pharmacy:</span>
+                        <span className="font-bold">{d.emptiedReturnedCount as string || 0} boxes</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between text-red-700  font-medium bg-red-50  px-2 py-0.5 rounded">
+                          <span>Pharmacy Return:</span>
+                          <span>{d.returnedToPharmacy ? 'YES' : 'NO'} ({d.unemptiedReturnedCount as string || 0})</span>
+                        </div>
+                        <div className="flex justify-between text-gray-700 ">
+                          <span>Meds Refrigerated:</span>
+                          <span className={d.medsNeedRefrigeration === 'Yes' ? 'font-bold text-blue-600 ' : ''}>
+                            {d.medsNeedRefrigeration === 'Yes' ? (d.medsMovedToFridge ? 'Yes (Moved to Fridge)' : 'Yes (NOT MOVED)') : 'No'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-gray-700">
+              <strong>Tackle Boxes Included:</strong> {String(checklist["Tackle Boxes Included"])}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TIRE PRESSURE */}
+      <div>
+        <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Tire Pressure (PSI)</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {["Driver Front", "Passenger Front", "Driver Rear", "Passenger Rear"].map((pos) => (
+            <div key={pos} className="bg-blue-50  p-3 rounded text-center border border-blue-100 ">
+              <span className="block text-xs text-blue-600  font-bold mb-1">{pos}</span>
+              <span className="text-lg font-mono text-blue-900 ">{(checklist[`Tire Pressure (${pos})`] as string) || '-'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* CHECKLIST */}
       <div>
         <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Inspection Checklist</h3>
@@ -370,15 +425,15 @@ export default function LogViewer({ log }: { log: LogData }) {
                 );
               })}
             </tbody>
-            </table>
-            </div>
-            </div>
+          </table>
+        </div>
+      </div>
 
-            {/* VESTIBULE CLEANLINESS */}
-            {images.vestibuleTrashPhoto && (
-            <div className="animate-in fade-in slide-in-from-top-4">
-            <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Vestibule Cleanliness</h3>
-            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
+      {/* VESTIBULE CLEANLINESS */}
+      {images.vestibuleTrashPhoto && (
+        <div className="animate-in fade-in slide-in-from-top-4">
+          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Vestibule Cleanliness</h3>
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
             <div className="flex-1">
               <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule?</span>
               <p className="text-xs text-gray-500 italic">Photo evidence provided below (Click to enlarge)</p>
@@ -389,12 +444,12 @@ export default function LogViewer({ log }: { log: LogData }) {
             >
               <img src={images.vestibuleTrashPhoto} alt="Vestibule Trash" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             </div>
-            </div>
-            </div>
-            )}
+          </div>
+        </div>
+      )}
 
-            {/* ADDITIONAL NOTES */}
-            {log.notes && (
+      {/* ADDITIONAL NOTES */}
+      {log.notes && (
         <div className="bg-yellow-50  border border-yellow-200  rounded-lg p-4">
           <h4 className="text-sm font-bold text-yellow-800  uppercase tracking-wide mb-2">Additional Notes</h4>
           <p className="text-yellow-900  text-sm">{log.notes}</p>

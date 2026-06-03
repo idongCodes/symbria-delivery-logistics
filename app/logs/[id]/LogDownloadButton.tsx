@@ -33,12 +33,32 @@ const POST_TRIP_QUESTIONS = [
   "Tackle boxes returned"
 ];
 
+const SCANNER_QUESTIONS = [
+  "Scanner Synchronized",
+  "Clicked End Route",
+  "Completely Logged off Scanner",
+  "Scanner returned & plugged in"
+];
+
+const KEY_QUESTIONS = [
+  "Vehicle key returned to lockbox"
+];
+
 const DAMAGE_QUESTIONS = [
   "Dings, dents, or other visible damage on interior/exterior",
   "Cracks/chips on any windows",
   "Dashboard warning lights on",
   "Any new damage to vehicle?"
 ];
+
+type MedReturn = {
+  hadReturns: 'Yes' | 'No' | null;
+  reason?: string;
+  facilityPatient: string;
+  handedToPharmacy: 'Yes' | 'No' | null;
+  needsRefrigeration: 'Yes' | 'No' | null;
+  placedInFridge: 'Yes' | 'No' | null;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function LogDownloadButton({ log }: { log: any }) {
@@ -91,6 +111,56 @@ export default function LogDownloadButton({ log }: { log: any }) {
         </tr>
       `;
     }).join('');
+
+    // --- Format Scanner for Print ---
+    let scannerRows = "";
+    SCANNER_QUESTIONS.forEach(q => {
+        const val = checklist[q] || "-";
+        const comment = checklist[`${q}_COMMENT`];
+        const statusBadge = val === "No" ? `<span class="badge badge-error">ISSUE</span>` : `<span class="badge badge-success">OK</span>`;
+        scannerRows += `
+          <tr>
+            <td class="q-col">${q}</td>
+            <td class="s-col">${statusBadge}</td>
+            <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '<span class="text-muted">-</span>'}</td>
+          </tr>
+        `;
+    });
+
+    const scannerHtml = `
+      <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+          <h3>Scanner</h3>
+          <table>
+            <thead><tr><th>Protocol Item</th><th style="text-align:center;">Status</th><th>Notes</th></tr></thead>
+            <tbody>${scannerRows}</tbody>
+          </table>
+      </div>
+    `;
+
+    // --- Format Key for Print ---
+    let keyRows = "";
+    KEY_QUESTIONS.forEach(q => {
+        const val = checklist[q] || "-";
+        const comment = checklist[`${q}_COMMENT`];
+        const statusBadge = val === "No" ? `<span class="badge badge-error">ISSUE</span>` : `<span class="badge badge-success">OK</span>`;
+        keyRows += `
+          <tr>
+            <td class="q-col">${q}</td>
+            <td class="s-col">${statusBadge}</td>
+            <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '<span class="text-muted">-</span>'}</td>
+          </tr>
+        `;
+    });
+
+    const keyHtml = `
+      <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+          <h3>Keys</h3>
+          <table>
+            <thead><tr><th>Protocol Item</th><th style="text-align:center;">Status</th><th>Notes</th></tr></thead>
+            <tbody>${keyRows}</tbody>
+          </table>
+      </div>
+    `;
     
     let checklistObj: Record<string, string> = {};
     try {
@@ -117,6 +187,33 @@ export default function LogDownloadButton({ log }: { log: any }) {
           </table>
       </div>
     `;
+
+    // --- Format Med Returns for Print ---
+    let medReturnsHtml = "";
+    const medReturns = checklistObj["Med Returns"] as unknown as MedReturn;
+    if (medReturns) {
+      let details = "";
+      if (medReturns.hadReturns === 'Yes') {
+        details = `
+          <div style="padding:10px; font-size:12px;">
+            <p><strong>Had Returns:</strong> Yes</p>
+            <p><strong>Reason:</strong> ${medReturns.reason || 'N/A'}</p>
+            <p><strong>Facility/Nurse Station:</strong> ${medReturns.facilityPatient}</p>
+            <p><strong>Handed to Pharmacy/Dropbox:</strong> ${medReturns.handedToPharmacy || 'N/A'}</p>
+            <p><strong>Require Refrigeration:</strong> ${medReturns.needsRefrigeration || 'N/A'}</p>
+            ${medReturns.needsRefrigeration === 'Yes' ? `<p><strong>Placed in Refrigerator:</strong> ${medReturns.placedInFridge || 'N/A'}</p>` : ''}
+          </div>
+        `;
+      } else {
+        details = `<div style="padding:10px; font-size:12px;"><strong>Had Returns:</strong> No</div>`;
+      }
+      medReturnsHtml = `
+        <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+          <h3>💊 Med Returns</h3>
+          ${details}
+        </div>
+      `;
+    }
 
     // --- Format Tackle Box for Print ---
     let tackleBoxHtml = "";
@@ -289,9 +386,12 @@ export default function LogDownloadButton({ log }: { log: any }) {
             </div>
           </div>
 
+          ${scannerHtml}
+          ${keyHtml}
+          ${medReturnsHtml}
           ${tackleBoxHtml}
-          ${vestibuleTrashHtml}
           ${tireHtml}
+          ${vestibuleTrashHtml}
 
           <h3>Inspection Checklist</h3>
           <table>
