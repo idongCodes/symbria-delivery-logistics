@@ -342,8 +342,6 @@ export async function POST(req: Request) {
             </tr>
           </table>
 
-          ${vestibuleTrashHtml}
-
           ${notes ? `
             <div style="margin-bottom: 20px;">
               <h3 style="color: #991b1b; margin-bottom: 5px;">📝 Additional Notes:</h3>
