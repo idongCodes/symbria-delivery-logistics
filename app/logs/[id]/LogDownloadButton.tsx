@@ -27,6 +27,7 @@ const PRE_TRIP_QUESTIONS = [
 const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
   "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Any new damage to vehicle?",
   "Synchronize Scanner, End Route, Log Off",
   "Scanner returned & plugged in",
   "Tackle boxes returned"
@@ -35,7 +36,8 @@ const POST_TRIP_QUESTIONS = [
 const DAMAGE_QUESTIONS = [
   "Dings, dents, or other visible damage on interior/exterior",
   "Cracks/chips on any windows",
-  "Dashboard warning lights on"
+  "Dashboard warning lights on",
+  "Any new damage to vehicle?"
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
