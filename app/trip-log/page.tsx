@@ -128,6 +128,15 @@ type TackleBoxDelivery = {
   medsMovedToFridge: boolean;
 };
 
+type MedReturn = {
+  hadReturns: 'Yes' | 'No' | null;
+  reason?: string;
+  facilityPatient: string;
+  handedToPharmacy: 'Yes' | 'No' | null;
+  needsRefrigeration: 'Yes' | 'No' | null;
+  placedInFridge: 'Yes' | 'No' | null;
+};
+
 import { saveImageToDB, loadImagesFromDB, clearImagesFromDB } from "@/app/lib/indexedDB";
 
 export default function Dashboard() {
@@ -181,6 +190,16 @@ export default function Dashboard() {
   const [tackleBoxesIncluded, setTackleBoxesIncluded] = useState<'Yes' | 'No' | null>(null);
   const [tackleBoxDeliveries, setTackleBoxDeliveries] = useState<TackleBoxDelivery[]>([]);
 
+  // Med Returns State
+  const [medReturnData, setMedReturnData] = useState<MedReturn>({
+    hadReturns: null,
+    reason: "",
+    facilityPatient: "",
+    handedToPharmacy: null,
+    needsRefrigeration: null,
+    placedInFridge: null
+  });
+
   const resetForm = useCallback(() => {
     setFirstName("");
     setLastName("");
@@ -193,6 +212,7 @@ export default function Dashboard() {
     setNotes("");
     setTackleBoxesIncluded(null);
     setTackleBoxDeliveries([]);
+    setMedReturnData({ hadReturns: null, reason: "", facilityPatient: "", handedToPharmacy: null, needsRefrigeration: null, placedInFridge: null });
     setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
     localStorage.removeItem("tripLogFormState");
     clearImagesFromDB();
@@ -450,6 +470,33 @@ export default function Dashboard() {
       </div>
     `;
 
+    // --- Format Med Returns for Print ---
+    let medReturnsHtml = "";
+    const medReturns = checklistObj["Med Returns"] as unknown as MedReturn;
+    if (medReturns) {
+      let details = "";
+      if (medReturns.hadReturns === 'Yes') {
+        details = `
+          <div style="padding:10px; font-size:12px;">
+            <p><strong>Had Returns:</strong> Yes</p>
+            <p><strong>Reason:</strong> ${medReturns.reason || 'N/A'}</p>
+            <p><strong>Facility/Patient:</strong> ${medReturns.facilityPatient}</p>
+            <p><strong>Handed to Pharmacy/Dropbox:</strong> ${medReturns.handedToPharmacy || 'N/A'}</p>
+            <p><strong>Require Refrigeration:</strong> ${medReturns.needsRefrigeration || 'N/A'}</p>
+            ${medReturns.needsRefrigeration === 'Yes' ? `<p><strong>Placed in Refrigerator:</strong> ${medReturns.placedInFridge || 'N/A'}</p>` : ''}
+          </div>
+        `;
+      } else {
+        details = `<div style="padding:10px; font-size:12px;"><strong>Had Returns:</strong> No</div>`;
+      }
+      medReturnsHtml = `
+        <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+          <h3>💊 Med Returns</h3>
+          ${details}
+        </div>
+      `;
+    }
+
     // --- 2. Format Tackle Box for Print ---
     let tackleBoxHtml = "";
     if (checklistObj["Tackle Boxes Included"]) {
@@ -621,11 +668,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          ${tackleBoxHtml}
           ${scannerHtml}
           ${keyHtml}
-          ${vestibuleTrashHtml}
+          ${medReturnsHtml}
+          ${tackleBoxHtml}
           ${tireHtml}
+          ${vestibuleTrashHtml}
 
           <h3>Inspection Checklist</h3>
           <table>
@@ -702,6 +750,7 @@ export default function Dashboard() {
     setRouteId(log.route_id || "");
     setOdometer(log.odometer?.toString() || "");
     setNotes(log.notes || "");
+    setMedReturnData((log.checklist["Med Returns"] as MedReturn) || { hadReturns: null, reason: "", facilityPatient: "", handedToPharmacy: null, needsRefrigeration: null, placedInFridge: null });
     setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
 
     const answers: Record<string, string> = {};
@@ -863,6 +912,10 @@ export default function Dashboard() {
         if (tackleBoxesIncluded === 'Yes') {
           finalChecklist["Tackle Box Deliveries"] = tackleBoxDeliveries;
         }
+      }
+
+      if (tripType === 'Post-Trip') {
+        finalChecklist["Med Returns"] = medReturnData;
       }
   
       const baseData = {
@@ -1446,6 +1499,99 @@ export default function Dashboard() {
                   </div>
                 </div>
               </>
+            )}
+
+            {tripType === 'Post-Trip' && (
+              <div className="bg-orange-50/30 p-4 md:p-6 rounded-xl border border-orange-100 animate-in fade-in slide-in-from-top-4">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">💊 Med Returns</h3>
+                
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col bg-white p-3 rounded border border-gray-200">
+                    <span className="text-sm font-semibold text-gray-700 mb-2">Did you have to bring back any meds?</span>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="hadReturns" value="Yes" checked={medReturnData.hadReturns === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, hadReturns: "Yes" }))} className="accent-orange-600 w-4 h-4" required={tripType === 'Post-Trip'} />
+                        <span className="text-sm">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="hadReturns" value="No" checked={medReturnData.hadReturns === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, hadReturns: "No" }))} className="accent-orange-600 w-4 h-4" />
+                        <span className="text-sm">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {medReturnData.hadReturns === 'Yes' && (
+                    <div className="space-y-4 mt-2 animate-in fade-in slide-in-from-top-2">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-sm font-semibold text-gray-700">Reason for return (Optional)</span>
+                        <input 
+                          type="text" 
+                          placeholder="ex, 'Per Nurse, patient discharged', etc" 
+                          value={medReturnData.reason} 
+                          onChange={(e) => setMedReturnData(prev => ({ ...prev, reason: e.target.value }))}
+                          className="border p-3 rounded bg-white text-sm focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all" 
+                        />
+                      </label>
+
+                      <label className="flex flex-col gap-1">
+                        <span className="text-sm font-semibold text-gray-700">Facility / Nurse Station (Required)</span>
+                        <input 
+                          type="text" 
+                          placeholder="ex, 'Overlook OLPAT1', etc" 
+                          value={medReturnData.facilityPatient} 
+                          onChange={(e) => setMedReturnData(prev => ({ ...prev, facilityPatient: e.target.value }))}
+                          className="border p-3 rounded bg-white text-sm focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all" 
+                          required={medReturnData.hadReturns === 'Yes'}
+                        />
+                      </label>
+
+                      <div className="flex flex-col bg-white p-3 rounded border border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700 mb-2">Meds handed to Pharmacy or placed in dropbox?</span>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="handedToPharmacy" value="Yes" checked={medReturnData.handedToPharmacy === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, handedToPharmacy: "Yes" }))} className="accent-orange-600 w-4 h-4" required={medReturnData.hadReturns === 'Yes'} />
+                            <span className="text-sm">Yes</span>
+                          </label>
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="handedToPharmacy" value="No" checked={medReturnData.handedToPharmacy === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, handedToPharmacy: "No" }))} className="accent-orange-600 w-4 h-4" />
+                            <span className="text-sm">No</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col bg-white p-3 rounded border border-gray-200">
+                        <span className="text-sm font-semibold text-gray-700 mb-2">Meds require refrigeration?</span>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="needsRefrigeration" value="Yes" checked={medReturnData.needsRefrigeration === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, needsRefrigeration: "Yes" }))} className="accent-orange-600 w-4 h-4" required={medReturnData.hadReturns === 'Yes'} />
+                            <span className="text-sm">Yes</span>
+                          </label>
+                          <label className="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="needsRefrigeration" value="No" checked={medReturnData.needsRefrigeration === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, needsRefrigeration: "No" }))} className="accent-orange-600 w-4 h-4" />
+                            <span className="text-sm">No</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {medReturnData.needsRefrigeration === 'Yes' && (
+                        <div className="flex flex-col bg-blue-50 p-3 rounded border border-blue-200 animate-in fade-in slide-in-from-top-1 shadow-sm">
+                          <span className="text-sm font-bold text-blue-800 mb-2">Meds placed in refrigerator?</span>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="placedInFridge" value="Yes" checked={medReturnData.placedInFridge === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, placedInFridge: "Yes" }))} className="accent-blue-600 w-4 h-4" required={medReturnData.needsRefrigeration === 'Yes'} />
+                              <span className="text-sm font-bold text-blue-900">Yes</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="placedInFridge" value="No" checked={medReturnData.placedInFridge === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, placedInFridge: "No" }))} className="accent-blue-600 w-4 h-4" />
+                              <span className="text-sm font-bold text-blue-900">No</span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {tripType === 'Post-Trip' && (
