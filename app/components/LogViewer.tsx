@@ -89,6 +89,7 @@ export default function LogViewer({ log }: { log: LogData }) {
     trunk: "Trunk",
     deliveryTrackLoginScreen: "Delivery Track Login Screen",
     fuelGauge: "Fuel Gauge",
+    vestibuleTrashPhoto: "Vestibule Trash Collection",
   };
 
   const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
@@ -327,12 +328,28 @@ export default function LogViewer({ log }: { log: LogData }) {
                 );
               })}
             </tbody>
-          </table>
-        </div>
-      </div>
+            </table>
+            </div>
+            </div>
 
-      {/* NOTES */}
-      {log.notes && (
+            {/* VESTIBULE CLEANLINESS */}
+            {images.vestibuleTrashPhoto && (
+            <div className="animate-in fade-in slide-in-from-top-4">
+            <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Vestibule Cleanliness</h3>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
+            <div className="flex-1">
+              <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule?</span>
+              <p className="text-xs text-gray-500 italic">Photo evidence provided below</p>
+            </div>
+            <div className="w-full md:w-64 aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+              <img src={images.vestibuleTrashPhoto} alt="Vestibule Trash" className="w-full h-full object-cover" />
+            </div>
+            </div>
+            </div>
+            )}
+
+            {/* ADDITIONAL NOTES */}
+            {log.notes && (
         <div className="bg-yellow-50  border border-yellow-200  rounded-lg p-4">
           <h4 className="text-sm font-bold text-yellow-800  uppercase tracking-wide mb-2">Additional Notes</h4>
           <p className="text-yellow-900  text-sm">{log.notes}</p>
