@@ -163,16 +163,32 @@ export default function LogDownloadButton({ log }: { log: any }) {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
+      deliveryTrackLoginScreen: "Delivery Track Login Screen",
+      fuelGauge: "Fuel Gauge",
+      vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
 
     let exteriorImagesHtml = "";
     let tireImagesHtml = "";
     let interiorImagesHtml = "";
+    let vestibuleTrashHtml = "";
 
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk"];
+      const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+
+      if (images.vestibuleTrashPhoto) {
+        vestibuleTrashHtml = `
+          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+              <h3>Vestibule Cleanliness</h3>
+              <div style="padding:10px;">
+                <p style="margin-bottom:10px; font-weight:bold;">All trash collected from vestibule?</p>
+                <img src="${images.vestibuleTrashPhoto}" style="width:100%; max-width:400px; border-radius:4px; border:1px solid #ddd;" />
+              </div>
+          </div>
+        `;
+      }
 
       const generateImageHtml = (keys: string[], title: string) => {
         let html = '';
@@ -272,6 +288,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
           </div>
 
           ${tackleBoxHtml}
+          ${vestibuleTrashHtml}
           ${tireHtml}
 
           <h3>Inspection Checklist</h3>

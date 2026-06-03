@@ -170,16 +170,30 @@ export async function POST(req: Request) {
       trunk: "Trunk",
       deliveryTrackLoginScreen: "Delivery Track Login Screen",
       fuelGauge: "Fuel Gauge",
+      vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
 
     let exteriorImagesHtml = "";
     let tireImagesHtml = "";
     let interiorImagesHtml = "";
+    let vestibuleTrashHtml = "";
 
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
       const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+
+      if (images.vestibuleTrashPhoto) {
+        vestibuleTrashHtml = `
+          <div style="margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb;">
+            <h3 style="margin: 0 0 10px 0; color: #374151; font-size: 16px;">Vestibule Cleanliness</h3>
+            <p style="margin: 0 0 10px 0; font-size: 14px;"><strong>All trash collected from vestibule?</strong> Photo evidence provided:</p>
+            <a href="${images.vestibuleTrashPhoto}" target="_blank">
+              <img src="${images.vestibuleTrashPhoto}" style="width:100%; max-width: 400px; border-radius:6px; border:1px solid #ccc;" />
+            </a>
+          </div>
+        `;
+      }
 
 
       const generateImageHtml = (keys: string[]) => {
@@ -244,6 +258,8 @@ export async function POST(req: Request) {
         ${scannerSection}
 
         ${keySection}
+
+        ${vestibuleTrashHtml}
 
         <h3 style="background:#f3f4f6; padding:10px;">Inspection Checklist</h3>
         <table width="100%" cellspacing="0" style="font-size: 14px;">
@@ -325,6 +341,8 @@ export async function POST(req: Request) {
               <td style="text-align:right;"><strong>Route:</strong> ${route_id || 'N/A'}</td>
             </tr>
           </table>
+
+          ${vestibuleTrashHtml}
 
           ${notes ? `
             <div style="margin-bottom: 20px;">

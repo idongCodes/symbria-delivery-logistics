@@ -170,7 +170,7 @@ export default function Dashboard() {
     setNotes("");
     setTackleBoxesIncluded(null);
     setTackleBoxDeliveries([]);
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
     localStorage.removeItem("tripLogFormState");
     clearImagesFromDB();
   }, []);
@@ -224,7 +224,8 @@ export default function Dashboard() {
     frontSeat: File | null;
     deliveryTrackLoginScreen: File | null;
     fuelGauge: File | null;
-  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null });
+    vestibuleTrashPhoto: File | null;
+  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
 
 
 
@@ -471,16 +472,30 @@ export default function Dashboard() {
       trunk: "Trunk",
       deliveryTrackLoginScreen: "Delivery Track Login Screen",
       fuelGauge: "Fuel Gauge",
+      vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
 
     let exteriorImagesHtml = "";
     let tireImagesHtml = "";
     let interiorImagesHtml = "";
+    let vestibuleTrashHtml = "";
 
     if (log.images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
       const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+
+      if (log.images.vestibuleTrashPhoto) {
+        vestibuleTrashHtml = `
+          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+              <h3>Vestibule Cleanliness</h3>
+              <div style="padding:10px;">
+                <p style="margin-bottom:10px; font-weight:bold;">All trash collected from vestibule?</p>
+                <img src="${log.images.vestibuleTrashPhoto}" style="width:100%; max-width:400px; border-radius:4px; border:1px solid #ddd;" />
+              </div>
+          </div>
+        `;
+      }
 
       const generateImageHtml = (keys: string[], title: string) => {
         let html = '';
@@ -582,6 +597,7 @@ export default function Dashboard() {
           ${tackleBoxHtml}
           ${scannerHtml}
           ${keyHtml}
+          ${vestibuleTrashHtml}
           ${tireHtml}
 
           <h3>Inspection Checklist</h3>
@@ -639,7 +655,7 @@ export default function Dashboard() {
     setRouteId(log.route_id || "");
     setOdometer(log.odometer?.toString() || "");
     setNotes(log.notes || "");
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
@@ -740,7 +756,7 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'deliveryTrackLoginScreen' | 'fuelGauge', file: File | null) => {
+  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'deliveryTrackLoginScreen' | 'fuelGauge' | 'vestibuleTrashPhoto', file: File | null) => {
     setImageFiles(prev => ({ ...prev, [key]: file }));
     saveImageToDB(key, file);
   };
@@ -1713,6 +1729,19 @@ export default function Dashboard() {
                   <ImageUploadInput onChange={(file) => handleFileChange('trunk', file)} file={imageFiles.trunk} required={!editingLog?.images?.trunk} />
                   {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50/50 p-4 md:p-6 rounded-xl border border-blue-100">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Vestibule Cleanliness</h3>
+              <div className="bg-white p-4 rounded border border-gray-200">
+                <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule? (Photo Required)</span>
+                <ImageUploadInput 
+                  onChange={(file) => handleFileChange('vestibuleTrashPhoto', file)} 
+                  file={imageFiles.vestibuleTrashPhoto} 
+                  required={!editingLog?.images?.vestibuleTrashPhoto} 
+                />
+                {editingLog?.images?.vestibuleTrashPhoto && <a href={editingLog.images.vestibuleTrashPhoto} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
               </div>
             </div>
 
