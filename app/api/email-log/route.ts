@@ -29,16 +29,19 @@ export async function POST(req: Request) {
       console.error("Error parsing checklist in email route:", e);
     }
 
-    const scannerQs = ["Scanner Synchronized", "Clicked End Route", "Completely Logged off Scanner", "Scanner returned"];
+    const scannerQs = ["Scanner Synchronized", "Clicked End Route", "Completely Logged off Scanner", "Scanner returned & plugged in"];
+    const keyQs = ["Vehicle key returned to lockbox"];
 
     let checklistRows = "";
     let scannerRows = "";
+    let keyRows = "";
     
     if (checklistObj) {
       Object.entries(checklistObj).forEach(([key, value]) => {
         if (key.endsWith("_COMMENT") || key.includes("Tire Pressure") || key === "Tackle Boxes Included" || key === "Tackle Box Deliveries") return; // Skip comments/tires/tackle-boxes for main list
         
         const isScannerQ = scannerQs.includes(key);
+        const isKeyQ = keyQs.includes(key);
         const stringValue = String(value);
         const commentKey = `${key}_COMMENT`;
         const comment = checklistObj[commentKey] ? `<br/><span style="color:red; font-size:12px;">⚠️ ${checklistObj[commentKey]}</span>` : "";
@@ -61,13 +64,15 @@ export async function POST(req: Request) {
 
         if (isScannerQ) {
           scannerRows += rowHtml;
+        } else if (isKeyQ) {
+          keyRows += rowHtml;
         } else {
           checklistRows += rowHtml;
         }
       });
     }
 
-    // --- 2. Format Scanner Section ---
+    // --- Format Scanner Section ---
     let scannerSection = "";
     if (scannerRows) {
       scannerSection = `
@@ -78,9 +83,21 @@ export async function POST(req: Request) {
       `;
     }
 
+    // --- Format Key Section ---
+    let keySection = "";
+    if (keyRows) {
+      keySection = `
+        <h3 style="background:#f3f4f6; padding:10px; margin-top: 20px;">Keys</h3>
+        <table width="100%" cellspacing="0" style="font-size: 14px;">
+          ${keyRows}
+        </table>
+      `;
+    }
+
     // --- 2. Format Tackle Box Deliveries ---
     let tackleBoxSection = "";
-    if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
+    if (checklistObj["Tackle Boxes Included"]) {
+      if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
       const deliveries = checklistObj["Tackle Box Deliveries"] as Array<Record<string, unknown>>;
       const deliveryRows = deliveries.map(d => {
         let details = `<strong>Delivered:</strong> ${d.deliveredCount || 0}<br/>`;
@@ -108,6 +125,16 @@ export async function POST(req: Request) {
           </table>
         </div>
       `;
+      } else {
+        tackleBoxSection = `
+          <div style="margin: 20px 0; border: 1px solid #1e3a8a; border-radius: 8px; overflow: hidden;">
+            <h3 style="margin: 0; background: #1e3a8a; color: white; padding: 10px;">📦 Tackle Box Deliveries</h3>
+            <div style="padding: 10px; font-size: 14px;">
+              <strong>Tackle Boxes Included:</strong> ${checklistObj["Tackle Boxes Included"]}
+            </div>
+          </div>
+        `;
+      }
     }
 
     // --- 3. Format Tire Pressure ---
@@ -212,9 +239,11 @@ export async function POST(req: Request) {
 
         ${tackleBoxSection}
 
+        ${tireSection}
+
         ${scannerSection}
 
-        ${tireSection}
+        ${keySection}
 
         <h3 style="background:#f3f4f6; padding:10px;">Inspection Checklist</h3>
         <table width="100%" cellspacing="0" style="font-size: 14px;">

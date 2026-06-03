@@ -42,10 +42,14 @@ const SCANNER_QUESTIONS = [
   "Scanner Synchronized",
   "Clicked End Route",
   "Completely Logged off Scanner",
-  "Scanner returned"
+  "Scanner returned & plugged in"
 ];
 
-const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS, ...SCANNER_QUESTIONS]));
+const KEY_QUESTIONS = [
+  "Vehicle key returned to lockbox"
+];
+
+const ALL_QUESTIONS_MASTER = Array.from(new Set([...PRE_TRIP_QUESTIONS, ...POST_TRIP_QUESTIONS, ...SCANNER_QUESTIONS, ...KEY_QUESTIONS]));
 
 const DAMAGE_QUESTIONS = [
   "Dings, dents, or other visible damage on interior/exterior",
@@ -76,8 +80,7 @@ type TripLog = {
   updated_at: string; 
   edit_count: number; 
   user_id: string;
-  vehicle_id: string;
-  route_id: string; 
+  route_id: string;
   odometer: number;
   trip_type: string;
   notes: string;
@@ -394,28 +397,64 @@ export default function Dashboard() {
       </div>
     `;
 
+    // --- Format Key for Print ---
+    let keyRows = "";
+    KEY_QUESTIONS.forEach(q => {
+        const val = checklistObj[q] || "-";
+        const comment = checklistObj[`${q}_COMMENT`];
+        const statusBadge = val === "No" ? `<span class="badge badge-error">ISSUE</span>` : `<span class="badge badge-success">OK</span>`;
+        keyRows += `
+          <tr>
+            <td class="q-col">${q}</td>
+            <td class="s-col">${statusBadge}</td>
+            <td class="n-col">${comment ? `<span class="comment">⚠️ ${comment}</span>` : '<span class="text-muted">-</span>'}</td>
+          </tr>
+        `;
+    });
+
+    const keyHtml = `
+      <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+          <h3>Keys</h3>
+          <table>
+            <thead><tr><th>Protocol Item</th><th style="text-align:center;">Status</th><th>Notes</th></tr></thead>
+            <tbody>${keyRows}</tbody>
+          </table>
+      </div>
+    `;
+
     // --- 2. Format Tackle Box for Print ---
     let tackleBoxHtml = "";
-    if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
-      const deliveries = checklistObj["Tackle Box Deliveries"] as Array<Record<string, unknown>>;
-      const deliveryRows = deliveries.map(d => {
-        let details = `Qty: ${d.deliveredCount || 0} | Nurse Emptied: ${d.nurseEmptied}`;
-        if (d.nurseEmptied === "Yes") {
-          details += ` (${d.emptiedReturnedCount || 0} returned)`;
-        } else {
-          details += ` | Returned Pharmacy: ${d.returnedToPharmacy ? 'YES' : 'NO'} (${d.unemptiedReturnedCount || 0}) | Refrigerated: ${d.medsNeedRefrigeration === "Yes" ? (d.medsMovedToFridge ? 'Moved to Fridge' : 'NOT MOVED') : 'No'}`;
-        }
-        return `<tr><td style="font-weight:bold;">${d.location}</td><td style="font-size:11px;">${details}</td></tr>`;
-      }).join("");
+    if (checklistObj["Tackle Boxes Included"]) {
+      if (checklistObj["Tackle Boxes Included"] === "Yes" && Array.isArray(checklistObj["Tackle Box Deliveries"])) {
+        const deliveries = checklistObj["Tackle Box Deliveries"] as Array<Record<string, unknown>>;
+        const deliveryRows = deliveries.map(d => {
+          let details = `Qty: ${d.deliveredCount || 0} | Nurse Emptied: ${d.nurseEmptied}`;
+          if (d.nurseEmptied === "Yes") {
+            details += ` (${d.emptiedReturnedCount || 0} returned)`;
+          } else {
+            details += ` | Returned Pharmacy: ${d.returnedToPharmacy ? 'YES' : 'NO'} (${d.unemptiedReturnedCount || 0}) | Refrigerated: ${d.medsNeedRefrigeration === "Yes" ? (d.medsMovedToFridge ? 'Moved to Fridge' : 'NOT MOVED') : 'No'}`;
+          }
+          return `<tr><td style="font-weight:bold;">${d.location}</td><td style="font-size:11px;">${details}</td></tr>`;
+        }).join("");
 
-      tackleBoxHtml = `
-        <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
-            <h3>📦 Tackle Box Deliveries</h3>
-            <table style="font-size:12px;">
-                ${deliveryRows}
-            </table>
-        </div>
-      `;
+        tackleBoxHtml = `
+          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+              <h3>📦 Tackle Box Deliveries</h3>
+              <table style="font-size:12px;">
+                  ${deliveryRows}
+              </table>
+          </div>
+        `;
+      } else {
+        tackleBoxHtml = `
+          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
+              <h3>📦 Tackle Box Deliveries</h3>
+              <div style="font-size:13px; font-weight:bold; margin-top:10px;">
+                Tackle Boxes Included: ${checklistObj["Tackle Boxes Included"]}
+              </div>
+          </div>
+        `;
+      }
     }
 
     const imageTitles: { [key: string]: string } = {
@@ -542,6 +581,7 @@ export default function Dashboard() {
 
           ${tackleBoxHtml}
           ${scannerHtml}
+          ${keyHtml}
           ${tireHtml}
 
           <h3>Inspection Checklist</h3>
@@ -764,7 +804,6 @@ export default function Dashboard() {
   
       const baseData = {
         user_id: userProfile?.id || "e04fde02-765b-40d0-8cdb-3449b2b21eca", // Use Guest Driver ID for public forms
-        vehicle_id: "N/A",
         route_id: routeId,
         odometer: Number(odometer),
         trip_type: tripType,
@@ -774,16 +813,16 @@ export default function Dashboard() {
         driver_name: `${firstName} ${lastName}`.trim(),
         updated_at: new Date().toISOString(),
       };
-  
+
       if (editingLog) {
         // --- EDIT MODE ---
         const imageUrls = { ...(editingLog.images || {}) };
         const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
-        
-        for (const [key, file] of imagesToUpload) {
+
+        await Promise.all(imagesToUpload.map(async ([key, file]) => {
           const url = await uploadImage(file!);
           imageUrls[key as keyof typeof imageUrls] = url;
-        }
+        }));
       
         const response = await supabase.from('trip_logs').update({
           ...baseData,
@@ -801,11 +840,11 @@ export default function Dashboard() {
         const imageUrls: Record<string, string> = {};
 
         if (imagesToUpload.length > 0) {
-          for (const [key, file] of imagesToUpload) {
+          await Promise.all(imagesToUpload.map(async ([key, file]) => {
             const url = await uploadImage(file!);
             imageUrls[key] = url;
             console.log(`Uploaded ${key}.`);
-          }
+          }));
         }
 
         // 1. Insert log with text data and image URLs
@@ -813,25 +852,18 @@ export default function Dashboard() {
           .from('trip_logs')
           .insert({ ...baseData, images: imageUrls })
           .select();
-  
+
         if (insertError) throw insertError;
         if (!newLogs || newLogs.length === 0) throw new Error("Failed to create log.");
-        
+
         const newLog = newLogs[0];
-        
-        // 2. Give feedback
-        alert("Success! Log submitted.");
-        
-        // 3. Reset form and navigate away
-        formElement.reset();
-        resetForm();
-        fetchData();
-  
-        // 4. Trigger email notification
+
+        // Trigger email notification first so it ALWAYS sends before alert/navigate
         const token = await generateShareToken(newLog.id);
         const origin = typeof window !== 'undefined' ? window.location.origin : 'https://symbria-delivery-logistics.vercel.app';
         const shareLink = `${origin}/share/${token}`;
-        fetch('/api/email-log', {
+
+        await fetch('/api/email-log', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -841,7 +873,15 @@ export default function Dashboard() {
                 shareLink
             })
         }).catch(err => console.error("Email trigger failed:", err));
-      }
+
+        // 2. Give feedback
+        alert("Success! Log submitted.");
+
+        // 3. Reset form and navigate away
+        formElement.reset();
+        resetForm();
+        fetchData();
+        }
   
     } catch (err) {
       const errorMessage = (err as Error).message || "An unknown error occurred";
@@ -1280,6 +1320,45 @@ export default function Dashboard() {
                               {editingLog?.images?.deliveryTrackLoginScreen && <a href={editingLog.images.deliveryTrackLoginScreen} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
                           )}
+
+                          {showComment && (
+                            <div className="mt-1 animate-in fade-in slide-in-from-top-1">
+                              <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {tripType === 'Post-Trip' && (
+              <>
+                <hr className="border-gray-200 " />
+                <div>
+                  <h3 className="text-lg font-bold text-gray-800  mb-4">Keys</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {KEY_QUESTIONS.map((question, index) => {
+                      const answer = checklistData[question];
+                      const showComment = requiresDescription(question, answer);
+                      const isBad = showComment;
+                      return (
+                        <div key={`key-${index}`} className={`flex flex-col bg-gray-50  p-3 rounded border ${isBad ? 'border-red-200  bg-red-50 ' : 'border-gray-100 '}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm text-gray-700  font-medium max-w-[70%]">{question}</span>
+                            <div className="flex gap-4">
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`key-q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
+                                <span className="text-sm ">Yes</span>
+                              </label>
+                              <label className="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name={`key-q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
+                                <span className="text-sm ">No</span>
+                              </label>
+                            </div>
+                          </div>
 
                           {showComment && (
                             <div className="mt-1 animate-in fade-in slide-in-from-top-1">
