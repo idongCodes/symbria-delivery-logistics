@@ -1046,12 +1046,25 @@ export default function Dashboard() {
         }
   
     } catch (err) {
+      console.error("Submission Error:", err);
       const errorMessage = (err as Error).message || "An unknown error occurred";
-      showModal({
-        title: "Submission Failed",
-        message: errorMessage,
-        type: 'error'
-      });
+      
+      // Handle specific Next.js Server Action error when app is redeployed
+      if (errorMessage.toLowerCase().includes("failed to find server action")) {
+        showModal({
+          title: "App Update Required",
+          message: "The application has been updated! Please refresh the page to submit your form. Your photos and data are still saved in this session.",
+          type: 'error',
+          confirmText: "Refresh Now",
+          onConfirm: () => window.location.reload()
+        });
+      } else {
+        showModal({
+          title: "Submission Failed",
+          message: errorMessage,
+          type: 'error'
+        });
+      }
     } finally {
       setSubmitting(false);
       setEditingLog(null);
