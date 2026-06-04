@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -148,6 +148,7 @@ export default function Dashboard() {
   
   const [loading, setLoading] = useState(true); 
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [editingLog, setEditingLog] = useState<TripLog | null>(null);
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -269,6 +270,8 @@ export default function Dashboard() {
     fuelGauge: File | null;
     vestibuleTrashPhoto: File | null;
   }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
+
+  const [compressing, setCompressing] = useState<Record<string, boolean>>({});
 
 
 
@@ -852,13 +855,44 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'deliveryTrackLoginScreen' | 'fuelGauge' | 'vestibuleTrashPhoto', file: File | null) => {
-    setImageFiles(prev => ({ ...prev, [key]: file }));
-    saveImageToDB(key, file);
+  const handleFileChange = async (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'deliveryTrackLoginScreen' | 'fuelGauge' | 'vestibuleTrashPhoto', file: File | null) => {
+    if (!file) {
+      setImageFiles(prev => ({ ...prev, [key]: null }));
+      saveImageToDB(key, null);
+      return;
+    }
+
+    setCompressing(prev => ({ ...prev, [key]: true }));
+    
+    try {
+      const options = {
+        maxSizeMB: 0.2, // Aim for 200KB early
+        maxWidthOrHeight: 1280,
+        useWebWorker: true,
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      // Ensure the name is preserved for the UI
+      const renamedFile = new File([compressedFile], file.name, { type: file.type });
+      
+      setImageFiles(prev => ({ ...prev, [key]: renamedFile }));
+      saveImageToDB(key, renamedFile);
+    } catch (error) {
+      console.error("Early compression failed:", error);
+      setImageFiles(prev => ({ ...prev, [key]: file }));
+      saveImageToDB(key, file);
+    } finally {
+      setCompressing(prev => ({ ...prev, [key]: false }));
+    }
   };
   const handleTireChange = (key: 'df' | 'pf' | 'dr' | 'pr', value: string) => setTirePressures(prev => ({ ...prev, [key]: value }));
   
   const uploadImage = async (file: File, quality: number = 0.6) => {
+    // If the file is already small enough (under 300KB), don't re-compress
+    if (file.size < 300 * 1024) {
+      return await uploadAndGetUrl(file);
+    }
+
     const options = {
       maxSizeMB: 0.2, // Compressed down to ~200kb for faster uploads on weak networks
       maxWidthOrHeight: 1024,
@@ -934,11 +968,13 @@ export default function Dashboard() {
         // --- EDIT MODE ---
         const imageUrls = { ...(editingLog.images || {}) };
         const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
+        setUploadProgress({ current: 0, total: imagesToUpload.length });
 
-        await Promise.all(imagesToUpload.map(async ([key, file]) => {
+        for (const [key, file] of imagesToUpload) {
           const url = await uploadImage(file!);
           imageUrls[key as keyof typeof imageUrls] = url;
-        }));
+          setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
+        }
       
         const response = await supabase.from('trip_logs').update({
           ...baseData,
@@ -958,13 +994,15 @@ export default function Dashboard() {
         // --- NEW LOG MODE (SYNC) ---
         const imagesToUpload = Object.entries(imageFiles).filter(([, file]) => file);
         const imageUrls: Record<string, string> = {};
+        setUploadProgress({ current: 0, total: imagesToUpload.length });
 
         if (imagesToUpload.length > 0) {
-          await Promise.all(imagesToUpload.map(async ([key, file]) => {
+          for (const [key, file] of imagesToUpload) {
             const url = await uploadImage(file!);
             imageUrls[key] = url;
+            setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
             console.log(`Uploaded ${key}.`);
-          }));
+          }
         }
 
         // 1. Insert log with text data and image URLs
@@ -1394,6 +1432,7 @@ export default function Dashboard() {
                           <ImageUploadInput 
                             onChange={(file) => handleFileChange('fuelGauge', file)} 
                             file={imageFiles.fuelGauge} 
+                            loading={compressing.fuelGauge}
                             required={tripType === 'Post-Trip' && !editingLog?.images?.fuelGauge} 
                           />
                           {editingLog?.images?.fuelGauge && <a href={editingLog.images.fuelGauge} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
@@ -1443,6 +1482,7 @@ export default function Dashboard() {
                               <ImageUploadInput 
                                 onChange={(file) => handleFileChange('deliveryTrackLoginScreen', file)} 
                                 file={imageFiles.deliveryTrackLoginScreen} 
+                                loading={compressing.deliveryTrackLoginScreen}
                                 required={tripType === 'Post-Trip' && !editingLog?.images?.deliveryTrackLoginScreen} 
                               />
                               {editingLog?.images?.deliveryTrackLoginScreen && <a href={editingLog.images.deliveryTrackLoginScreen} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
@@ -1865,22 +1905,22 @@ export default function Dashboard() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                               <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Front Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('driverFrontTire', file)} file={imageFiles.driverFrontTire} required={!editingLog?.images?.driverFrontTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('driverFrontTire', file)} file={imageFiles.driverFrontTire} loading={compressing.driverFrontTire} required={!editingLog?.images?.driverFrontTire} />
                               {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                               <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Front Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('passengerFrontTire', file)} file={imageFiles.passengerFrontTire} required={!editingLog?.images?.passengerFrontTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('passengerFrontTire', file)} file={imageFiles.passengerFrontTire} loading={compressing.passengerFrontTire} required={!editingLog?.images?.passengerFrontTire} />
                               {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                               <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Rear Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('driverRearTire', file)} file={imageFiles.driverRearTire} required={!editingLog?.images?.driverRearTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('driverRearTire', file)} file={imageFiles.driverRearTire} loading={compressing.driverRearTire} required={!editingLog?.images?.driverRearTire} />
                               {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
                             <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                               <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Rear Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('passengerRearTire', file)} file={imageFiles.passengerRearTire} required={!editingLog?.images?.passengerRearTire} />
+                              <ImageUploadInput onChange={(file) => handleFileChange('passengerRearTire', file)} file={imageFiles.passengerRearTire} loading={compressing.passengerRearTire} required={!editingLog?.images?.passengerRearTire} />
                               {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                             </div>
                           </div>
@@ -1892,22 +1932,22 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
 		  <span className="block text-sm font-semibold text-gray-700  mb-2">Front of Vehicle</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('front', file)} file={imageFiles.front} required={!editingLog?.images?.front} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('front', file)} file={imageFiles.front} loading={compressing.front} required={!editingLog?.images?.front} />
                   {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                   <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Side</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('driverSide', file)} file={imageFiles.driverSide} required={!editingLog?.images?.driverSide} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('driverSide', file)} file={imageFiles.driverSide} loading={compressing.driverSide} required={!editingLog?.images?.driverSide} />
                   {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                   <span className="block text-sm font-semibold text-gray-700  mb-2">Rear of Vehicle</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('rear', file)} file={imageFiles.rear} required={!editingLog?.images?.rear} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('rear', file)} file={imageFiles.rear} loading={compressing.rear} required={!editingLog?.images?.rear} />
                   {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                   <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Side</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('passengerSide', file)} file={imageFiles.passengerSide} required={!editingLog?.images?.passengerSide} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('passengerSide', file)} file={imageFiles.passengerSide} loading={compressing.passengerSide} required={!editingLog?.images?.passengerSide} />
                   {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
@@ -1921,17 +1961,17 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                   <span className="block text-sm font-semibold text-gray-700  mb-2">Front Seat Area</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('frontSeat', file)} file={imageFiles.frontSeat} required={!editingLog?.images?.frontSeat} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('frontSeat', file)} file={imageFiles.frontSeat} loading={compressing.frontSeat} required={!editingLog?.images?.frontSeat} />
                   {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                   <span className="block text-sm font-semibold text-gray-700  mb-2">Back Seat</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('back', file)} file={imageFiles.back} required={!editingLog?.images?.back} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('back', file)} file={imageFiles.back} loading={compressing.back} required={!editingLog?.images?.back} />
                   {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
                 <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
                   <span className="block text-sm font-semibold text-gray-700  mb-2">Trunk</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('trunk', file)} file={imageFiles.trunk} required={!editingLog?.images?.trunk} />
+                  <ImageUploadInput onChange={(file) => handleFileChange('trunk', file)} file={imageFiles.trunk} loading={compressing.trunk} required={!editingLog?.images?.trunk} />
                   {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
                 </div>
               </div>
@@ -1941,9 +1981,10 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-gray-800 mb-2">Vestibule Cleanliness</h3>
               <div className="bg-white p-4 rounded border border-gray-200">
                 <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule? (Photo Required)</span>
-                <ImageUploadInput 
+                <ImageUploadInput
                   onChange={(file) => handleFileChange('vestibuleTrashPhoto', file)} 
                   file={imageFiles.vestibuleTrashPhoto} 
+                  loading={compressing.vestibuleTrashPhoto}
                   required={!editingLog?.images?.vestibuleTrashPhoto} 
                 />
                 {editingLog?.images?.vestibuleTrashPhoto && <a href={editingLog.images.vestibuleTrashPhoto} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
@@ -1959,7 +2000,12 @@ export default function Dashboard() {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <button type="submit" disabled={submitting} className={`flex-1 font-bold py-3 px-6 rounded text-white flex items-center justify-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
-                {submitting ? ( <>Uploading Images...</> ) : ( editingLog ? "Update Log" : "Submit Log" )}
+                {submitting ? ( 
+                  <>
+                    <ArrowUpTrayIcon className="w-5 h-5 animate-bounce" />
+                    Uploading {uploadProgress.current}/{uploadProgress.total}...
+                  </> 
+                ) : ( editingLog ? "Update Log" : "Submit Log" )}
               </button>
               {editingLog && (
                 <button 
