@@ -41,19 +41,19 @@ export async function loadImagesFromDB(): Promise<Record<string, File>> {
     return new Promise((resolve, reject) => {
       const tx = db.transaction(STORE_NAME, "readonly");
       const store = tx.objectStore(STORE_NAME);
-      const request = store.getAll();
-      const keysRequest = store.getAllKeys();
+      const result: Record<string, File> = {};
       
-      tx.oncomplete = () => {
-        const result: Record<string, File> = {};
-        const keys = keysRequest.result;
-        const values = request.result;
-        keys.forEach((k, i) => {
-          result[k as string] = values[i];
-        });
-        resolve(result);
+      const request = store.openCursor();
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          result[cursor.primaryKey as string] = cursor.value;
+          cursor.continue();
+        } else {
+          resolve(result);
+        }
       };
-      tx.onerror = () => reject(tx.error);
+      request.onerror = () => reject(request.error);
     });
   } catch (e) {
     console.error("IndexedDB error", e);

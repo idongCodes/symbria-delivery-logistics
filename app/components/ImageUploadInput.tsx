@@ -10,9 +10,10 @@ interface ImageUploadInputProps {
   currentImage?: string; // URL from DB
   file?: File | null; // Currently selected file object
   className?: string;
+  loading?: boolean;
 }
 
-export default function ImageUploadInput({ label, required, onChange, currentImage, file, className }: ImageUploadInputProps) {
+export default function ImageUploadInput({ label, required, onChange, currentImage, file, className, loading }: ImageUploadInputProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
@@ -76,7 +77,12 @@ export default function ImageUploadInput({ label, required, onChange, currentIma
             />
           )}
           <span className="text-sm text-gray-500  break-all">
-            {file ? file.name : "No file chosen"}
+            {loading ? (
+               <span className="text-blue-600 font-medium animate-pulse flex items-center gap-1">
+                 <ArrowUpTrayIcon className="w-4 h-4 animate-bounce" />
+                 Compressing...
+               </span>
+            ) : (file ? file.name : "No file chosen")}
           </span>
         </div>
       </div>
