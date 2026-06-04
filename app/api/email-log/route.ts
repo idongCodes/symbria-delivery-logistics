@@ -354,7 +354,7 @@ export async function POST(req: Request) {
     await transporter.sendMail({
       from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
       to: 'idongesit_essien@ymail.com',
-      cc: 'lesterholden@hotmail.com',
+      cc: 'lesterholden@icloud.com',
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
     });
@@ -413,7 +413,7 @@ export async function POST(req: Request) {
       await transporter.sendMail({
         from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
         to: 'idongesit_essien@ymail.com',
-        cc: 'lesterholden@hotmail.com',
+        cc: 'lesterholden@icloud.com',
         subject: `Alert 🚨: Driver Submitted Issue - ${driver_name}`,
         html: alertHtml,
       });
