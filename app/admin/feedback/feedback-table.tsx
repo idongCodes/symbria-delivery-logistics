@@ -42,23 +42,56 @@ export default function FeedbackTable({ initialData }: { initialData: FeedbackIt
   const handleBulkDelete = async () => {
     if (!confirm('Are you sure you want to delete the selected items?')) return;
     setIsPending(true);
-    await deleteFeedback(selectedIds);
-    setSelectedIds([]); 
-    setIsPending(false);
+    try {
+      await deleteFeedback(selectedIds);
+      setSelectedIds([]); 
+    } catch (err) {
+      console.error(err);
+      const msg = (err as Error).message || "";
+      if (msg.toLowerCase().includes("failed to find server action")) {
+        alert("The app has been updated! Please refresh the page to continue.");
+      } else {
+        alert("Error deleting feedback: " + msg);
+      }
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handleBulkRead = async (status: boolean) => {
     setIsPending(true);
-    await markAsRead(selectedIds, status);
-    setSelectedIds([]);
-    setIsPending(false);
+    try {
+      await markAsRead(selectedIds, status);
+      setSelectedIds([]);
+    } catch (err) {
+      console.error(err);
+      const msg = (err as Error).message || "";
+      if (msg.toLowerCase().includes("failed to find server action")) {
+        alert("The app has been updated! Please refresh the page to continue.");
+      } else {
+        alert("Error updating feedback: " + msg);
+      }
+    } finally {
+      setIsPending(false);
+    }
   };
 
   const handleDeleteSingle = async (id: string) => {
     if (!confirm('Delete this message?')) return;
     setIsPending(true);
-    await deleteFeedback([id]);
-    setIsPending(false);
+    try {
+      await deleteFeedback([id]);
+    } catch (err) {
+      console.error(err);
+      const msg = (err as Error).message || "";
+      if (msg.toLowerCase().includes("failed to find server action")) {
+        alert("The app has been updated! Please refresh the page to continue.");
+      } else {
+        alert("Error deleting feedback: " + msg);
+      }
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
