@@ -221,12 +221,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (editingLog) return;
-    const stateToSave = { tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, tackleBoxesIncluded, tackleBoxDeliveries };
-    const isEmpty = Object.keys(checklistData).length === 0 && Object.keys(checklistComments).length === 0 && !routeId && !odometer && !notes && tripType === "Pre-Trip" && !tackleBoxesIncluded && tackleBoxDeliveries.length === 0;
+    const stateToSave = { firstName, lastName, tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, tackleBoxesIncluded, tackleBoxDeliveries, medReturnData };
+    const isEmpty = Object.keys(checklistData).length === 0 && Object.keys(checklistComments).length === 0 && !routeId && !odometer && !notes && tripType === "Pre-Trip" && !tackleBoxesIncluded && tackleBoxDeliveries.length === 0 && !firstName && !lastName;
     if (!isEmpty) {
       localStorage.setItem("tripLogFormState", JSON.stringify(stateToSave));
     }
-  }, [tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, tackleBoxesIncluded, tackleBoxDeliveries, editingLog]);
+  }, [firstName, lastName, tripType, checklistData, checklistComments, tirePressures, routeId, odometer, notes, tackleBoxesIncluded, tackleBoxDeliveries, medReturnData, editingLog]);
 
   useEffect(() => {
     if (editingLog) return;
@@ -234,6 +234,8 @@ export default function Dashboard() {
     if (savedState) {
       try {
         const parsed = JSON.parse(savedState);
+        setFirstName(parsed.firstName || "");
+        setLastName(parsed.lastName || "");
         setTripType(parsed.tripType || "Pre-Trip");
         setChecklistData(parsed.checklistData || {});
         setChecklistComments(parsed.checklistComments || {});
@@ -243,6 +245,9 @@ export default function Dashboard() {
         setNotes(parsed.notes || "");
         setTackleBoxesIncluded(parsed.tackleBoxesIncluded || null);
         setTackleBoxDeliveries(parsed.tackleBoxDeliveries || []);
+        if (parsed.medReturnData) {
+          setMedReturnData(parsed.medReturnData);
+        }
       } catch (e) {
         console.error("Failed to parse saved form state", e);
       }
