@@ -204,7 +204,7 @@ export async function POST(req: Request) {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-      deliveryTrackLoginScreen: "Delivery Track Login Screen",
+
       fuelGauge: "Fuel Gauge",
       vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
@@ -217,16 +217,15 @@ export async function POST(req: Request) {
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+      const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
 
-      if (images.vestibuleTrashPhoto) {
+      if (checklistObj["Was there trash in vestibule when you arrived?"] !== undefined) {
         vestibuleTrashHtml = `
           <div style="margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb;">
             <h3 style="margin: 0 0 10px 0; color: #374151; font-size: 16px;">Vestibule Cleanliness</h3>
-            <p style="margin: 0 0 10px 0; font-size: 14px;"><strong>All trash collected from vestibule?</strong> Photo evidence provided:</p>
-            <a href="${images.vestibuleTrashPhoto}" target="_blank">
-              <img src="${images.vestibuleTrashPhoto}" style="width:100%; max-width: 400px; border-radius:6px; border:1px solid #ccc;" />
-            </a>
+            <p style="margin: 0 0 5px 0; font-size: 14px;"><strong>Was there trash in vestibule when you arrived?</strong> ${String(checklistObj["Was there trash in vestibule when you arrived?"])}</p>
+            ${checklistObj["Was trash removed before you left?"] !== undefined ? `<p style="margin: 0; font-size: 14px;"><strong>Was trash removed before you left?</strong> ${String(checklistObj["Was trash removed before you left?"])}</p>` : ''}
+            ${checklistObj["Was trash removed before you left?_COMMENT"] !== undefined ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: red; background: #fef2f2; display: inline-block; padding: 2px 6px; border-radius: 4px;">⚠️ ${String(checklistObj["Was trash removed before you left?_COMMENT"])}</p>` : ''}
           </div>
         `;
       }
