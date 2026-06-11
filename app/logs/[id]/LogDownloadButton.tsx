@@ -262,20 +262,18 @@ export default function LogDownloadButton({ log }: { log: any }) {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-
-      fuelGauge: "Fuel Gauge",
       vestibuleTrashPhoto: "Vestibule Trash Collection",
-    };
+      };
 
-    let exteriorImagesHtml = "";
-    let tireImagesHtml = "";
-    let interiorImagesHtml = "";
-    let vestibuleTrashHtml = "";
+      let exteriorImagesHtml = "";
+      let tireImagesHtml = "";
+      let interiorImagesHtml = "";
+      let vestibuleTrashHtml = "";
 
-    if (images) {
+      if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
+      const interiorKeys = ["frontSeat", "back", "trunk"];
 
       if (checklistObj["Was there trash in vestibule when you arrived?"] !== undefined) {
         vestibuleTrashHtml = `

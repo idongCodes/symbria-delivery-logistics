@@ -214,7 +214,7 @@ export default function Dashboard() {
     setTackleBoxesIncluded(null);
     setTackleBoxDeliveries([]);
     setMedReturnData({ hadReturns: null, reason: "", facilityPatient: "", handedToPharmacy: null, needsRefrigeration: null, placedInFridge: null });
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, fuelGauge: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
     localStorage.removeItem("tripLogFormState");
     clearImagesFromDB();
   }, []);
@@ -271,8 +271,7 @@ export default function Dashboard() {
     driverRearTire: File | null;
     passengerRearTire: File | null;
     frontSeat: File | null;
-    fuelGauge: File | null;
-  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, fuelGauge: null });
+  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
 
   const [compressing, setCompressing] = useState<Record<string, boolean>>({});
 
@@ -550,8 +549,6 @@ export default function Dashboard() {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-
-      fuelGauge: "Fuel Gauge",
       vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
 
@@ -563,7 +560,7 @@ export default function Dashboard() {
     if (log.images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
+      const interiorKeys = ["frontSeat", "back", "trunk"];
 
       if (log.images.vestibuleTrashPhoto) {
         vestibuleTrashHtml = `
@@ -757,7 +754,7 @@ export default function Dashboard() {
     setOdometer(log.odometer?.toString() || "");
     setNotes(log.notes || "");
     setMedReturnData((log.checklist["Med Returns"] as MedReturn) || { hadReturns: null, reason: "", facilityPatient: "", handedToPharmacy: null, needsRefrigeration: null, placedInFridge: null });
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, fuelGauge: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
@@ -858,7 +855,7 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = async (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'fuelGauge', file: File | null) => {
+  const handleFileChange = async (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire', file: File | null) => {
     if (!file) {
       setImageFiles(prev => ({ ...prev, [key]: null }));
       saveImageToDB(key, null);
@@ -1504,19 +1501,6 @@ export default function Dashboard() {
                            </label>
                          </div>
                        </div>
-
-                       {tripType === 'Post-Trip' && question === "Fuel Tank Full" && answer === "Yes" && (
-                        <div className="mt-2 p-3 bg-blue-50/50 border border-blue-200 rounded-lg animate-in fade-in slide-in-from-top-1">
-                          <span className="block text-[10px] font-bold text-blue-700 uppercase mb-2">📸 Photo of Fuel Gauge (Required)</span>
-                          <ImageUploadInput 
-                            onChange={(file) => handleFileChange('fuelGauge', file)} 
-                            file={imageFiles.fuelGauge} 
-                            loading={compressing.fuelGauge}
-                            required={tripType === 'Post-Trip' && !editingLog?.images?.fuelGauge} 
-                          />
-                          {editingLog?.images?.fuelGauge && <a href={editingLog.images.fuelGauge} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                        </div>
-                       )}
 
                        {showComment && (
                          <div className="mt-1 animate-in fade-in slide-in-from-top-1">

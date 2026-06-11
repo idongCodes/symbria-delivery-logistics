@@ -112,14 +112,12 @@ export default function LogViewer({ log }: { log: LogData }) {
     frontSeat: "Front Seat Area",
     back: "Back Seat",
     trunk: "Trunk",
-
-    fuelGauge: "Fuel Gauge",
     vestibuleTrashPhoto: "Vestibule Trash Collection",
-  };
+    };
 
-  const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
-  const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-  const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
+    const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
+    const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
+    const interiorKeys = ["frontSeat", "back", "trunk"];
 
   const renderImageSection = (keys: string[], title: string) => {
     const hasImages = keys.some(key => images[key]);
