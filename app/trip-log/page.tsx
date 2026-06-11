@@ -996,6 +996,14 @@ export default function Dashboard() {
           message: "The trip log has been updated successfully.",
           type: 'success'
         });
+
+        resetForm();
+        fetchData();
+        if (userProfile?.role === 'Admin') {
+          setActiveTab('all');
+        } else {
+          setActiveTab('history');
+        }
   
       } else {
         // --- NEW LOG MODE (SYNC) ---
