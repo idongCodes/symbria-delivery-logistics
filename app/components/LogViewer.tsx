@@ -444,7 +444,7 @@ export default function LogViewer({ log }: { log: LogData }) {
                   <span className="text-sm font-semibold text-gray-700">Was trash removed before you left?</span>
                   <span className="text-sm font-medium">{String(checklist["Was trash removed before you left?"])}</span>
                 </div>
-                {checklist["Was trash removed before you left?_COMMENT"] && (
+                {!!checklist["Was trash removed before you left?_COMMENT"] && (
                   <div className="mt-1">
                     <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-1 rounded block w-fit">⚠️ {String(checklist["Was trash removed before you left?_COMMENT"])}</span>
                   </div>
