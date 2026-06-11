@@ -28,7 +28,7 @@ test.describe('Trip Log Form Simulations', () => {
     const photoInputs = [
         'driverFrontTire', 'passengerFrontTire', 'driverRearTire', 'passengerRearTire',
         'front', 'driverSide', 'rear', 'passengerSide',
-        'frontSeat', 'back', 'trunk', 'vestibuleTrashPhoto'
+        'frontSeat', 'back', 'trunk'
     ];
 
     for (const inputName of photoInputs) {

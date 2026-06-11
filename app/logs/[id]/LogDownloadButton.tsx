@@ -262,7 +262,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-      deliveryTrackLoginScreen: "Delivery Track Login Screen",
+
       fuelGauge: "Fuel Gauge",
       vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
@@ -275,15 +275,16 @@ export default function LogDownloadButton({ log }: { log: any }) {
     if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+      const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
 
-      if (images.vestibuleTrashPhoto) {
+      if (checklistObj["Was there trash in vestibule when you arrived?"] !== undefined) {
         vestibuleTrashHtml = `
           <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
               <h3>Vestibule Cleanliness</h3>
               <div style="padding:10px;">
-                <p style="margin-bottom:10px; font-weight:bold;">All trash collected from vestibule?</p>
-                <img src="${images.vestibuleTrashPhoto}" style="width:100%; max-width:400px; border-radius:4px; border:1px solid #ddd;" />
+                <p style="margin-bottom:5px; font-size: 14px;"><strong>Was there trash in vestibule when you arrived?</strong> ${String(checklistObj["Was there trash in vestibule when you arrived?"])}</p>
+                ${checklistObj["Was trash removed before you left?"] !== undefined ? `<p style="margin: 0; font-size: 14px;"><strong>Was trash removed before you left?</strong> ${String(checklistObj["Was trash removed before you left?"])}</p>` : ''}
+                ${checklistObj["Was trash removed before you left?_COMMENT"] !== undefined ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: red;">⚠️ ${String(checklistObj["Was trash removed before you left?_COMMENT"])}</p>` : ''}
               </div>
           </div>
         `;

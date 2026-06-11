@@ -214,7 +214,7 @@ export default function Dashboard() {
     setTackleBoxesIncluded(null);
     setTackleBoxDeliveries([]);
     setMedReturnData({ hadReturns: null, reason: "", facilityPatient: "", handedToPharmacy: null, needsRefrigeration: null, placedInFridge: null });
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, fuelGauge: null });
     localStorage.removeItem("tripLogFormState");
     clearImagesFromDB();
   }, []);
@@ -271,10 +271,8 @@ export default function Dashboard() {
     driverRearTire: File | null;
     passengerRearTire: File | null;
     frontSeat: File | null;
-    deliveryTrackLoginScreen: File | null;
     fuelGauge: File | null;
-    vestibuleTrashPhoto: File | null;
-  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
+  }>({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, fuelGauge: null });
 
   const [compressing, setCompressing] = useState<Record<string, boolean>>({});
 
@@ -552,7 +550,7 @@ export default function Dashboard() {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-      deliveryTrackLoginScreen: "Delivery Track Login Screen",
+
       fuelGauge: "Fuel Gauge",
       vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
@@ -565,7 +563,7 @@ export default function Dashboard() {
     if (log.images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-      const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+      const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
 
       if (log.images.vestibuleTrashPhoto) {
         vestibuleTrashHtml = `
@@ -759,7 +757,7 @@ export default function Dashboard() {
     setOdometer(log.odometer?.toString() || "");
     setNotes(log.notes || "");
     setMedReturnData((log.checklist["Med Returns"] as MedReturn) || { hadReturns: null, reason: "", facilityPatient: "", handedToPharmacy: null, needsRefrigeration: null, placedInFridge: null });
-    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, deliveryTrackLoginScreen: null, fuelGauge: null, vestibuleTrashPhoto: null });
+    setImageFiles({ front: null, back: null, trunk: null, driverSide: null, passengerSide: null, rear: null, driverFrontTire: null, passengerFrontTire: null, driverRearTire: null, passengerRearTire: null, frontSeat: null, fuelGauge: null });
 
     const answers: Record<string, string> = {};
     const comments: Record<string, string> = {};
@@ -860,7 +858,7 @@ export default function Dashboard() {
 
   const handleChecklistChange = (question: string, value: string) => setChecklistData(prev => ({ ...prev, [question]: value }));
   const handleCommentChange = (question: string, comment: string) => setChecklistComments(prev => ({ ...prev, [question]: comment }));
-  const handleFileChange = async (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'deliveryTrackLoginScreen' | 'fuelGauge' | 'vestibuleTrashPhoto', file: File | null) => {
+  const handleFileChange = async (key: 'front' | 'frontSeat' | 'back' | 'trunk' | 'driverSide' | 'passengerSide' | 'rear' | 'driverFrontTire' | 'passengerFrontTire' | 'driverRearTire' | 'passengerRearTire' | 'fuelGauge', file: File | null) => {
     if (!file) {
       setImageFiles(prev => ({ ...prev, [key]: null }));
       saveImageToDB(key, null);
@@ -955,6 +953,10 @@ export default function Dashboard() {
 
       if (tripType === 'Post-Trip') {
         finalChecklist["Med Returns"] = medReturnData;
+      }
+
+      if (finalChecklist["Was there trash in vestibule when you arrived?"] !== "Yes") {
+        delete finalChecklist["Was trash removed before you left?"];
       }
   
       const baseData = {
@@ -1105,6 +1107,55 @@ export default function Dashboard() {
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
+
+  const renderVestibuleCleanliness = () => (
+    <div className="bg-blue-50/50 p-4 md:p-6 rounded-xl border border-blue-100 mb-6">
+      <h3 className="text-lg font-bold text-gray-800 mb-2">Vestibule Cleanliness</h3>
+      <div className="bg-white p-4 rounded border border-gray-200 flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <span className="block text-sm font-medium text-gray-700">Was there trash in vestibule when you arrived?</span>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="vestibuleTrashArrived" value="Yes" checked={checklistData["Was there trash in vestibule when you arrived?"] === "Yes"} onChange={() => handleChecklistChange("Was there trash in vestibule when you arrived?", "Yes")} className="accent-green-600 w-4 h-4" required />
+              <span className="text-sm">Yes</span>
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="vestibuleTrashArrived" value="No" checked={checklistData["Was there trash in vestibule when you arrived?"] === "No"} onChange={() => handleChecklistChange("Was there trash in vestibule when you arrived?", "No")} className="accent-green-600 w-4 h-4" required />
+              <span className="text-sm">No</span>
+            </label>
+          </div>
+        </div>
+        {checklistData["Was there trash in vestibule when you arrived?"] === "Yes" && (
+          <div className="flex flex-col gap-2 pt-2 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+              <span className="block text-sm font-medium text-gray-700">Was trash removed before you left?</span>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="vestibuleTrashRemoved" value="Yes" checked={checklistData["Was trash removed before you left?"] === "Yes"} onChange={() => handleChecklistChange("Was trash removed before you left?", "Yes")} className="accent-green-600 w-4 h-4" required />
+                  <span className="text-sm">Yes</span>
+                </label>
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" name="vestibuleTrashRemoved" value="No" checked={checklistData["Was trash removed before you left?"] === "No"} onChange={() => handleChecklistChange("Was trash removed before you left?", "No")} className="accent-red-600 w-4 h-4" required />
+                  <span className="text-sm">No</span>
+                </label>
+              </div>
+            </div>
+            {checklistData["Was trash removed before you left?"] === "No" && (
+              <div className="pt-2 animate-in fade-in slide-in-from-top-2">
+                <input 
+                  type="text" 
+                  placeholder="Reason for not removing trash (Optional)" 
+                  value={checklistComments["Was trash removed before you left?"] || ""} 
+                  onChange={(e) => handleCommentChange("Was trash removed before you left?", e.target.value)} 
+                  className="border p-2 rounded w-full bg-red-50 focus:bg-white" 
+                />
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto bg-gray-50  min-h-screen transition-colors">
@@ -1421,6 +1472,8 @@ export default function Dashboard() {
 
             <hr className="border-gray-200 " />
             
+            {tripType === 'Pre-Trip' && renderVestibuleCleanliness()}
+
             <div>
                <h3 className="text-lg font-bold text-gray-800  mb-4">Inspection Checklist</h3>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1493,19 +1546,6 @@ export default function Dashboard() {
                               </label>
                             </div>
                           </div>
-
-                          {question === "Completely Logged off Scanner" && answer === "Yes" && (
-                            <div className="mt-2 p-3 bg-blue-50/50 border border-blue-200 rounded-lg animate-in fade-in slide-in-from-top-1">
-                              <span className="block text-[10px] font-bold text-blue-700 uppercase mb-2">📸 Photo of Delivery Track Login Screen (Required)</span>
-                              <ImageUploadInput 
-                                onChange={(file) => handleFileChange('deliveryTrackLoginScreen', file)} 
-                                file={imageFiles.deliveryTrackLoginScreen} 
-                                loading={compressing.deliveryTrackLoginScreen}
-                                required={tripType === 'Post-Trip' && !editingLog?.images?.deliveryTrackLoginScreen} 
-                              />
-                              {editingLog?.images?.deliveryTrackLoginScreen && <a href={editingLog.images.deliveryTrackLoginScreen} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                            </div>
-                          )}
 
                           {showComment && (
                             <div className="mt-1 animate-in fade-in slide-in-from-top-1">
@@ -1995,19 +2035,7 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-blue-50/50 p-4 md:p-6 rounded-xl border border-blue-100">
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Vestibule Cleanliness</h3>
-              <div className="bg-white p-4 rounded border border-gray-200">
-                <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule? (Photo Required)</span>
-                <ImageUploadInput
-                  onChange={(file) => handleFileChange('vestibuleTrashPhoto', file)} 
-                  file={imageFiles.vestibuleTrashPhoto} 
-                  loading={compressing.vestibuleTrashPhoto}
-                  required={!editingLog?.images?.vestibuleTrashPhoto} 
-                />
-                {editingLog?.images?.vestibuleTrashPhoto && <a href={editingLog.images.vestibuleTrashPhoto} target="_blank" className="text-xs text-blue-600 mt-2 block underline">View Current Image</a>}
-              </div>
-            </div>
+            {tripType === 'Post-Trip' && renderVestibuleCleanliness()}
 
             <hr className="border-gray-200 " />
             

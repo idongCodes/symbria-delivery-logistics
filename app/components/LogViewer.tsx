@@ -112,14 +112,14 @@ export default function LogViewer({ log }: { log: LogData }) {
     frontSeat: "Front Seat Area",
     back: "Back Seat",
     trunk: "Trunk",
-    deliveryTrackLoginScreen: "Delivery Track Login Screen",
+
     fuelGauge: "Fuel Gauge",
     vestibuleTrashPhoto: "Vestibule Trash Collection",
   };
 
   const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
   const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
-  const interiorKeys = ["frontSeat", "back", "trunk", "deliveryTrackLoginScreen", "fuelGauge"];
+  const interiorKeys = ["frontSeat", "back", "trunk", "fuelGauge"];
 
   const renderImageSection = (keys: string[], title: string) => {
     const hasImages = keys.some(key => images[key]);
@@ -430,20 +430,27 @@ export default function LogViewer({ log }: { log: LogData }) {
       </div>
 
       {/* VESTIBULE CLEANLINESS */}
-      {images.vestibuleTrashPhoto && (
+      {(checklist["Was there trash in vestibule when you arrived?"] !== undefined) && (
         <div className="animate-in fade-in slide-in-from-top-4">
           <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Vestibule Cleanliness</h3>
-          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col md:flex-row gap-6 items-center">
-            <div className="flex-1">
-              <span className="block text-sm font-semibold text-gray-700 mb-2">All trash collected from vestibule?</span>
-              <p className="text-xs text-gray-500 italic">Photo evidence provided below (Click to enlarge)</p>
+          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-4">
+            <div className="flex justify-between">
+              <span className="text-sm font-semibold text-gray-700">Was there trash in vestibule when you arrived?</span>
+              <span className="text-sm font-medium">{String(checklist["Was there trash in vestibule when you arrived?"])}</span>
             </div>
-            <div 
-              className="w-full md:w-64 aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 cursor-zoom-in group"
-              onClick={() => setSelectedImage(images.vestibuleTrashPhoto)}
-            >
-              <img src={images.vestibuleTrashPhoto} alt="Vestibule Trash" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            </div>
+            {checklist["Was trash removed before you left?"] !== undefined && (
+              <div className="flex flex-col gap-1 pt-2 border-t border-gray-100">
+                <div className="flex justify-between">
+                  <span className="text-sm font-semibold text-gray-700">Was trash removed before you left?</span>
+                  <span className="text-sm font-medium">{String(checklist["Was trash removed before you left?"])}</span>
+                </div>
+                {!!checklist["Was trash removed before you left?_COMMENT"] && (
+                  <div className="mt-1">
+                    <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-1 rounded block w-fit">⚠️ {String(checklist["Was trash removed before you left?_COMMENT"])}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
