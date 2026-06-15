@@ -142,6 +142,55 @@ export default function Home() {
         </div>
       </section>
 
+      {/* HOW TO USE SECTION */}
+      <section className="bg-white py-20 px-6 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">How to Use the App</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto">A quick guide to completing your daily inspections and route tracking.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative">
+            {/* Connecting Line for Desktop */}
+            <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-blue-100 z-0"></div>
+
+            {/* Step 1 */}
+            <div className="flex flex-col items-center text-center relative z-10">
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl mb-6 shadow-md border-4 border-blue-50 text-blue-600">
+                📝
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">1. Pre-Trip Inspection</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                Tap <strong>Complete Pre/Post-Trip</strong>. Select &quot;Pre-Trip&quot;, record your starting odometer, complete the safety checklist, and capture mandatory photos before driving.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="flex flex-col items-center text-center relative z-10">
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl mb-6 shadow-md border-4 border-blue-50 text-blue-600">
+                🚚
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">2. Run Your Route</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                Deliver your assigned routes. Use the <strong>Med Carts</strong> or <strong>Contacts</strong> sections to navigate stops and contact facilities if needed.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="flex flex-col items-center text-center relative z-10">
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl mb-6 shadow-md border-4 border-blue-50 text-blue-600">
+                ✅
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-3">3. Post-Trip Inspection</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                At the end of your shift, submit a &quot;Post-Trip&quot; log. Document your final mileage, report any new defects, and finalize your shift securely.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* 4. FEEDBACK SECTION */}
       <section id="contact" className="w-[90%] mx-auto bg-white  rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
         <div className="max-w-2xl mx-auto text-center">
