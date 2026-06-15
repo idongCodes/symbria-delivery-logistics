@@ -192,7 +192,7 @@ export default function Home() {
       </section>
 
       {/* 4. FEEDBACK SECTION */}
-      <section id="contact" className="w-[90%] mx-auto bg-white  rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
+      <section id="contact" className="w-[90%] mx-auto bg-white mt-16 rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-800  mb-4">We Value Your Feedback</h2>
           <p className="text-gray-500  mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
