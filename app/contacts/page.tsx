@@ -69,6 +69,7 @@ type Profile = {
 const PROFILES_DATA: Profile[] = [
   { id: "27b38b60-3c77-43e2-8052-fca71495d3a0", first_name: "Richard", last_name: "Essien", email: "ressien1@symbria.com", role: "Admin", job_title: "Delivery Driver", phone: "+17743126471" },
   { id: "39c7ffa7-646d-4f66-b986-fba5166267a6", first_name: "Richard", last_name: "Essien", email: "idongesit_essien@ymail.com", role: "Admin", job_title: null, phone: "+17743126471" },
+  { id: "74a3b563-6edd-42e9-9bbb-17568209f303", first_name: "Henry", last_name: "Edu", email: "hedusei@symbria.com", role: "Driver", job_title: "Delivery Driver", phone: "7742535472" },
   { id: "a95812b1-ee0c-49de-a08f-bf837ff31ad4", first_name: "Lester", last_name: "Holden", email: "lholden@symbria.com", role: "Management", job_title: "Logistics Lead", phone: "17745710527" },
   { id: "bfdcfa68-c121-47e2-a3a6-beb3646d0bbf", first_name: "Angelina", last_name: "Bermudez", email: "abermudez@symbria.com", role: "Driver", job_title: "Delivery Driver", phone: "5406640494" },
   { id: "1e740275-02a1-4edd-8ec4-f6797449a036", first_name: "Nicolas", last_name: "Guastini", email: "nguastini@symbria.com", role: "Driver", job_title: "Delivery Driver", phone: "8603825753" },
