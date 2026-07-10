@@ -602,9 +602,11 @@ export default function Dashboard() {
         return html;
       }
 
-      exteriorImagesHtml = generateImageHtml(exteriorKeys, "Exterior Photos");
-      tireImagesHtml = generateImageHtml(tireKeys, "Tire Photos");
-      interiorImagesHtml = generateImageHtml(interiorKeys, "Interior Photos");
+      if (log.trip_type === 'Post-Trip') {
+        exteriorImagesHtml = generateImageHtml(exteriorKeys, "Exterior Photos");
+        tireImagesHtml = generateImageHtml(tireKeys, "Tire Photos");
+        interiorImagesHtml = generateImageHtml(interiorKeys, "Interior Photos");
+      }
     }
 
     printWindow.document.write(`
@@ -1947,10 +1949,12 @@ export default function Dashboard() {
                           </div>
                         </div>
             
-                        <hr className="border-gray-200 " />
-                        
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-800  mb-2">Tire Photos (Required)</h3>
+                        {tripType === 'Post-Trip' && (
+                          <>
+                            <hr className="border-gray-200 " />
+                            
+                            <div>
+                              <h3 className="text-lg font-bold text-gray-800  mb-2">Tire Photos (Required)</h3>
                           <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
@@ -2026,6 +2030,8 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </>
+        )}
 
             {tripType === 'Post-Trip' && renderVestibuleCleanliness()}
 

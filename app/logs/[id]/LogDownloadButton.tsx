@@ -316,9 +316,11 @@ export default function LogDownloadButton({ log }: { log: any }) {
         return html;
       }
 
-      exteriorImagesHtml = generateImageHtml(exteriorKeys, "Exterior Photos");
-      tireImagesHtml = generateImageHtml(tireKeys, "Tire Photos");
-      interiorImagesHtml = generateImageHtml(interiorKeys, "Interior Photos");
+      if (log.trip_type === 'Post-Trip') {
+        exteriorImagesHtml = generateImageHtml(exteriorKeys, "Exterior Photos");
+        tireImagesHtml = generateImageHtml(tireKeys, "Tire Photos");
+        interiorImagesHtml = generateImageHtml(interiorKeys, "Interior Photos");
+      }
     }
 
     printWindow.document.write(`
