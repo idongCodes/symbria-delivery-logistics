@@ -462,9 +462,13 @@ export default function LogViewer({ log }: { log: LogData }) {
       )}
 
       {/* IMAGES */}
-      {renderImageSection(exteriorKeys, "Exterior Photos")}
-      {renderImageSection(tireKeys, "Tire Photos")}
-      {renderImageSection(interiorKeys, "Interior Photos")}
+      {log.trip_type === 'Post-Trip' && (
+        <>
+          {renderImageSection(exteriorKeys, "Exterior Photos")}
+          {renderImageSection(tireKeys, "Tire Photos")}
+          {renderImageSection(interiorKeys, "Interior Photos")}
+        </>
+      )}
     </div>
   );
 }

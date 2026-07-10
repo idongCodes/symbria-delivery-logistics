@@ -249,9 +249,11 @@ export async function POST(req: Request) {
         return count > 0 ? html : "";
       }
 
-      exteriorImagesHtml = generateImageHtml(exteriorKeys);
-      tireImagesHtml = generateImageHtml(tireKeys);
-      interiorImagesHtml = generateImageHtml(interiorKeys);
+      if (trip_type === 'Post-Trip') {
+        exteriorImagesHtml = generateImageHtml(exteriorKeys);
+        tireImagesHtml = generateImageHtml(tireKeys);
+        interiorImagesHtml = generateImageHtml(interiorKeys);
+      }
     }
 
     // --- 4. Format Share Link ---
