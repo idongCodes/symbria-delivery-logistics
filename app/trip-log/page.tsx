@@ -1007,7 +1007,7 @@ export default function Dashboard() {
         // Trigger update email
         if (changes.length > 0) {
           const token = await generateShareToken(editingLog.id);
-          const origin = typeof window !== 'undefined' ? window.location.origin : 'https://symbria-delivery-logistics.vercel.app';
+          const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
           const shareLink = `${origin}/share/${token}`;
 
           await fetch('/api/email-log', {
@@ -1067,7 +1067,7 @@ export default function Dashboard() {
 
         // Trigger email notification first so it ALWAYS sends before alert/navigate
         const token = await generateShareToken(newLog.id);
-        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://symbria-delivery-logistics.vercel.app';
+        const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
         const shareLink = `${origin}/share/${token}`;
 
         await fetch('/api/email-log', {
