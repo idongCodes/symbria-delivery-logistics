@@ -549,30 +549,16 @@ export default function Dashboard() {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-      vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
 
     let exteriorImagesHtml = "";
     let tireImagesHtml = "";
     let interiorImagesHtml = "";
-    let vestibuleTrashHtml = "";
 
     if (log.images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
       const interiorKeys = ["frontSeat", "back", "trunk"];
-
-      if (log.images.vestibuleTrashPhoto) {
-        vestibuleTrashHtml = `
-          <div class="section-box page-break-inside-avoid" style="margin-top:20px;">
-              <h3>Vestibule Cleanliness</h3>
-              <div style="padding:10px;">
-                <p style="margin-bottom:10px; font-weight:bold;">All trash collected from vestibule?</p>
-                <img src="${log.images.vestibuleTrashPhoto}" style="width:100%; max-width:400px; border-radius:4px; border:1px solid #ddd;" />
-              </div>
-          </div>
-        `;
-      }
 
       const generateImageHtml = (keys: string[], title: string) => {
         let html = '';
@@ -678,7 +664,6 @@ export default function Dashboard() {
           ${medReturnsHtml}
           ${tackleBoxHtml}
           ${tireHtml}
-          ${vestibuleTrashHtml}
 
           <h3>Inspection Checklist</h3>
           <table>
@@ -954,9 +939,7 @@ export default function Dashboard() {
         finalChecklist["Med Returns"] = medReturnData;
       }
 
-      if (finalChecklist["Was there trash in vestibule when you arrived?"] !== "Yes") {
-        delete finalChecklist["Was trash removed before you left?"];
-      }
+
   
       const baseData = {
         user_id: userProfile?.id || "e04fde02-765b-40d0-8cdb-3449b2b21eca", // Use Guest Driver ID for public forms
@@ -1115,54 +1098,7 @@ export default function Dashboard() {
 
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
 
-  const renderVestibuleCleanliness = () => (
-    <div className="bg-blue-50/50 p-4 md:p-6 rounded-xl border border-blue-100 mb-6">
-      <h3 className="text-lg font-bold text-gray-800 mb-2">Vestibule Cleanliness</h3>
-      <div className="bg-white p-4 rounded border border-gray-200 flex flex-col gap-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-          <span className="block text-sm font-medium text-gray-700">Was there trash in vestibule when you arrived?</span>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-1 cursor-pointer">
-              <input type="radio" name="vestibuleTrashArrived" value="Yes" checked={checklistData["Was there trash in vestibule when you arrived?"] === "Yes"} onChange={() => handleChecklistChange("Was there trash in vestibule when you arrived?", "Yes")} className="accent-green-600 w-4 h-4" required />
-              <span className="text-sm">Yes</span>
-            </label>
-            <label className="flex items-center gap-1 cursor-pointer">
-              <input type="radio" name="vestibuleTrashArrived" value="No" checked={checklistData["Was there trash in vestibule when you arrived?"] === "No"} onChange={() => handleChecklistChange("Was there trash in vestibule when you arrived?", "No")} className="accent-green-600 w-4 h-4" required />
-              <span className="text-sm">No</span>
-            </label>
-          </div>
-        </div>
-        {checklistData["Was there trash in vestibule when you arrived?"] === "Yes" && (
-          <div className="flex flex-col gap-2 pt-2 border-t border-gray-100 animate-in fade-in slide-in-from-top-2">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <span className="block text-sm font-medium text-gray-700">Was trash removed before you left?</span>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input type="radio" name="vestibuleTrashRemoved" value="Yes" checked={checklistData["Was trash removed before you left?"] === "Yes"} onChange={() => handleChecklistChange("Was trash removed before you left?", "Yes")} className="accent-green-600 w-4 h-4" required />
-                  <span className="text-sm">Yes</span>
-                </label>
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input type="radio" name="vestibuleTrashRemoved" value="No" checked={checklistData["Was trash removed before you left?"] === "No"} onChange={() => handleChecklistChange("Was trash removed before you left?", "No")} className="accent-red-600 w-4 h-4" required />
-                  <span className="text-sm">No</span>
-                </label>
-              </div>
-            </div>
-            {checklistData["Was trash removed before you left?"] === "No" && (
-              <div className="pt-2 animate-in fade-in slide-in-from-top-2">
-                <input 
-                  type="text" 
-                  placeholder="Reason for not removing trash (Optional)" 
-                  value={checklistComments["Was trash removed before you left?"] || ""} 
-                  onChange={(e) => handleCommentChange("Was trash removed before you left?", e.target.value)} 
-                  className="border p-2 rounded w-full bg-red-50 focus:bg-white" 
-                />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto bg-gray-50  min-h-screen transition-colors">
@@ -1478,8 +1414,6 @@ export default function Dashboard() {
             </label>
 
             <hr className="border-gray-200 " />
-            
-            {tripType === 'Pre-Trip' && renderVestibuleCleanliness()}
 
             <div>
                <h3 className="text-lg font-bold text-gray-800  mb-4">Inspection Checklist</h3>
@@ -2033,7 +1967,7 @@ export default function Dashboard() {
           </>
         )}
 
-            {tripType === 'Post-Trip' && renderVestibuleCleanliness()}
+
 
             <hr className="border-gray-200 " />
             

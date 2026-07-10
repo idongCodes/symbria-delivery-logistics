@@ -112,7 +112,6 @@ export default function LogViewer({ log }: { log: LogData }) {
     frontSeat: "Front Seat Area",
     back: "Back Seat",
     trunk: "Trunk",
-    vestibuleTrashPhoto: "Vestibule Trash Collection",
     };
 
     const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
@@ -427,31 +426,6 @@ export default function LogViewer({ log }: { log: LogData }) {
         </div>
       </div>
 
-      {/* VESTIBULE CLEANLINESS */}
-      {(checklist["Was there trash in vestibule when you arrived?"] !== undefined) && (
-        <div className="animate-in fade-in slide-in-from-top-4">
-          <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Vestibule Cleanliness</h3>
-          <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm flex flex-col gap-4">
-            <div className="flex justify-between">
-              <span className="text-sm font-semibold text-gray-700">Was there trash in vestibule when you arrived?</span>
-              <span className="text-sm font-medium">{String(checklist["Was there trash in vestibule when you arrived?"])}</span>
-            </div>
-            {checklist["Was trash removed before you left?"] !== undefined && (
-              <div className="flex flex-col gap-1 pt-2 border-t border-gray-100">
-                <div className="flex justify-between">
-                  <span className="text-sm font-semibold text-gray-700">Was trash removed before you left?</span>
-                  <span className="text-sm font-medium">{String(checklist["Was trash removed before you left?"])}</span>
-                </div>
-                {!!checklist["Was trash removed before you left?_COMMENT"] && (
-                  <div className="mt-1">
-                    <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-1 rounded block w-fit">⚠️ {String(checklist["Was trash removed before you left?_COMMENT"])}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ADDITIONAL NOTES */}
       {log.notes && (

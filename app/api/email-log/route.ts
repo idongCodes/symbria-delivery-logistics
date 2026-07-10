@@ -204,29 +204,16 @@ export async function POST(req: Request) {
       frontSeat: "Front Seat Area",
       back: "Back Seat",
       trunk: "Trunk",
-      vestibuleTrashPhoto: "Vestibule Trash Collection",
       };
 
       let exteriorImagesHtml = "";
       let tireImagesHtml = "";
       let interiorImagesHtml = "";
-      let vestibuleTrashHtml = "";
 
       if (images) {
       const exteriorKeys = ["front", "driverSide", "rear", "passengerSide"];
       const tireKeys = ["driverFrontTire", "passengerFrontTire", "driverRearTire", "passengerRearTire"];
       const interiorKeys = ["frontSeat", "back", "trunk"];
-
-      if (checklistObj["Was there trash in vestibule when you arrived?"] !== undefined) {
-        vestibuleTrashHtml = `
-          <div style="margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9fafb;">
-            <h3 style="margin: 0 0 10px 0; color: #374151; font-size: 16px;">Vestibule Cleanliness</h3>
-            <p style="margin: 0 0 5px 0; font-size: 14px;"><strong>Was there trash in vestibule when you arrived?</strong> ${String(checklistObj["Was there trash in vestibule when you arrived?"])}</p>
-            ${checklistObj["Was trash removed before you left?"] !== undefined ? `<p style="margin: 0; font-size: 14px;"><strong>Was trash removed before you left?</strong> ${String(checklistObj["Was trash removed before you left?"])}</p>` : ''}
-            ${checklistObj["Was trash removed before you left?_COMMENT"] !== undefined ? `<p style="margin: 5px 0 0 0; font-size: 12px; color: red; background: #fef2f2; display: inline-block; padding: 2px 6px; border-radius: 4px;">⚠️ ${String(checklistObj["Was trash removed before you left?_COMMENT"])}</p>` : ''}
-          </div>
-        `;
-      }
 
 
       const generateImageHtml = (keys: string[]) => {
@@ -298,7 +285,7 @@ export async function POST(req: Request) {
 
         ${keySection}
 
-        ${vestibuleTrashHtml}
+
 
         <h3 style="background:#f3f4f6; padding:10px;">Inspection Checklist</h3>
         <table width="100%" cellspacing="0" style="font-size: 14px;">
