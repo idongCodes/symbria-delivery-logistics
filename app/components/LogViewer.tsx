@@ -69,6 +69,7 @@ interface LogData {
   checklist: unknown;
   images: unknown;
   driver_name?: string | null;
+  edit_history?: unknown;
 }
 
 export default function LogViewer({ log }: { log: LogData }) {
@@ -442,6 +443,45 @@ export default function LogViewer({ log }: { log: LogData }) {
           {renderImageSection(tireKeys, "Tire Photos")}
           {renderImageSection(interiorKeys, "Interior Photos")}
         </>
+      )}
+
+      {/* EDIT HISTORY */}
+      {Array.isArray(log.edit_history) && log.edit_history.length > 0 && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-6">
+          <h4 className="text-sm font-bold text-purple-800 uppercase tracking-wide mb-3">Edit History</h4>
+          <div className="flex flex-col gap-3">
+            {log.edit_history.map((edit: any, idx: number) => (
+              <div key={idx} className="bg-white p-3 rounded shadow-sm border border-purple-100 text-sm">
+                <div className="flex justify-between items-center mb-2 border-b border-purple-50 pb-2">
+                  <span className="font-semibold text-purple-900">Edited by {edit.editor_name || 'Unknown'}</span>
+                  <span className="text-xs text-purple-600 font-medium">
+                    {new Date(edit.edited_at).toLocaleString()}
+                  </span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-xs text-left">
+                    <thead className="text-purple-800 bg-purple-50">
+                      <tr>
+                        <th className="px-2 py-1 border-b border-purple-100">Field</th>
+                        <th className="px-2 py-1 border-b border-purple-100">Old Value</th>
+                        <th className="px-2 py-1 border-b border-purple-100">New Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(edit.changes) && edit.changes.map((c: any, cIdx: number) => (
+                        <tr key={cIdx} className="border-b border-gray-50 last:border-0">
+                          <td className="px-2 py-1 font-medium">{c.field}</td>
+                          <td className="px-2 py-1 text-red-600 bg-red-50/50">{String(c.old || 'N/A')}</td>
+                          <td className="px-2 py-1 text-green-700 bg-green-50/50">{String(c.new || 'N/A')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
