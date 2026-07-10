@@ -89,6 +89,7 @@ type TripLog = {
   checklist: Record<string, unknown>; 
   images: Record<string, string>; 
   driver_name?: string; 
+  edit_history?: any[];
 };
 
 type UserProfile = {
@@ -965,15 +966,7 @@ export default function Dashboard() {
           setUploadProgress(prev => ({ ...prev, current: prev.current + 1 }));
         }
       
-        const response = await supabase.from('trip_logs').update({
-          ...baseData,
-          images: imageUrls,
-          edit_count: editingLog.edit_count + 1,
-        }).eq('id', editingLog.id);
-      
-        if (response.error) throw response.error;
-      
-        // --- Calculate Changes for Update Email ---
+        // --- Calculate Changes for Update Email & History ---
         const changes: { field: string, old: any, new: any }[] = [];
 
         if (editingLog.route_id !== baseData.route_id) changes.push({ field: "Route", old: editingLog.route_id, new: baseData.route_id });
@@ -992,6 +985,24 @@ export default function Dashboard() {
             changes.push({ field: key, old: oldChecklist[key], new: newChecklist[key] });
           }
         });
+
+        const newEditHistoryEntry = {
+            editor_name: `${userProfile?.firstName || ''} ${userProfile?.lastName || ''}`.trim() || 'System',
+            edited_at: new Date().toISOString(),
+            changes: changes
+        };
+
+        const existingHistory = Array.isArray(editingLog.edit_history) ? editingLog.edit_history : [];
+        const newEditHistory = changes.length > 0 ? [...existingHistory, newEditHistoryEntry] : existingHistory;
+
+        const response = await supabase.from('trip_logs').update({
+          ...baseData,
+          images: imageUrls,
+          edit_count: editingLog.edit_count + 1,
+          edit_history: newEditHistory
+        }).eq('id', editingLog.id);
+      
+        if (response.error) throw response.error;
 
         // Trigger update email
         if (changes.length > 0) {
@@ -1355,11 +1366,18 @@ export default function Dashboard() {
                       )}
                       <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
                         <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Type</div>
-                        <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800  ' : 'bg-orange-100 text-orange-800  '
-                        }`}>
-                          {log.trip_type}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800  ' : 'bg-orange-100 text-orange-800  '
+                          }`}>
+                            {log.trip_type}
+                          </span>
+                          {log.edit_count > 0 && (
+                            <span className="whitespace-nowrap px-2 inline-flex text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200" title={`Edited ${log.edit_count} time(s)`}>
+                              Edited
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
                         <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Route</div>

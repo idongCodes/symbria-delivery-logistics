@@ -36,6 +36,7 @@ model TripLog {
   images      Json?    
   driver_name String?
   share_token String? @unique
+  edit_history Json?
 
   @@map("trip_logs")
 }
