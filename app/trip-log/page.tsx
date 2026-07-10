@@ -973,6 +973,47 @@ export default function Dashboard() {
       
         if (response.error) throw response.error;
       
+        // --- Calculate Changes for Update Email ---
+        const changes: { field: string, old: any, new: any }[] = [];
+
+        if (editingLog.route_id !== baseData.route_id) changes.push({ field: "Route", old: editingLog.route_id, new: baseData.route_id });
+        if (editingLog.odometer !== baseData.odometer) changes.push({ field: "Odometer", old: editingLog.odometer, new: baseData.odometer });
+        if (editingLog.notes !== baseData.notes) changes.push({ field: "Notes", old: editingLog.notes, new: baseData.notes });
+        if (editingLog.trip_type !== baseData.trip_type) changes.push({ field: "Trip Type", old: editingLog.trip_type, new: baseData.trip_type });
+        
+        // Checklist diff
+        const oldChecklist = (editingLog.checklist as Record<string, any>) || {};
+        const newChecklist = baseData.checklist as Record<string, any>;
+        const allKeys = Array.from(new Set([...Object.keys(oldChecklist), ...Object.keys(newChecklist)]));
+        allKeys.forEach(key => {
+          const oldVal = typeof oldChecklist[key] === 'object' ? JSON.stringify(oldChecklist[key]) : oldChecklist[key];
+          const newVal = typeof newChecklist[key] === 'object' ? JSON.stringify(newChecklist[key]) : newChecklist[key];
+          if (oldVal !== newVal) {
+            changes.push({ field: key, old: oldChecklist[key], new: newChecklist[key] });
+          }
+        });
+
+        // Trigger update email
+        if (changes.length > 0) {
+          const token = await generateShareToken(editingLog.id);
+          const origin = typeof window !== 'undefined' ? window.location.origin : 'https://symbria-delivery-logistics.vercel.app';
+          const shareLink = `${origin}/share/${token}`;
+
+          await fetch('/api/email-log', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  isUpdate: true,
+                  changes: changes,
+                  driver_name: baseData.driver_name,
+                  trip_type: baseData.trip_type,
+                  route_id: baseData.route_id,
+                  odometer: baseData.odometer,
+                  shareLink
+              })
+          }).catch(err => console.error("Update Email trigger failed:", err));
+        }
+
         showModal({
           title: "Update Successful",
           message: "The trip log has been updated successfully.",

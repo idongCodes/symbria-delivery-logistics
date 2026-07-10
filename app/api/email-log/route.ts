@@ -13,8 +13,89 @@ export async function POST(req: Request) {
       checklist, 
       images, 
       created_at,
-      shareLink
+      shareLink,
+      isUpdate,
+      changes
     } = body;
+
+    // --- 0. Handle Update Email Branch ---
+    if (isUpdate) {
+      let changesHtml = "";
+      if (changes && Array.isArray(changes) && changes.length > 0) {
+        changesHtml = `
+          <table width="100%" cellspacing="0" cellpadding="10" style="font-size: 14px; margin-top: 20px; border: 1px solid #e5e7eb; border-collapse: collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="text-align:left; border: 1px solid #e5e7eb;">Field</th>
+                <th style="text-align:left; border: 1px solid #e5e7eb;">Old Value</th>
+                <th style="text-align:left; border: 1px solid #e5e7eb;">New Value</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        changes.forEach((change: any) => {
+          changesHtml += `
+            <tr>
+              <td style="border: 1px solid #e5e7eb;"><strong>${change.field}</strong></td>
+              <td style="border: 1px solid #e5e7eb; color: #b91c1c; background: #fef2f2;">${String(change.old || 'N/A')}</td>
+              <td style="border: 1px solid #e5e7eb; color: #15803d; background: #f0fdf4;">${String(change.new || 'N/A')}</td>
+            </tr>
+          `;
+        });
+        changesHtml += `
+            </tbody>
+          </table>
+        `;
+      } else {
+        changesHtml = `<p>No fields were materially changed.</p>`;
+      }
+
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+          <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
+            Trip Log Updated
+          </h2>
+          <p>A trip log was recently updated by <strong>${driver_name || 'Driver'}</strong>.</p>
+          
+          <table width="100%" style="background:#f8fafc; padding:15px; border-radius:5px; margin-bottom:20px;">
+            <tr><td style="padding-bottom:5px;"><strong>Driver:</strong> ${driver_name || 'Unknown'}</td></tr>
+            <tr><td style="padding-bottom:5px;"><strong>Type:</strong> <span style="background:${trip_type === 'Pre-Trip' ? '#dbeafe' : '#fef3c7'}; padding:2px 6px; border-radius:4px;">${trip_type}</span></td></tr>
+            <tr><td style="padding-bottom:5px;"><strong>Route / Odo:</strong> ${route_id || 'N/A'} / ${odometer}</td></tr>
+          </table>
+
+          <h3 style="background:#f3f4f6; padding:10px;">Changed Fields</h3>
+          ${changesHtml}
+
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="${shareLink}" style="background-color: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 16px; display: inline-block;">View Updated Log</a>
+          </div>
+          
+          <p style="margin-top:30px; font-size:12px; color:#999; text-align:center;">
+            Automated message from Symbria Delivery Logistics System.
+          </p>
+        </div>
+      `;
+
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
+        to: 'idongesit_essien@ymail.com',
+        cc: 'lesterholden@icloud.com',
+        subject: `UPDATE: Trip Log - ${driver_name} - ${trip_type}`,
+        html: emailHtml,
+      });
+
+      return NextResponse.json({ success: true, message: "Update email sent successfully" }, { status: 200 });
+    }
 
     // --- 1. Format Checklist for Email ---
     // We'll convert the JSON checklist into HTML table rows
