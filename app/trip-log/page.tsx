@@ -1373,8 +1373,8 @@ export default function Dashboard() {
                             {log.trip_type}
                           </span>
                           {log.edit_count > 0 && (
-                            <span className="whitespace-nowrap px-2 inline-flex text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200" title={`Edited ${log.edit_count} time(s)`}>
-                              Edited
+                            <span className="whitespace-nowrap px-2 inline-flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200" title={`Edited ${log.edit_count} time(s)`}>
+                              Edited <InformationCircleIcon className="w-3 h-3" />
                             </span>
                           )}
                         </div>
