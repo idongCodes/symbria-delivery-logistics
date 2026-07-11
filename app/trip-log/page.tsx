@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
+import { deleteRoute } from "@/app/actions/route-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -156,6 +157,7 @@ export default function Dashboard() {
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1152,6 +1154,30 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
+  const handleDeleteRoute = (routeId: number) => {
+    showModal({
+      title: 'Delete Route',
+      message: 'Are you sure you want to completely delete and purge this route? This action cannot be undone.',
+      type: 'confirm',
+      confirmText: 'Delete Route',
+      onConfirm: async () => {
+        // Optimistic UI update
+        const previousRoutes = [...routeOptions];
+        setRouteOptions(routeOptions.filter(route => route.id !== routeId));
+        
+        const result = await deleteRoute(routeId);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to delete route',
+            type: 'error'
+          });
+          setRouteOptions(previousRoutes); // Revert optimistic update
+        }
+      }
+    });
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
 
 
@@ -1335,7 +1361,49 @@ export default function Dashboard() {
       {activeTab === 'route-management' && (userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Route/Location Management</h2>
-          <p className="text-gray-500 ">Route and Location management interface is under development.</p>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-800">Available Routes</h3>
+              <button className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                <PlusIcon className="w-4 h-4 stroke-2" />
+                Add Route
+              </button>
+            </div>
+            {routeOptions.length > 0 ? (
+              <div className="space-y-3">
+                {routeOptions.map((route) => (
+                  <div key={route.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                    <button 
+                      onClick={() => setExpandedRouteId(expandedRouteId === route.id ? null : route.id)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <span className="font-semibold text-gray-800">{route.name}</span>
+                      <ChevronDownIcon className={`w-5 h-5 text-gray-500 transition-transform ${expandedRouteId === route.id ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {expandedRouteId === route.id && (
+                      <div className="p-4 bg-white border-t border-gray-200 flex gap-3 animate-in slide-in-from-top-2">
+                        <button className="flex-1 py-2 px-3 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <UserPlusIcon className="w-4 h-4" /> Assign
+                        </button>
+                        <button className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <PencilSquareIcon className="w-4 h-4" /> Edit
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteRoute(route.id)}
+                          className="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                        >
+                          <TrashIcon className="w-4 h-4" /> Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">No routes currently available.</p>
+            )}
+          </div>
         </div>
       )}
 
