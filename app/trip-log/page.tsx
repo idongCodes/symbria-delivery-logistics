@@ -1399,14 +1399,23 @@ export default function Dashboard() {
                       className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
                       {editingRouteId === route.id ? (
-                        <input 
-                          type="text" 
-                          value={editingRouteName}
-                          onChange={(e) => setEditingRouteName(e.target.value)}
-                          onClick={(e) => e.stopPropagation()} // Prevent accordion toggle
-                          className="font-semibold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          autoFocus
-                        />
+                        <div className="relative w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="text" 
+                            value={editingRouteName}
+                            onChange={(e) => setEditingRouteName(e.target.value)}
+                            className="font-semibold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 pr-8 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            autoFocus
+                          />
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setEditingRouteId(null); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                            aria-label="Cancel edit"
+                          >
+                            <XCircleIcon className="w-5 h-5" />
+                          </button>
+                        </div>
                       ) : (
                         <span className="font-semibold text-gray-800">{route.name}</span>
                       )}
