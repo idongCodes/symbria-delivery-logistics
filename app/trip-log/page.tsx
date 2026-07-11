@@ -1554,6 +1554,27 @@ export default function Dashboard() {
               <p className="text-gray-500 italic">No routes currently available.</p>
             )}
           </div>
+
+          {/* --- AVAILABLE FACILITIES SECTION --- */}
+          <div className="mt-10 space-y-4 pt-8 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-800">Available Facilities</h3>
+              <button 
+                onClick={() => {}}
+                className="flex items-center gap-1.5 bg-purple-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors shadow-sm"
+              >
+                <PlusIcon className="w-4 h-4 stroke-2" />
+                Add Facility
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="border border-dashed border-gray-300 rounded-lg bg-gray-50 p-8 text-center">
+                <p className="text-gray-500 font-medium">No facilities available yet.</p>
+                <p className="text-gray-400 text-sm mt-1">Tap 'Add Facility' to create your first facility.</p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
