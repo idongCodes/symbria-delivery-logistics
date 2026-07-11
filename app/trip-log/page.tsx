@@ -104,9 +104,16 @@ type UserProfile = {
 };
 
 // Shape for Dynamic Routes
-type RouteOption = {
+interface RouteOption {
   id: number;
   name: string;
+}
+
+interface FacilityOption {
+  id: number;
+  name: string;
+  address: string | null;
+  phone: string | null;
 };
 
 type ModalConfig = {
@@ -155,6 +162,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
+  const [facilityOptions, setFacilityOptions] = useState<FacilityOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
@@ -792,6 +800,15 @@ export default function Dashboard() {
 
       if (routeError) console.error("Route Error:", routeError);
       if (routeData) setRouteOptions(routeData);
+
+      const { data: facilityData, error: facilityError } = await supabase
+        .from('facilities')
+        .select('id, name, address, phone')
+        .eq('active', true)
+        .order('name');
+        
+      if (facilityError) console.error("Facility Error:", facilityError);
+      if (facilityData) setFacilityOptions(facilityData);
 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { 
@@ -1569,10 +1586,30 @@ export default function Dashboard() {
             </div>
             
             <div className="space-y-3">
-              <div className="border border-dashed border-gray-300 rounded-lg bg-gray-50 p-8 text-center">
-                <p className="text-gray-500 font-medium">No facilities available yet.</p>
-                <p className="text-gray-400 text-sm mt-1">Tap 'Add Facility' to create your first facility.</p>
-              </div>
+              {facilityOptions.length > 0 ? (
+                facilityOptions.map(facility => (
+                  <div key={facility.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+                    <div>
+                      <span className="font-semibold text-gray-800 block">{facility.name}</span>
+                      <span className="text-sm text-gray-500 block">{facility.address || 'No address provided'}</span>
+                      <span className="text-xs text-blue-600 block mt-0.5">{facility.phone || 'No phone provided'}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded transition-colors">
+                        <PencilSquareIcon className="w-4 h-4" />
+                      </button>
+                      <button className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded transition-colors">
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="border border-dashed border-gray-300 rounded-lg bg-gray-50 p-8 text-center">
+                  <p className="text-gray-500 font-medium">No facilities available yet.</p>
+                  <p className="text-gray-400 text-sm mt-1">Tap 'Add Facility' to create your first facility.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
