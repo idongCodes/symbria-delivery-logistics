@@ -156,7 +156,7 @@ export default function Dashboard() {
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
+  const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
