@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
+import { deleteRoute } from "@/app/actions/route-actions";
 import imageCompression from "browser-image-compression";
 import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
@@ -1153,6 +1154,19 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
+  const handleDeleteRoute = async (routeId: number) => {
+    if (!confirm('Are you sure you want to completely delete and purge this route? This action cannot be undone.')) return;
+    
+    // Optimistic UI update
+    setRouteOptions(routeOptions.filter(route => route.id !== routeId));
+    
+    const result = await deleteRoute(routeId);
+    if (!result.success) {
+      alert(result.error);
+      fetchData(); // Refetch to revert optimistic update
+    }
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
 
 
@@ -1364,7 +1378,10 @@ export default function Dashboard() {
                         <button className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
                           <PencilSquareIcon className="w-4 h-4" /> Edit
                         </button>
-                        <button className="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                        <button 
+                          onClick={() => handleDeleteRoute(route.id)}
+                          className="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                        >
                           <TrashIcon className="w-4 h-4" /> Remove
                         </button>
                       </div>
