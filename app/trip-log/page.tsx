@@ -1441,11 +1441,18 @@ export default function Dashboard() {
               </table>
             </div>
             
-            {visibleLogs.length > visibleCount && (
-              <div className="text-center mt-6">
-                <button onClick={() => setVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
-                  Load More
-                </button>
+            {(visibleLogs.length > visibleCount || visibleCount > 5) && (
+              <div className="text-center mt-6 flex justify-center gap-4">
+                {visibleCount > 5 && (
+                  <button onClick={() => setVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
+                    Show Less
+                  </button>
+                )}
+                {visibleLogs.length > visibleCount && (
+                  <button onClick={() => setVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
+                    Load More
+                  </button>
+                )}
               </div>
             )}
 
