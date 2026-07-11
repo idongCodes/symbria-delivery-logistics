@@ -169,6 +169,7 @@ export default function Dashboard() {
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
+  const [activeTooltipLogId, setActiveTooltipLogId] = useState<number | null>(null);
 
   // Filtering State
   const [filterDriver, setFilterDriver] = useState("");
@@ -1373,9 +1374,31 @@ export default function Dashboard() {
                             {log.trip_type}
                           </span>
                           {log.edit_count > 0 && (
-                            <span className="whitespace-nowrap px-2 inline-flex text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200" title={`Edited ${log.edit_count} time(s)`}>
-                              Edited
-                            </span>
+                            <div className="relative">
+                              <span 
+                                onClick={() => setActiveTooltipLogId(activeTooltipLogId === log.id ? null : log.id)}
+                                className="whitespace-nowrap px-2 inline-flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200 cursor-pointer hover:bg-purple-200 transition-colors" 
+                              >
+                                Edited <InformationCircleIcon className="w-3 h-3" />
+                              </span>
+                              {activeTooltipLogId === log.id && (
+                                <div className="absolute z-50 mt-2 left-0 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-3 text-xs text-gray-700 font-normal">
+                                  <div className="flex justify-between items-center border-b pb-1 mb-2">
+                                    <span className="font-bold text-gray-900">Edit Details</span>
+                                    <button onClick={(e) => { e.stopPropagation(); setActiveTooltipLogId(null); }} className="text-gray-400 hover:text-gray-600">
+                                      <XCircleIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <p className="mb-1"><span className="font-semibold">Times edited:</span> {log.edit_count}</p>
+                                  {log.edit_history && log.edit_history.length > 0 && (
+                                    <>
+                                      <p className="mb-1"><span className="font-semibold">By:</span> {log.edit_history[log.edit_history.length - 1].editor_name || 'System'}</p>
+                                      <p><span className="font-semibold">At:</span> {new Date(log.edit_history[log.edit_history.length - 1].edited_at).toLocaleString()}</p>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
