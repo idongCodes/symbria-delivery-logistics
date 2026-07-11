@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -1337,7 +1337,13 @@ export default function Dashboard() {
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Route/Location Management</h2>
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-800">Available Routes</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-800">Available Routes</h3>
+              <button className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                <PlusIcon className="w-4 h-4 stroke-2" />
+                Add Route
+              </button>
+            </div>
             {routeOptions.length > 0 ? (
               <div className="space-y-3">
                 {routeOptions.map((route) => (
