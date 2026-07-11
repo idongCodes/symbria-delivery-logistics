@@ -4,13 +4,19 @@
 import { prisma } from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 
+export async function getFeedback() {
+  return await prisma.feedback.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function deleteFeedback(ids: string[]) {
   await prisma.feedback.deleteMany({
     where: {
       id: { in: ids },
     },
   });
-  revalidatePath('/admin/feedback'); // Refresh the page automatically
+  revalidatePath('/trip-log'); // Refresh the page automatically
 }
 
 export async function markAsRead(ids: string[], isRead: boolean) {
@@ -22,5 +28,5 @@ export async function markAsRead(ids: string[], isRead: boolean) {
       read: isRead,
     },
   });
-  revalidatePath('/admin/feedback');
+  revalidatePath('/trip-log');
 }

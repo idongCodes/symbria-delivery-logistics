@@ -104,13 +104,7 @@ export default function Nav() {
                     >
                       Med Carts
                     </Link>
-                    <Link 
-                      href="/admin/feedback" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
-                    >
-                      Feedback
-                    </Link>
+
                     <Link 
                       href="/contacts" 
                       onClick={() => setMenuOpen(false)}
