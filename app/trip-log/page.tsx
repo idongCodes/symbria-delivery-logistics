@@ -1201,31 +1201,31 @@ export default function Dashboard() {
                 {/* Modal Menu */}
                 <div className="absolute top-full right-2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
                   <div className="flex flex-col relative z-50 py-2">
-                    <button onClick={() => { setActiveTab('new'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'new' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
+                    <button onClick={() => { setActiveTab('new'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'new' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
                       {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
                     </button>
-                    <button onClick={() => { setActiveTab('history'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'history' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
+                    <button onClick={() => { setActiveTab('history'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'history' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
                       My Logs
                     </button>
-                    <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'all' ? 'text-purple-600 bg-purple-50/50' : 'text-gray-700'}`}>
+                    <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'all' ? 'text-purple-600 bg-purple-50/50' : 'text-gray-700'}`}>
                       All Logs
                     </button>
                     
                     {userProfile?.role === 'Admin' && (
                       <>
-                        <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'med-carts' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
+                        <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'med-carts' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
                           Med Carts
                         </button>
-                        <button onClick={() => { setActiveTab('driver-management'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'driver-management' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
+                        <button onClick={() => { setActiveTab('driver-management'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'driver-management' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
                           Driver Management
                         </button>
-                        <button onClick={() => { setActiveTab('route-management'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'route-management' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
+                        <button onClick={() => { setActiveTab('route-management'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'route-management' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
                           Route/Location Management
                         </button>
                       </>
                     )}
 
-                    <button onClick={() => { setActiveTab('my-info'); setEditingLog(null); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors border-t border-gray-100 mt-1 ${activeTab === 'my-info' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
+                    <button onClick={() => { setActiveTab('my-info'); setEditingLog(null); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-right text-sm font-medium hover:bg-gray-50 transition-colors border-t border-gray-100 mt-1 ${activeTab === 'my-info' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
                       My Info
                     </button>
                   </div>
