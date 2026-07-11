@@ -154,9 +154,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [activeTabs, setActiveTabs] = useState<string[]>(['new']);
-  const toggleTab = (tab: string) => setActiveTabs(prev => prev.includes(tab) ? prev.filter(t => t !== tab) : [...prev, tab]);
-  const toggleAll = () => setActiveTabs(prev => prev.length >= 4 ? [] : ['new', 'history', 'all', 'med-carts', 'my-info']);
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts'>('new');
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -170,9 +168,7 @@ export default function Dashboard() {
   const showModal = (config: Omit<ModalConfig, 'isOpen'>) => setModalConfig({ ...config, isOpen: true });
 
   // Pagination State
-  
-  const [myVisibleCount, setMyVisibleCount] = useState(5);
-  const [allVisibleCount, setAllVisibleCount] = useState(5);
+  const [visibleCount, setVisibleCount] = useState(5);
   const [activeTooltipLogId, setActiveTooltipLogId] = useState<number | null>(null);
 
   // Filtering State
@@ -775,7 +771,7 @@ export default function Dashboard() {
     }
     setChecklistData(answers);
     setChecklistComments(comments);
-    setActiveTabs(['new']);
+    setActiveTab('new');
   };
 
   const fetchData = useCallback(async () => {
@@ -1039,9 +1035,9 @@ export default function Dashboard() {
         resetForm();
         fetchData();
         if (userProfile?.role === 'Admin') {
-          setActiveTabs(['all']);
+          setActiveTab('all');
         } else {
-          setActiveTabs(['history']);
+          setActiveTab('history');
         }
   
       } else {
@@ -1125,20 +1121,28 @@ export default function Dashboard() {
     }
   }
 
-  const myVisibleLogs = logs.filter(log => log.user_id === userProfile?.id);
-  
-  const allVisibleLogs = logs.filter(log => {
+  const visibleLogs = logs.filter(log => {
     let match = true;
-    if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
-    if (filterRoute && log.route_id !== filterRoute) match = false;
-    if (filterType && log.trip_type !== filterType) match = false;
-    if (filterDate) {
-      const logDate = new Date(log.created_at).toISOString().split('T')[0];
-      if (logDate !== filterDate) match = false;
-    }
-    if (filterIssuesOnly) {
-      const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
-      if (!hasIssue) match = false;
+
+    if (activeTab === 'history') {
+      // Only show logs for the current user
+      if (log.user_id !== userProfile?.id) return false;
+    } else if (activeTab === 'all') {
+      // Apply admin filters only if activeTab is 'all'
+      if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
+      if (filterRoute && log.route_id !== filterRoute) match = false;
+      if (filterType && log.trip_type !== filterType) match = false;
+      if (filterDate) {
+        const logDate = new Date(log.created_at).toISOString().split('T')[0];
+        if (logDate !== filterDate) match = false;
+      }
+      if (filterIssuesOnly) {
+        const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
+        if (!hasIssue) match = false;
+      }
+    } else {
+      // If activeTab is 'new' or 'my-info', no logs should be displayed in this table context
+      return false;
     }
     return match;
   });
@@ -1174,1201 +1178,37 @@ export default function Dashboard() {
         )}
       </header>
 
-      
-      
-      {userProfile?.role === 'Admin' && (
-        <div className="max-w-6xl mx-auto w-full flex justify-end mb-4">
+      {userProfile && ( // Only show tabs if user is authenticated
+        <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
+          <button onClick={() => { setActiveTab('new');
+            setEditingLog(null); setVisibleCount(5); 
+          }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}>
+            {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
+          </button>
+          <button onClick={() => { setActiveTab('history');
+            setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'history' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}>
+            My Logs
+          </button>
+          <button onClick={() => { setActiveTab('all'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'all' ? 'text-purple-600  border-b-2 border-purple-600 ' : 'text-gray-500 '}`}>
+            All Logs
+          </button>
+          
+          {userProfile?.role === 'Admin' && (
+            <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+              Med Carts
+            </button>
+          )}
+
           <button 
-            onClick={toggleAll}
-            className="text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-lg transition-colors border border-blue-200"
+            onClick={() => { setActiveTab('my-info'); setEditingLog(null); }} 
+            className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'my-info' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}
           >
-            {activeTabs.length >= 4 ? 'Collapse All' : 'Expand All'}
+            My Info
           </button>
         </div>
       )}
-
-      {/* ACCORDION VIEWS FOR AUTHENTICATED USERS */}
-      {userProfile ? (
-        <div className="flex flex-col gap-3 mb-6 max-w-6xl mx-auto w-full">
-          
-          {/* 1. NEW FORM */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <button 
-              onClick={() => { toggleTab('new'); setEditingLog(null);  }}
-              className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-blue-600">📝</span>
-                {editingLog ? `Editing #${editingLog.id}` : 'New Form'}
-              </div>
-              <span className="text-gray-400">{activeTabs.includes('new') ? '▼' : '▶'}</span>
-            </button>
-            {activeTabs.includes('new') && (
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                {/* Main Form */}
-      {true && (
-        <div className="bg-white  p-4 md:p-6 rounded-xl shadow-sm border border-gray-100  max-w-4xl">
-          <h2 className="text-xl font-semibold mb-2 text-gray-900 ">
-            {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
-          </h2>
-          <p className="text-sm text-gray-500  mb-6 italic">Ensure you select &quot;Post-Trip Inspection&quot; when you return at the end of your shift.</p>
-          
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <label className="flex flex-col gap-1 flex-1">
-                <span className="text-sm font-semibold text-gray-700 ">First Name</span>
-                <input name="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="border p-3 rounded bg-white   " required />
-              </label>
-              <label className="flex flex-col gap-1 flex-1">
-                <span className="text-sm font-semibold text-gray-700 ">Last Name</span>
-                <input name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="border p-3 rounded bg-white   " required />
-              </label>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 ">Trip Type</span>
-              <select name="trip_type" value={tripType} onChange={(e) => setTripType(e.target.value)} className="border p-3 rounded bg-white   " required>
-                <option value="Pre-Trip">Pre-Trip Inspection</option>
-                <option value="Post-Trip">Post-Trip Inspection</option>
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 ">Select Route</span>
-              <select name="route_id" value={routeId} onChange={(e) => setRouteId(e.target.value)} className="border p-3 rounded-lg bg-white   " required>
-                <option value="" disabled>-- Choose a Route --</option>
-                {routeOptions.length > 0 ? (
-                  routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)
-                ) : (
-                  <option disabled>Loading routes...</option>
-                )}
-              </select>
-            </div>
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 ">Odometer</span>
-              <input name="odometer" type="number" value={odometer} onChange={(e) => setOdometer(e.target.value)} className="border p-3 rounded bg-white   " required />
-            </label>
-
-            <hr className="border-gray-200 " />
-
-            <div>
-               <h3 className="text-lg font-bold text-gray-800  mb-4">Inspection Checklist</h3>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {currentQuestions.map((question, index) => {
-                   const answer = checklistData[question];
-                   const showComment = requiresDescription(question, answer);
-                   const isBad = showComment;
-                   return (
-                     <div key={index} className={`flex flex-col bg-gray-50  p-3 rounded border ${isBad ? 'border-red-200  bg-red-50 ' : 'border-gray-100 '}`}>
-                       <div className="flex justify-between items-start mb-2">
-                         <span className="text-sm text-gray-700  font-medium max-w-[70%]">{question}</span>
-                         <div className="flex gap-4">
-                           <label className="flex items-center gap-1 cursor-pointer">
-                             <input type="radio" name={`q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
-                             <span className="text-sm ">Yes</span>
-                           </label>
-                           <label className="flex items-center gap-1 cursor-pointer">
-                             <input type="radio" name={`q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
-                             <span className="text-sm ">No</span>
-                           </label>
-                         </div>
-                       </div>
-
-                       {showComment && (
-                         <div className="mt-1 animate-in fade-in slide-in-from-top-1">
-                           <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
-                         </div>
-                       )}
-                     </div>
-                   );
-                 })}
-               </div>
-            </div>
-
-            {tripType === 'Post-Trip' && (
-              <>
-                <hr className="border-gray-200 " />
-                <div>
-                  <h3 className="text-lg font-bold text-gray-800  mb-4">Scanner</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {SCANNER_QUESTIONS.map((question, index) => {
-                      const answer = checklistData[question];
-                      const showComment = requiresDescription(question, answer);
-                      const isBad = showComment;
-                      return (
-                        <div key={`scanner-${index}`} className={`flex flex-col bg-gray-50  p-3 rounded border ${isBad ? 'border-red-200  bg-red-50 ' : 'border-gray-100 '}`}>
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-sm text-gray-700  font-medium max-w-[70%]">{question}</span>
-                            <div className="flex gap-4">
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="radio" name={`scanner-q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
-                                <span className="text-sm ">Yes</span>
-                              </label>
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="radio" name={`scanner-q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
-                                <span className="text-sm ">No</span>
-                              </label>
-                            </div>
-                          </div>
-
-                          {showComment && (
-                            <div className="mt-1 animate-in fade-in slide-in-from-top-1">
-                              <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {tripType === 'Post-Trip' && (
-              <>
-                <hr className="border-gray-200 " />
-                <div>
-                  <h3 className="text-lg font-bold text-gray-800  mb-4">Keys</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {KEY_QUESTIONS.map((question, index) => {
-                      const answer = checklistData[question];
-                      const showComment = requiresDescription(question, answer);
-                      const isBad = showComment;
-                      return (
-                        <div key={`key-${index}`} className={`flex flex-col bg-gray-50  p-3 rounded border ${isBad ? 'border-red-200  bg-red-50 ' : 'border-gray-100 '}`}>
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="text-sm text-gray-700  font-medium max-w-[70%]">{question}</span>
-                            <div className="flex gap-4">
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="radio" name={`key-q-${index}`} value="Yes" checked={answer === "Yes"} onChange={() => handleChecklistChange(question, "Yes")} className="accent-green-600 w-4 h-4" required />
-                                <span className="text-sm ">Yes</span>
-                              </label>
-                              <label className="flex items-center gap-1 cursor-pointer">
-                                <input type="radio" name={`key-q-${index}`} value="No" checked={answer === "No"} onChange={() => handleChecklistChange(question, "No")} className="accent-red-600 w-4 h-4" />
-                                <span className="text-sm ">No</span>
-                              </label>
-                            </div>
-                          </div>
-
-                          {showComment && (
-                            <div className="mt-1 animate-in fade-in slide-in-from-top-1">
-                              <input type="text" placeholder="Describe issue (Required)" value={checklistComments[question] || ""} onChange={(e) => handleCommentChange(question, e.target.value)} className="w-full text-sm border border-red-300 rounded p-2 focus:outline-none focus:border-red-500 text-red-700  placeholder-red-300  bg-white " required />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {tripType === 'Post-Trip' && (
-              <div className="bg-orange-50/30 p-4 md:p-6 rounded-xl border border-orange-100 animate-in fade-in slide-in-from-top-4">
-                <h3 className="text-lg font-bold text-gray-800 mb-4">💊 Med Returns</h3>
-                
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-col bg-white p-3 rounded border border-gray-200">
-                    <span className="text-sm font-semibold text-gray-700 mb-2">Did you have to bring back any meds?</span>
-                    <div className="flex gap-4">
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="hadReturns" value="Yes" checked={medReturnData.hadReturns === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, hadReturns: "Yes" }))} className="accent-orange-600 w-4 h-4" required={tripType === 'Post-Trip'} />
-                        <span className="text-sm">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="hadReturns" value="No" checked={medReturnData.hadReturns === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, hadReturns: "No" }))} className="accent-orange-600 w-4 h-4" />
-                        <span className="text-sm">No</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {medReturnData.hadReturns === 'Yes' && (
-                    <div className="space-y-4 mt-2 animate-in fade-in slide-in-from-top-2">
-                      <label className="flex flex-col gap-1">
-                        <span className="text-sm font-semibold text-gray-700">Reason for return (Optional)</span>
-                        <input 
-                          type="text" 
-                          placeholder="ex, 'Per Nurse, patient discharged', etc" 
-                          value={medReturnData.reason} 
-                          onChange={(e) => setMedReturnData(prev => ({ ...prev, reason: e.target.value }))}
-                          className="border p-3 rounded bg-white text-sm focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all" 
-                        />
-                      </label>
-
-                      <label className="flex flex-col gap-1">
-                        <span className="text-sm font-semibold text-gray-700">Facility / Nurse Station (Required)</span>
-                        <input 
-                          type="text" 
-                          placeholder="ex, 'Overlook OLPAT1', etc" 
-                          value={medReturnData.facilityPatient} 
-                          onChange={(e) => setMedReturnData(prev => ({ ...prev, facilityPatient: e.target.value }))}
-                          className="border p-3 rounded bg-white text-sm focus:ring-2 focus:ring-orange-200 focus:outline-none transition-all" 
-                          required={medReturnData.hadReturns === 'Yes'}
-                        />
-                      </label>
-
-                      <div className="flex flex-col bg-white p-3 rounded border border-gray-200">
-                        <span className="text-sm font-semibold text-gray-700 mb-2">Meds handed to Pharmacy or placed in dropbox?</span>
-                        <div className="flex gap-4">
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="handedToPharmacy" value="Yes" checked={medReturnData.handedToPharmacy === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, handedToPharmacy: "Yes" }))} className="accent-orange-600 w-4 h-4" required={medReturnData.hadReturns === 'Yes'} />
-                            <span className="text-sm">Yes</span>
-                          </label>
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="handedToPharmacy" value="No" checked={medReturnData.handedToPharmacy === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, handedToPharmacy: "No" }))} className="accent-orange-600 w-4 h-4" />
-                            <span className="text-sm">No</span>
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col bg-white p-3 rounded border border-gray-200">
-                        <span className="text-sm font-semibold text-gray-700 mb-2">Meds require refrigeration?</span>
-                        <div className="flex gap-4">
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="needsRefrigeration" value="Yes" checked={medReturnData.needsRefrigeration === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, needsRefrigeration: "Yes" }))} className="accent-orange-600 w-4 h-4" required={medReturnData.hadReturns === 'Yes'} />
-                            <span className="text-sm">Yes</span>
-                          </label>
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input type="radio" name="needsRefrigeration" value="No" checked={medReturnData.needsRefrigeration === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, needsRefrigeration: "No" }))} className="accent-orange-600 w-4 h-4" />
-                            <span className="text-sm">No</span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {medReturnData.needsRefrigeration === 'Yes' && (
-                        <div className="flex flex-col bg-blue-50 p-3 rounded border border-blue-200 animate-in fade-in slide-in-from-top-1 shadow-sm">
-                          <span className="text-sm font-bold text-blue-800 mb-2">Meds placed in refrigerator?</span>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="placedInFridge" value="Yes" checked={medReturnData.placedInFridge === "Yes"} onChange={() => setMedReturnData(prev => ({ ...prev, placedInFridge: "Yes" }))} className="accent-blue-600 w-4 h-4" required={medReturnData.needsRefrigeration === 'Yes'} />
-                              <span className="text-sm font-bold text-blue-900">Yes</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="placedInFridge" value="No" checked={medReturnData.placedInFridge === "No"} onChange={() => setMedReturnData(prev => ({ ...prev, placedInFridge: "No" }))} className="accent-blue-600 w-4 h-4" />
-                              <span className="text-sm font-bold text-blue-900">No</span>
-                            </label>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {tripType === 'Post-Trip' && (
-              <>
-                <hr className="border-gray-200 " />
-                <div className="bg-blue-50/50 p-4 md:p-6 rounded-xl border border-blue-100">
-                  <h3 className="text-lg font-bold text-gray-800  mb-4">Tackle Box Deliveries</h3>
-                  
-                  {/* Step 1: Included? */}
-                  <div className="flex flex-col gap-2 mb-6">
-                    <span className="text-sm font-semibold text-gray-700 ">Were tackle boxes included in today&apos;s delivery?</span>
-                    <div className="flex gap-6">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="tackle-included" value="Yes" checked={tackleBoxesIncluded === 'Yes'} onChange={() => setTackleBoxesIncluded('Yes')} className="accent-blue-600 w-4 h-4" required={tripType === 'Post-Trip'} />
-                        <span className="text-sm font-medium">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="tackle-included" value="No" checked={tackleBoxesIncluded === 'No'} onChange={() => { setTackleBoxesIncluded('No'); setTackleBoxDeliveries([]); }} className="accent-blue-600 w-4 h-4" />
-                        <span className="text-sm font-medium">No</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {tackleBoxesIncluded === 'Yes' && (
-                    <div className="space-y-6 animate-in fade-in slide-in-from-top-2">
-                      {/* Step 2: Select Locations */}
-                      <div className="flex flex-col gap-2">
-                        <span className="text-sm font-semibold text-gray-700 ">Which locations received tackle boxes?</span>
-                        {!routeId ? (
-                          <p className="text-xs text-orange-600 bg-orange-50 p-2 rounded border border-orange-200">Please select a route above first to see available locations.</p>
-                        ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                            {(ROUTE_STOPS[routeId] || []).map(facility => {
-                              const isSelected = tackleBoxDeliveries.some(d => d.location === facility);
-                              return (
-                                <label key={facility} className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition-colors ${isSelected ? 'bg-blue-100 border-blue-300 ' : 'bg-white  border-gray-200  hover:bg-gray-50 '}`}>
-                                  <input 
-                                    type="checkbox" 
-                                    checked={isSelected} 
-                                    onChange={(e) => {
-                                      if (e.target.checked) {
-                                        setTackleBoxDeliveries(prev => [...prev, { 
-                                          location: facility, 
-                                          deliveredCount: "", 
-                                          nurseEmptied: null,
-                                          emptiedReturnedCount: "",
-                                          returnedToPharmacy: false,
-                                          unemptiedReturnedCount: "",
-                                          medsNeedRefrigeration: null,
-                                          medsMovedToFridge: false
-                                        }]);
-                                      } else {
-                                        setTackleBoxDeliveries(prev => prev.filter(d => d.location !== facility));
-                                      }
-                                    }}
-                                    className="accent-blue-600 w-4 h-4"
-                                  />
-                                  <span className="text-[10px] md:text-xs font-medium">{facility}</span>
-                                </label>
-                              );
-                            })}
-                            {(!ROUTE_STOPS[routeId] || ROUTE_STOPS[routeId].length === 0) && (
-                              <p className="text-xs text-gray-500 col-span-full italic">No locations configured for this route.</p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Step 3: Detailed Info for each location */}
-                      {tackleBoxDeliveries.map((delivery, index) => (
-                        <div key={delivery.location} className="bg-white  p-4 rounded-lg border border-blue-200 shadow-sm space-y-4">
-                          <div className="flex justify-between items-center border-b pb-2">
-                            <h4 className="font-bold text-blue-800 ">{delivery.location}</h4>
-                            <button type="button" onClick={() => setTackleBoxDeliveries(prev => prev.filter(d => d.location !== delivery.location))} className="text-red-500 hover:text-red-700 transition-colors">
-                              <TrashIcon className="w-4 h-4" />
-                            </button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <label className="flex flex-col gap-1">
-                              <span className="text-xs font-semibold text-gray-600 ">How many tackle boxes delivered?</span>
-                              <input 
-                                type="number" 
-                                value={delivery.deliveredCount} 
-                                onChange={(e) => {
-                                  const newDeliveries = [...tackleBoxDeliveries];
-                                  newDeliveries[index].deliveredCount = e.target.value;
-                                  setTackleBoxDeliveries(newDeliveries);
-                                }}
-                                className="border p-2 rounded text-sm bg-gray-50  focus:bg-white  transition-colors"
-                                placeholder="Count"
-                                required
-                              />
-                            </label>
-
-                            <div className="flex flex-col gap-1">
-                              <span className="text-xs font-semibold text-gray-600 ">Nurse emptied at time of delivery?</span>
-                              <div className="flex gap-4 mt-1">
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                  <input 
-                                    type="radio" 
-                                    name={`emptied-${index}`} 
-                                    checked={delivery.nurseEmptied === 'Yes'} 
-                                    onChange={() => {
-                                      const newDeliveries = [...tackleBoxDeliveries];
-                                      newDeliveries[index].nurseEmptied = 'Yes';
-                                      newDeliveries[index].returnedToPharmacy = false;
-                                      newDeliveries[index].unemptiedReturnedCount = "";
-                                      newDeliveries[index].medsNeedRefrigeration = null;
-                                      newDeliveries[index].medsMovedToFridge = false;
-                                      setTackleBoxDeliveries(newDeliveries);
-                                    }}
-                                    className="accent-green-600"
-                                    required
-                                  />
-                                  <span className="text-xs">Yes</span>
-                                </label>
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                  <input 
-                                    type="radio" 
-                                    name={`emptied-${index}`} 
-                                    checked={delivery.nurseEmptied === 'No'} 
-                                    onChange={() => {
-                                      const newDeliveries = [...tackleBoxDeliveries];
-                                      newDeliveries[index].nurseEmptied = 'No';
-                                      newDeliveries[index].emptiedReturnedCount = "";
-                                      setTackleBoxDeliveries(newDeliveries);
-                                    }}
-                                    className="accent-red-600"
-                                  />
-                                  <span className="text-xs">No</span>
-                                </label>
-                              </div>
-                            </div>
-                          </div>
-
-                          {delivery.nurseEmptied === 'Yes' && (
-                            <label className="flex flex-col gap-1 animate-in slide-in-from-top-1">
-                              <span className="text-xs font-semibold text-gray-600 ">How many empty tackle boxes returned?</span>
-                              <input 
-                                type="number" 
-                                value={delivery.emptiedReturnedCount || ""} 
-                                onChange={(e) => {
-                                  const newDeliveries = [...tackleBoxDeliveries];
-                                  newDeliveries[index].emptiedReturnedCount = e.target.value;
-                                  setTackleBoxDeliveries(newDeliveries);
-                                }}
-                                className="border p-2 rounded text-sm bg-gray-50  focus:bg-white  transition-colors"
-                                placeholder="Count"
-                                required
-                              />
-                            </label>
-                          )}
-
-                          {delivery.nurseEmptied === 'No' && (
-                            <div className="space-y-4 animate-in slide-in-from-top-1">
-                              <div className="bg-red-50  p-3 rounded border border-red-100  space-y-3">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                  <input 
-                                    type="checkbox" 
-                                    checked={!!delivery.returnedToPharmacy} 
-                                    onChange={(e) => {
-                                      const newDeliveries = [...tackleBoxDeliveries];
-                                      newDeliveries[index].returnedToPharmacy = e.target.checked;
-                                      setTackleBoxDeliveries(newDeliveries);
-                                    }}
-                                    className="accent-red-600 w-4 h-4"
-                                    required
-                                  />
-                                  <span className="text-xs font-bold text-red-700 ">Tackle box returned to pharmacy?</span>
-                                </label>
-
-                                {delivery.returnedToPharmacy && (
-                                  <label className="flex flex-col gap-1">
-                                    <span className="text-xs font-semibold text-red-600 ">How many unemptied tackle boxes returned?</span>
-                                    <input 
-                                      type="number" 
-                                      value={delivery.unemptiedReturnedCount || ""} 
-                                      onChange={(e) => {
-                                        const newDeliveries = [...tackleBoxDeliveries];
-                                        newDeliveries[index].unemptiedReturnedCount = e.target.value;
-                                        setTackleBoxDeliveries(newDeliveries);
-                                      }}
-                                      className="border p-2 rounded text-sm bg-white  border-red-200"
-                                      placeholder="Count"
-                                      required
-                                    />
-                                  </label>
-                                )}
-                              </div>
-
-                              <div className="flex flex-col gap-1">
-                                <span className="text-xs font-semibold text-gray-600 ">Any meds need refrigeration?</span>
-                                <div className="flex gap-4 mt-1">
-                                  <label className="flex items-center gap-1 cursor-pointer">
-                                    <input 
-                                      type="radio" 
-                                      name={`refrig-${index}`} 
-                                      checked={delivery.medsNeedRefrigeration === 'Yes'} 
-                                      onChange={() => {
-                                        const newDeliveries = [...tackleBoxDeliveries];
-                                        newDeliveries[index].medsNeedRefrigeration = 'Yes';
-                                        setTackleBoxDeliveries(newDeliveries);
-                                      }}
-                                      className="accent-blue-600"
-                                      required
-                                    />
-                                    <span className="text-xs">Yes</span>
-                                  </label>
-                                  <label className="flex items-center gap-1 cursor-pointer">
-                                    <input 
-                                      type="radio" 
-                                      name={`refrig-${index}`} 
-                                      checked={delivery.medsNeedRefrigeration === 'No'} 
-                                      onChange={() => {
-                                        const newDeliveries = [...tackleBoxDeliveries];
-                                        newDeliveries[index].medsNeedRefrigeration = 'No';
-                                        newDeliveries[index].medsMovedToFridge = false;
-                                        setTackleBoxDeliveries(newDeliveries);
-                                      }}
-                                      className="accent-blue-600"
-                                    />
-                                    <span className="text-xs">No</span>
-                                  </label>
-                                </div>
-                              </div>
-
-                              {delivery.medsNeedRefrigeration === 'Yes' && (
-                                <label className="flex items-center gap-2 p-3 bg-blue-50  border border-blue-200 rounded cursor-pointer animate-in slide-in-from-top-1">
-                                  <input 
-                                    type="checkbox" 
-                                    checked={!!delivery.medsMovedToFridge} 
-                                    onChange={(e) => {
-                                      const newDeliveries = [...tackleBoxDeliveries];
-                                      newDeliveries[index].medsMovedToFridge = e.target.checked;
-                                      setTackleBoxDeliveries(newDeliveries);
-                                    }}
-                                    className="accent-blue-600 w-4 h-4"
-                                    required
-                                  />
-                                  <span className="text-xs font-bold text-blue-700 ">Meds taken out of tackle box and put in refrigerator?</span>
-                                </label>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-                        <hr className="border-gray-200 " />
-                        
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-800  mb-4">Tire Pressure (PSI) (Required)</h3>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Driver Front</span><input type="number" placeholder="PSI" value={tirePressures.df} onChange={(e) => handleTireChange('df', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Passenger Front</span><input type="number" placeholder="PSI" value={tirePressures.pf} onChange={(e) => handleTireChange('pf', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Driver Rear</span><input type="number" placeholder="PSI" value={tirePressures.dr} onChange={(e) => handleTireChange('dr', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
-                            <label className="flex flex-col gap-1"><span className="text-xs font-semibold text-gray-600 ">Passenger Rear</span><input type="number" placeholder="PSI" value={tirePressures.pr} onChange={(e) => handleTireChange('pr', e.target.value)} className="border p-3 rounded bg-white   " required /></label>
-                          </div>
-                        </div>
-            
-                        {tripType === 'Post-Trip' && (
-                          <>
-                            <hr className="border-gray-200 " />
-                            
-                            <div>
-                              <h3 className="text-lg font-bold text-gray-800  mb-2">Tire Photos (Required)</h3>
-                          <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                              <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Front Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('driverFrontTire', file)} file={imageFiles.driverFrontTire} loading={compressing.driverFrontTire} required={!editingLog?.images?.driverFrontTire} />
-                              {editingLog?.images?.driverFrontTire && <a href={editingLog.images.driverFrontTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                            </div>
-                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                              <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Front Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('passengerFrontTire', file)} file={imageFiles.passengerFrontTire} loading={compressing.passengerFrontTire} required={!editingLog?.images?.passengerFrontTire} />
-                              {editingLog?.images?.passengerFrontTire && <a href={editingLog.images.passengerFrontTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                            </div>
-                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                              <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Rear Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('driverRearTire', file)} file={imageFiles.driverRearTire} loading={compressing.driverRearTire} required={!editingLog?.images?.driverRearTire} />
-                              {editingLog?.images?.driverRearTire && <a href={editingLog.images.driverRearTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                            </div>
-                            <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                              <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Rear Tire</span>
-                              <ImageUploadInput onChange={(file) => handleFileChange('passengerRearTire', file)} file={imageFiles.passengerRearTire} loading={compressing.passengerRearTire} required={!editingLog?.images?.passengerRearTire} />
-                              {editingLog?.images?.passengerRearTire && <a href={editingLog.images.passengerRearTire} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                            </div>
-                          </div>
-                        </div>
-            
-                                    <div>
-              <h3 className="text-lg font-bold text-gray-800  mb-2">Exterior Photos (Required)</h3>
-              <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-		  <span className="block text-sm font-semibold text-gray-700  mb-2">Front of Vehicle</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('front', file)} file={imageFiles.front} loading={compressing.front} required={!editingLog?.images?.front} />
-                  {editingLog?.images?.front && <a href={editingLog.images.front} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                  <span className="block text-sm font-semibold text-gray-700  mb-2">Driver Side</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('driverSide', file)} file={imageFiles.driverSide} loading={compressing.driverSide} required={!editingLog?.images?.driverSide} />
-                  {editingLog?.images?.driverSide && <a href={editingLog.images.driverSide} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                  <span className="block text-sm font-semibold text-gray-700  mb-2">Rear of Vehicle</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('rear', file)} file={imageFiles.rear} loading={compressing.rear} required={!editingLog?.images?.rear} />
-                  {editingLog?.images?.rear && <a href={editingLog.images.rear} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                  <span className="block text-sm font-semibold text-gray-700  mb-2">Passenger Side</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('passengerSide', file)} file={imageFiles.passengerSide} loading={compressing.passengerSide} required={!editingLog?.images?.passengerSide} />
-                  {editingLog?.images?.passengerSide && <a href={editingLog.images.passengerSide} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-              </div>
-            </div>
-
-            <hr className="border-gray-200 " />
-
-            <div>
-              <h3 className="text-lg font-bold text-gray-800  mb-2">Interior Photos (Required)</h3>
-              <p className="text-sm text-gray-500  mb-4">Ensure photos are well lit and not blurry.</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                  <span className="block text-sm font-semibold text-gray-700  mb-2">Front Seat Area</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('frontSeat', file)} file={imageFiles.frontSeat} loading={compressing.frontSeat} required={!editingLog?.images?.frontSeat} />
-                  {editingLog?.images?.frontSeat && <a href={editingLog.images.frontSeat} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                  <span className="block text-sm font-semibold text-gray-700  mb-2">Back Seat</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('back', file)} file={imageFiles.back} loading={compressing.back} required={!editingLog?.images?.back} />
-                  {editingLog?.images?.back && <a href={editingLog.images.back} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-                <div className="bg-gray-50  p-4 rounded border border-gray-200 ">
-                  <span className="block text-sm font-semibold text-gray-700  mb-2">Trunk</span>
-                  <ImageUploadInput onChange={(file) => handleFileChange('trunk', file)} file={imageFiles.trunk} loading={compressing.trunk} required={!editingLog?.images?.trunk} />
-                  {editingLog?.images?.trunk && <a href={editingLog.images.trunk} target="_blank" className="text-xs text-blue-600  mt-2 block underline">View Current Image</a>}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-
-
-            <hr className="border-gray-200 " />
-            
-            <label className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-gray-700 ">Additional Notes / Defects</span>
-              <textarea name="notes" value={notes} onChange={(e) => setNotes(e.target.value)} className="border p-3 rounded bg-white   " rows={3} placeholder="General notes..." />
-            </label>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button type="submit" disabled={submitting} className={`flex-1 font-bold py-3 px-6 rounded text-white flex items-center justify-center gap-2 transition-all ${submitting ? "bg-gray-400 cursor-wait" : (editingLog ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')}`}>
-                {submitting ? ( 
-                  <>
-                    <ArrowUpTrayIcon className="w-5 h-5 animate-bounce" />
-                    Uploading {uploadProgress.current}/{uploadProgress.total}...
-                  </> 
-                ) : ( editingLog ? "Update Log" : "Submit Log" )}
-              </button>
-              {editingLog && (
-                <button 
-                  type="button" 
-                  onClick={() => { setEditingLog(null); resetForm(); setActiveTabs(['history']); }} 
-                  disabled={submitting} 
-                  className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200    transition-all"
-                >
-                  Cancel Edit
-                </button>
-              )}
-              <button type="button" onClick={resetForm} disabled={submitting} className="font-bold py-3 px-6 rounded bg-gray-200 text-gray-700 hover:bg-gray-300    transition-all">
-                Reset
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* CUSTOM MODAL */}
-      {modalConfig.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className={`p-3 rounded-full ${
-                  modalConfig.type === 'success' ? 'bg-green-100 text-green-600' :
-                  modalConfig.type === 'error' ? 'bg-red-100 text-red-600' :
-                  modalConfig.type === 'confirm' ? 'bg-orange-100 text-orange-600' :
-                  'bg-blue-100 text-blue-600'
-                }`}>
-                  {modalConfig.type === 'success' && <CheckCircleIcon className="w-8 h-8" />}
-                  {modalConfig.type === 'error' && <XCircleIcon className="w-8 h-8" />}
-                  {modalConfig.type === 'confirm' && <ExclamationTriangleIcon className="w-8 h-8" />}
-                  {modalConfig.type === 'info' && <InformationCircleIcon className="w-8 h-8" />}
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">{modalConfig.title}</h3>
-              </div>
-              <p className="text-gray-600 leading-relaxed">{modalConfig.message}</p>
-            </div>
-            
-            <div className="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3">
-              <button
-                onClick={() => {
-                  const callback = modalConfig.onConfirm;
-                  setModalConfig(prev => ({ ...prev, isOpen: false }));
-                  if (callback) {
-                    // Small delay to allow state to settle if opening another modal
-                    setTimeout(() => callback(), 100);
-                  }
-                }}
-                className={`px-5 py-2.5 rounded-lg font-bold text-white transition-all ${
-                  modalConfig.type === 'success' ? 'bg-green-600 hover:bg-green-700' :
-                  modalConfig.type === 'error' ? 'bg-red-600 hover:bg-red-700' :
-                  modalConfig.type === 'confirm' ? 'bg-orange-600 hover:bg-orange-700' :
-                  'bg-blue-600 hover:bg-blue-700'
-                }`}
-              >
-                {modalConfig.confirmText || 'OK'}
-              </button>
-              
-              {modalConfig.type === 'confirm' && (
-                <button
-                  onClick={closeModal}
-                  className="px-5 py-2.5 rounded-lg font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 transition-all"
-                >
-                  {modalConfig.cancelText || 'Cancel'}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-              </div>
-            )}
-          </div>
-
-          {/* 2. MY LOGS */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <button 
-              onClick={() => { toggleTab('history'); setEditingLog(null); setMyVisibleCount(5); }}
-              className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-blue-600">📋</span> My Logs
-              </div>
-              <span className="text-gray-400">{activeTabs.includes('history') ? '▼' : '▶'}</span>
-            </button>
-            {activeTabs.includes('history') && (
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                {true && (
-        <div className="flex flex-col gap-4">
-          {false && (
-            <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100  flex flex-wrap gap-4 items-end mb-2">
-              <div className="flex-1 min-w-[150px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Driver Name</label>
-                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-              </div>
-              <div className="flex-1 min-w-[150px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Route</label>
-                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                  <option value="">All Routes</option>
-                  {routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
-                </select>
-              </div>
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Trip Type</label>
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                  <option value="">All Types</option>
-                  <option value="Pre-Trip">Pre-Trip</option>
-                  <option value="Post-Trip">Post-Trip</option>
-                </select>
-              </div>
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Date</label>
-                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-              </div>
-              <div className="flex items-center gap-2 mb-2 md:mb-1">
-                <input 
-                  type="checkbox" 
-                  id="filterIssuesOnly" 
-                  checked={filterIssuesOnly} 
-                  onChange={(e) => setFilterIssuesOnly(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                />
-                <label htmlFor="filterIssuesOnly" className="text-xs font-bold text-gray-700 cursor-pointer uppercase tracking-wide">
-                  Issues Only 🚨
-                </label>
-              </div>
-              <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
-                <button 
-                  onClick={() => {
-                    setFilterDriver("");
-                    setFilterRoute("");
-                    setFilterType("");
-                    setFilterDate("");
-                    setFilterIssuesOnly(false);
-                  }}
-                  className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300   text-gray-700  text-sm font-bold rounded transition-colors h-[38px] md:self-end"
-                  aria-label="Clear Filters"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100 ">
-            <div className="overflow-x-auto">
-              <table className="w-full block md:table divide-y divide-gray-200 ">
-                <thead className="bg-gray-50  hidden md:table-header-group">
-                  <tr>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Date / Time
-                    </th>
-                    {false && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Driver
-                    </th>}
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Route
-                    </th>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Odometer
-                    </th>
-                    <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-transparent md:bg-white md: divide-y divide-transparent md:divide-gray-200  block md:table-row-group">
-                  {myVisibleLogs.length === 0 && (
-                    <tr className="block md:table-row bg-white  rounded-lg shadow-sm md:shadow-none border border-gray-100  md:border-0 p-4">
-                      <td colSpan={false ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
-                    </tr>
-                  )}
-                  {myVisibleLogs.slice(0, myVisibleCount).map((log) => {
-                    const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
-                    return (
-                      <tr key={log.id} className={`hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border ${hasIssue ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-100 '} md:border-0 mb-4 md:mb-0 relative`}>
-                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Date / Time</div>
-                          <div className="whitespace-nowrap flex items-center gap-2">
-                            {hasIssue && <span className="text-lg" title="Issue Reported">🚨</span>}
-                            <ClientDate timestamp={log.created_at} />
-                          </div>
-                        </td>
-                        {false && (
-                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
-                          <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
-                        </td>
-                      )}
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Type</div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800  ' : 'bg-orange-100 text-orange-800  '
-                          }`}>
-                            {log.trip_type}
-                          </span>
-                          {log.edit_count > 0 && (
-                            <div className="relative">
-                              <span 
-                                onClick={() => setActiveTooltipLogId(activeTooltipLogId === log.id ? null : log.id)}
-                                className="whitespace-nowrap px-2 inline-flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200 cursor-pointer hover:bg-purple-200 transition-colors" 
-                              >
-                                Edited <InformationCircleIcon className="w-3 h-3" />
-                              </span>
-                              {activeTooltipLogId === log.id && (
-                                <div className="absolute z-50 mt-2 left-0 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-3 text-xs text-gray-700 font-normal">
-                                  <div className="flex justify-between items-center border-b pb-1 mb-2">
-                                    <span className="font-bold text-gray-900">Edit Details</span>
-                                    <button onClick={(e) => { e.stopPropagation(); setActiveTooltipLogId(null); }} className="text-gray-400 hover:text-gray-600">
-                                      <XCircleIcon className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                  <p className="mb-1"><span className="font-semibold">Times edited:</span> {log.edit_count}</p>
-                                  {log.edit_history && log.edit_history.length > 0 && (
-                                    <>
-                                      <p className="mb-1"><span className="font-semibold">By:</span> {log.edit_history[log.edit_history.length - 1].editor_name || 'System'}</p>
-                                      <p><span className="font-semibold">At:</span> {new Date(log.edit_history[log.edit_history.length - 1].edited_at).toLocaleString()}</p>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Route</div>
-                        <div className="whitespace-nowrap text-gray-900 ">{log.route_id}</div>
-                      </td>
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Odometer</div>
-                        <div className="whitespace-nowrap text-gray-900 ">{log.odometer}</div>
-                      </td>
-                      <td className="p-4 block md:table-cell text-right text-sm font-medium">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-3 text-left">Actions</div>
-                        <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
-                          {canEditOrDelete(log) && (
-                            <>
-                              <button onClick={() => handleEditClick(log)} className="p-2 bg-blue-50  text-blue-600  hover:bg-blue-100  rounded-lg transition-colors" title="Edit">
-                                <PencilSquareIcon className="w-5 h-5" />
-                              </button>
-                              <button onClick={() => handleDelete(log.id)} className="p-2 bg-red-50  text-red-600  hover:bg-red-100  rounded-lg transition-colors" title="Delete">
-                                <TrashIcon className="w-5 h-5" />
-                              </button>
-                            </>
-                          )}
-                          <Link href={`/logs/${log.id}`} className="p-2 bg-gray-50  text-gray-600  hover:bg-gray-100  rounded-lg transition-colors" title="View">
-                            <EyeIcon className="w-5 h-5" />
-                          </Link>
-                          <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50  text-green-600  hover:bg-green-100  rounded-lg transition-colors" title="CSV">
-                            <DocumentArrowDownIcon className="w-5 h-5" />
-                          </button>
-                          <button onClick={() => handlePrint(log)} className="p-2 bg-purple-50  text-purple-600  hover:bg-purple-100  rounded-lg transition-colors" title="Print">
-                            <PrinterIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              </table>
-            </div>
-            
-            {(myVisibleLogs.length > myVisibleCount || myVisibleCount > 5) && (
-              <div className="text-center mt-6 flex justify-center gap-4">
-                {myVisibleCount > 5 && (
-                  <button onClick={() => setMyVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
-                    Show Less
-                  </button>
-                )}
-                {myVisibleLogs.length > myVisibleCount && (
-                  <button onClick={() => setMyVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
-                    Load More
-                  </button>
-                )}
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-              </div>
-            )}
-          </div>
-
-          {/* 3. ALL LOGS */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <button 
-              onClick={() => { toggleTab('all'); setEditingLog(null); setAllVisibleCount(5); }}
-              className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-purple-600">🌍</span> All Logs
-              </div>
-              <span className="text-gray-400">{true ? '▼' : '▶'}</span>
-            </button>
-            {true && (
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                {true && (
-        <div className="flex flex-col gap-4">
-          {true && (
-            <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100  flex flex-wrap gap-4 items-end mb-2">
-              <div className="flex-1 min-w-[150px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Driver Name</label>
-                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-              </div>
-              <div className="flex-1 min-w-[150px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Route</label>
-                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                  <option value="">All Routes</option>
-                  {routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
-                </select>
-              </div>
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Trip Type</label>
-                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                  <option value="">All Types</option>
-                  <option value="Pre-Trip">Pre-Trip</option>
-                  <option value="Post-Trip">Post-Trip</option>
-                </select>
-              </div>
-              <div className="flex-1 min-w-[120px]">
-                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Date</label>
-                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
-              </div>
-              <div className="flex items-center gap-2 mb-2 md:mb-1">
-                <input 
-                  type="checkbox" 
-                  id="filterIssuesOnly" 
-                  checked={filterIssuesOnly} 
-                  onChange={(e) => setFilterIssuesOnly(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                />
-                <label htmlFor="filterIssuesOnly" className="text-xs font-bold text-gray-700 cursor-pointer uppercase tracking-wide">
-                  Issues Only 🚨
-                </label>
-              </div>
-              <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
-                <button 
-                  onClick={() => {
-                    setFilterDriver("");
-                    setFilterRoute("");
-                    setFilterType("");
-                    setFilterDate("");
-                    setFilterIssuesOnly(false);
-                  }}
-                  className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300   text-gray-700  text-sm font-bold rounded transition-colors h-[38px] md:self-end"
-                  aria-label="Clear Filters"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100 ">
-            <div className="overflow-x-auto">
-              <table className="w-full block md:table divide-y divide-gray-200 ">
-                <thead className="bg-gray-50  hidden md:table-header-group">
-                  <tr>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Date / Time
-                    </th>
-                    {true && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Driver
-                    </th>}
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Route
-                    </th>
-                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Odometer
-                    </th>
-                    <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500  uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-transparent md:bg-white md: divide-y divide-transparent md:divide-gray-200  block md:table-row-group">
-                  {allVisibleLogs.length === 0 && (
-                    <tr className="block md:table-row bg-white  rounded-lg shadow-sm md:shadow-none border border-gray-100  md:border-0 p-4">
-                      <td colSpan={true ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
-                    </tr>
-                  )}
-                  {allVisibleLogs.slice(0, allVisibleCount).map((log) => {
-                    const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
-                    return (
-                      <tr key={log.id} className={`hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border ${hasIssue ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-100 '} md:border-0 mb-4 md:mb-0 relative`}>
-                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Date / Time</div>
-                          <div className="whitespace-nowrap flex items-center gap-2">
-                            {hasIssue && <span className="text-lg" title="Issue Reported">🚨</span>}
-                            <ClientDate timestamp={log.created_at} />
-                          </div>
-                        </td>
-                        {true && (
-                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
-                          <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
-                        </td>
-                      )}
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Type</div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800  ' : 'bg-orange-100 text-orange-800  '
-                          }`}>
-                            {log.trip_type}
-                          </span>
-                          {log.edit_count > 0 && (
-                            <div className="relative">
-                              <span 
-                                onClick={() => setActiveTooltipLogId(activeTooltipLogId === log.id ? null : log.id)}
-                                className="whitespace-nowrap px-2 inline-flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200 cursor-pointer hover:bg-purple-200 transition-colors" 
-                              >
-                                Edited <InformationCircleIcon className="w-3 h-3" />
-                              </span>
-                              {activeTooltipLogId === log.id && (
-                                <div className="absolute z-50 mt-2 left-0 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-3 text-xs text-gray-700 font-normal">
-                                  <div className="flex justify-between items-center border-b pb-1 mb-2">
-                                    <span className="font-bold text-gray-900">Edit Details</span>
-                                    <button onClick={(e) => { e.stopPropagation(); setActiveTooltipLogId(null); }} className="text-gray-400 hover:text-gray-600">
-                                      <XCircleIcon className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                  <p className="mb-1"><span className="font-semibold">Times edited:</span> {log.edit_count}</p>
-                                  {log.edit_history && log.edit_history.length > 0 && (
-                                    <>
-                                      <p className="mb-1"><span className="font-semibold">By:</span> {log.edit_history[log.edit_history.length - 1].editor_name || 'System'}</p>
-                                      <p><span className="font-semibold">At:</span> {new Date(log.edit_history[log.edit_history.length - 1].edited_at).toLocaleString()}</p>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Route</div>
-                        <div className="whitespace-nowrap text-gray-900 ">{log.route_id}</div>
-                      </td>
-                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Odometer</div>
-                        <div className="whitespace-nowrap text-gray-900 ">{log.odometer}</div>
-                      </td>
-                      <td className="p-4 block md:table-cell text-right text-sm font-medium">
-                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-3 text-left">Actions</div>
-                        <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
-                          {canEditOrDelete(log) && (
-                            <>
-                              <button onClick={() => handleEditClick(log)} className="p-2 bg-blue-50  text-blue-600  hover:bg-blue-100  rounded-lg transition-colors" title="Edit">
-                                <PencilSquareIcon className="w-5 h-5" />
-                              </button>
-                              <button onClick={() => handleDelete(log.id)} className="p-2 bg-red-50  text-red-600  hover:bg-red-100  rounded-lg transition-colors" title="Delete">
-                                <TrashIcon className="w-5 h-5" />
-                              </button>
-                            </>
-                          )}
-                          <Link href={`/logs/${log.id}`} className="p-2 bg-gray-50  text-gray-600  hover:bg-gray-100  rounded-lg transition-colors" title="View">
-                            <EyeIcon className="w-5 h-5" />
-                          </Link>
-                          <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50  text-green-600  hover:bg-green-100  rounded-lg transition-colors" title="CSV">
-                            <DocumentArrowDownIcon className="w-5 h-5" />
-                          </button>
-                          <button onClick={() => handlePrint(log)} className="p-2 bg-purple-50  text-purple-600  hover:bg-purple-100  rounded-lg transition-colors" title="Print">
-                            <PrinterIcon className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              </table>
-            </div>
-            
-            {(allVisibleLogs.length > allVisibleCount || allVisibleCount > 5) && (
-              <div className="text-center mt-6 flex justify-center gap-4">
-                {allVisibleCount > 5 && (
-                  <button onClick={() => setAllVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
-                    Show Less
-                  </button>
-                )}
-                {allVisibleLogs.length > allVisibleCount && (
-                  <button onClick={() => setAllVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
-                    Load More
-                  </button>
-                )}
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-              </div>
-            )}
-          </div>
-
-          {/* 4. MED CARTS */}
-          {userProfile?.role === 'Admin' && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <button 
-                onClick={() => { toggleTab('med-carts'); setEditingLog(null);  }}
-                className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">💊</span> Med Carts
-                </div>
-                <span className="text-gray-400">{activeTabs.includes('med-carts') ? '▼' : '▶'}</span>
-              </button>
-              {activeTabs.includes('med-carts') && (
-                <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                  {true && (
-        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
-          <h2 className="text-xl font-bold text-gray-900  mb-4">Med Carts Management</h2>
-          <p className="text-gray-500 ">Med Carts management interface is under development.</p>
-        </div>
-      )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 5. MY INFO */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <button 
-              onClick={() => { toggleTab('my-info'); setEditingLog(null); }}
-              className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-blue-600">👤</span> My Info
-              </div>
-              <span className="text-gray-400">{activeTabs.includes('my-info') ? '▼' : '▶'}</span>
-            </button>
-            {activeTabs.includes('my-info') && (
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                {true && (
+      
+      {activeTab === 'my-info' && userProfile && (
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  max-w-2xl mx-auto space-y-8 animate-in fade-in slide-in-from-top-4">
           
           <div className="flex items-center gap-4">
@@ -2414,16 +1254,216 @@ export default function Dashboard() {
 
         </div>
       )}
+
+      {activeTab === 'med-carts' && userProfile?.role === 'Admin' && (
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900  mb-4">Med Carts Management</h2>
+          <p className="text-gray-500 ">Med Carts management interface is under development.</p>
+        </div>
+      )}
+
+      {userProfile && (activeTab === 'history' || activeTab === 'all') && (
+        <div className="flex flex-col gap-4">
+          {activeTab === 'all' && (
+            <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100  flex flex-wrap gap-4 items-end mb-2">
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Driver Name</label>
+                <input type="text" placeholder="Search driver..." value={filterDriver} onChange={(e) => setFilterDriver(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Route</label>
+                <select value={filterRoute} onChange={(e) => setFilterRoute(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="">All Routes</option>
+                  {routeOptions.map(r => <option key={r.id} value={r.name}>{r.name}</option>)}
+                </select>
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Trip Type</label>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                  <option value="">All Types</option>
+                  <option value="Pre-Trip">Pre-Trip</option>
+                  <option value="Post-Trip">Post-Trip</option>
+                </select>
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Date</label>
+                <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="w-full border p-2 rounded bg-gray-50    outline-none focus:ring-2 focus:ring-blue-500 text-sm" />
+              </div>
+              <div className="flex items-center gap-2 mb-2 md:mb-1">
+                <input 
+                  type="checkbox" 
+                  id="filterIssuesOnly" 
+                  checked={filterIssuesOnly} 
+                  onChange={(e) => setFilterIssuesOnly(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="filterIssuesOnly" className="text-xs font-bold text-gray-700 cursor-pointer uppercase tracking-wide">
+                  Issues Only 🚨
+                </label>
+              </div>
+              <div className="flex-none w-full md:w-auto mt-2 md:mt-0">
+                <button 
+                  onClick={() => {
+                    setFilterDriver("");
+                    setFilterRoute("");
+                    setFilterType("");
+                    setFilterDate("");
+                    setFilterIssuesOnly(false);
+                  }}
+                  className="w-full md:w-auto px-4 py-2 bg-gray-200 hover:bg-gray-300   text-gray-700  text-sm font-bold rounded transition-colors h-[38px] md:self-end"
+                  aria-label="Clear Filters"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100 ">
+            <div className="overflow-x-auto">
+              <table className="w-full block md:table divide-y divide-gray-200 ">
+                <thead className="bg-gray-50  hidden md:table-header-group">
+                  <tr>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                      Date / Time
+                    </th>
+                    {activeTab === 'all' && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                      Driver
+                    </th>}
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                      Type
+                    </th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                      Route
+                    </th>
+                    <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                      Odometer
+                    </th>
+                    <th scope="col" className="p-4 text-right text-xs font-medium text-gray-500  uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-transparent md:bg-white md: divide-y divide-transparent md:divide-gray-200  block md:table-row-group">
+                  {visibleLogs.length === 0 && (
+                    <tr className="block md:table-row bg-white  rounded-lg shadow-sm md:shadow-none border border-gray-100  md:border-0 p-4">
+                      <td colSpan={activeTab === 'all' ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
+                    </tr>
+                  )}
+                  {visibleLogs.slice(0, visibleCount).map((log) => {
+                    const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
+                    return (
+                      <tr key={log.id} className={`hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border ${hasIssue ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-100 '} md:border-0 mb-4 md:mb-0 relative`}>
+                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Date / Time</div>
+                          <div className="whitespace-nowrap flex items-center gap-2">
+                            {hasIssue && <span className="text-lg" title="Issue Reported">🚨</span>}
+                            <ClientDate timestamp={log.created_at} />
+                          </div>
+                        </td>
+                        {activeTab === 'all' && (
+                        <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                          <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
+                          <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
+                        </td>
+                      )}
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Type</div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`whitespace-nowrap px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            log.trip_type === 'Pre-Trip' ? 'bg-blue-100 text-blue-800  ' : 'bg-orange-100 text-orange-800  '
+                          }`}>
+                            {log.trip_type}
+                          </span>
+                          {log.edit_count > 0 && (
+                            <div className="relative">
+                              <span 
+                                onClick={() => setActiveTooltipLogId(activeTooltipLogId === log.id ? null : log.id)}
+                                className="whitespace-nowrap px-2 inline-flex items-center gap-1 text-[10px] leading-5 font-bold rounded-full bg-purple-100 text-purple-700 uppercase tracking-wider border border-purple-200 cursor-pointer hover:bg-purple-200 transition-colors" 
+                              >
+                                Edited <InformationCircleIcon className="w-3 h-3" />
+                              </span>
+                              {activeTooltipLogId === log.id && (
+                                <div className="absolute z-50 mt-2 left-0 w-56 bg-white border border-gray-200 rounded-lg shadow-xl p-3 text-xs text-gray-700 font-normal">
+                                  <div className="flex justify-between items-center border-b pb-1 mb-2">
+                                    <span className="font-bold text-gray-900">Edit Details</span>
+                                    <button onClick={(e) => { e.stopPropagation(); setActiveTooltipLogId(null); }} className="text-gray-400 hover:text-gray-600">
+                                      <XCircleIcon className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                  <p className="mb-1"><span className="font-semibold">Times edited:</span> {log.edit_count}</p>
+                                  {log.edit_history && log.edit_history.length > 0 && (
+                                    <>
+                                      <p className="mb-1"><span className="font-semibold">By:</span> {log.edit_history[log.edit_history.length - 1].editor_name || 'System'}</p>
+                                      <p><span className="font-semibold">At:</span> {new Date(log.edit_history[log.edit_history.length - 1].edited_at).toLocaleString()}</p>
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Route</div>
+                        <div className="whitespace-nowrap text-gray-900 ">{log.route_id}</div>
+                      </td>
+                      <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Odometer</div>
+                        <div className="whitespace-nowrap text-gray-900 ">{log.odometer}</div>
+                      </td>
+                      <td className="p-4 block md:table-cell text-right text-sm font-medium">
+                        <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-3 text-left">Actions</div>
+                        <div className="flex items-center justify-start md:justify-end gap-2 flex-wrap">
+                          {canEditOrDelete(log) && (
+                            <>
+                              <button onClick={() => handleEditClick(log)} className="p-2 bg-blue-50  text-blue-600  hover:bg-blue-100  rounded-lg transition-colors" title="Edit">
+                                <PencilSquareIcon className="w-5 h-5" />
+                              </button>
+                              <button onClick={() => handleDelete(log.id)} className="p-2 bg-red-50  text-red-600  hover:bg-red-100  rounded-lg transition-colors" title="Delete">
+                                <TrashIcon className="w-5 h-5" />
+                              </button>
+                            </>
+                          )}
+                          <Link href={`/logs/${log.id}`} className="p-2 bg-gray-50  text-gray-600  hover:bg-gray-100  rounded-lg transition-colors" title="View">
+                            <EyeIcon className="w-5 h-5" />
+                          </Link>
+                          <button onClick={() => downloadCSV(log)} className="p-2 bg-green-50  text-green-600  hover:bg-green-100  rounded-lg transition-colors" title="CSV">
+                            <DocumentArrowDownIcon className="w-5 h-5" />
+                          </button>
+                          <button onClick={() => handlePrint(log)} className="p-2 bg-purple-50  text-purple-600  hover:bg-purple-100  rounded-lg transition-colors" title="Print">
+                            <PrinterIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              </table>
+            </div>
+            
+            {(visibleLogs.length > visibleCount || visibleCount > 5) && (
+              <div className="text-center mt-6 flex justify-center gap-4">
+                {visibleCount > 5 && (
+                  <button onClick={() => setVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
+                    Show Less
+                  </button>
+                )}
+                {visibleLogs.length > visibleCount && (
+                  <button onClick={() => setVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
+                    Load More
+                  </button>
+                )}
               </div>
             )}
-          </div>
 
+          </div>
         </div>
-      ) : (
-        // UNAUTHENTICATED DRIVER VIEW (JUST THE FORM)
-        <div className="w-full">
-          {/* Main Form */}
-      {true && (
+      )}
+
+      {/* Main Form */}
+      {(!userProfile || activeTab === 'new') && (
         <div className="bg-white  p-4 md:p-6 rounded-xl shadow-sm border border-gray-100  max-w-4xl">
           <h2 className="text-xl font-semibold mb-2 text-gray-900 ">
             {editingLog ? `Editing Log #${editingLog.id}` : "Submit New Pre/Post Trip Inspection"}
@@ -3039,7 +2079,7 @@ export default function Dashboard() {
               {editingLog && (
                 <button 
                   type="button" 
-                  onClick={() => { setEditingLog(null); resetForm(); setActiveTabs(['history']); }} 
+                  onClick={() => { setEditingLog(null); resetForm(); setActiveTab('history'); }} 
                   disabled={submitting} 
                   className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200    transition-all"
                 >
@@ -3111,9 +2151,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-        </div>
-      )}
 
-</div>
+          </div>
   );
 }
