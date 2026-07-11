@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 // --- CONFIGURATION: ROUTE DATA ---
 const ROUTE_DATA = [
@@ -81,7 +82,33 @@ const PROFILES_DATA: Profile[] = [
 ];
 
 export default function ContactsPage() {
+  const supabase = createClient();
   const profiles = PROFILES_DATA;
+  const [dbRoutes, setDbRoutes] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      const { data } = await supabase.from('routes').select('id, name').eq('active', true).order('name');
+      if (data) setDbRoutes(data);
+    };
+    fetchRoutes();
+  }, [supabase]);
+
+  const displayRoutes = dbRoutes.map(dbRoute => {
+    const staticMatch = ROUTE_DATA.find(r => r.region === dbRoute.name);
+    if (staticMatch) return staticMatch;
+    
+    return {
+      id: dbRoute.id.toString(),
+      region: dbRoute.name,
+      regionColor: "text-gray-600",
+      scannerPhone: "N/A",
+      duration: "TBD",
+      stops: []
+    };
+  });
+
+  const finalRoutes = displayRoutes.length > 0 ? displayRoutes : ROUTE_DATA;
 
   // --- FILTERING LOGIC ---
   const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
@@ -93,6 +120,8 @@ export default function ContactsPage() {
     const [links, setLinks] = useState({ google: '', apple: '', waze: '' });
 
     useEffect(() => {
+      if (!stops || stops.length === 0) return;
+
       const origin = encodeURIComponent("Midstate Dr, Auburn, MA");
       const destination = encodeURIComponent("Midstate Dr, Auburn, MA");
       const waypoints = encodeURIComponent(stops.map(s => s.address).join('|'));
@@ -271,7 +300,7 @@ export default function ContactsPage() {
           
           {/* --- MOBILE VIEW (CARDS) --- */}
           <div className="block md:hidden space-y-4 p-4">
-            {ROUTE_DATA.map((route) => (
+            {finalRoutes.map((route) => (
               <div key={route.id} className="bg-white  p-5 rounded-xl shadow-sm border border-gray-200 ">
                 <div className="flex justify-between items-start mb-3 pb-3 border-b border-gray-100 ">
                   <div>
@@ -294,7 +323,7 @@ export default function ContactsPage() {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs text-gray-500  font-semibold uppercase">Locations ({route.stops.length})</span>
-                    <NavDropdownMenu stops={route.stops} isDesktop={false} />
+                    {route.stops.length > 0 && <NavDropdownMenu stops={route.stops} isDesktop={false} />}
                   </div>
                   <div className="space-y-3 bg-gray-50  p-3 rounded-lg border border-gray-100 ">
                     {route.stops.map((stop, idx) => (
@@ -325,7 +354,7 @@ export default function ContactsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 ">
-                {ROUTE_DATA.map((route) => (
+                {finalRoutes.map((route) => (
                   <tr key={route.id} className="hover:bg-gray-50  align-top transition-colors">
                     <td className="p-4 font-medium text-red-600 ">{route.id}</td>
                     <td className={`p-4 font-bold ${route.regionColor}`}>{route.region}</td>
@@ -336,7 +365,7 @@ export default function ContactsPage() {
                     </td>
                     <td className="p-4 text-gray-600 ">
                       <div className="mb-4">
-                        <NavDropdownMenu stops={route.stops} isDesktop={true} />
+                        {route.stops.length > 0 && <NavDropdownMenu stops={route.stops} isDesktop={true} />}
                       </div>
                       <div className="space-y-4">
                         {route.stops.map((stop, idx) => (
