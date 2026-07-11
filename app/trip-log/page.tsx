@@ -1788,6 +1788,9 @@ export default function Dashboard() {
                     
                     {expandedFacilityId === facility.id && (
                       <div className="p-4 bg-white border-t border-gray-200 flex gap-3 animate-in slide-in-from-top-2">
+                        <button className="flex-1 py-2 px-3 bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <UserPlusIcon className="w-4 h-4" /> Assign
+                        </button>
                         {editingFacilityId === facility.id ? (
                           <button 
                             onClick={() => handleUpdateFacility(facility.id)}
