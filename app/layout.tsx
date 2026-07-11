@@ -4,6 +4,7 @@ import "./globals.css";
 import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import AutoLogout from "./components/AutoLogout";
+import BackToTop from "./components/BackToTop";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,6 +26,7 @@ export default function RootLayout({
         <main className="flex-grow w-full">
           {children}
         </main>
+        <BackToTop />
         <Footer />
       </body>
     </html>
