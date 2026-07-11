@@ -20,10 +20,26 @@ export async function deleteRoute(routeId: number) {
 
 export async function updateRoute(routeId: number, name: string) {
   try {
-    await prisma.route.update({
-      where: { id: routeId },
-      data: { name }
+    const route = await prisma.route.findUnique({
+      where: { id: routeId }
     });
+
+    if (!route) {
+      return { success: false, error: 'Route not found' };
+    }
+
+    const oldName = route.name;
+
+    await prisma.$transaction([
+      prisma.route.update({
+        where: { id: routeId },
+        data: { name }
+      }),
+      prisma.tripLog.updateMany({
+        where: { route_id: oldName },
+        data: { route_id: name }
+      })
+    ]);
     
     // Revalidate the dashboard page to refresh the route list
     revalidatePath('/trip-log');
