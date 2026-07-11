@@ -150,6 +150,7 @@ export default function ContactsPage() {
   // 2. Management List
   const managers = profiles.filter(p => 
     p.email !== hiddenEmail && 
+    p.email !== "idong.essien@comcast.net" &&
     (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
     p.email !== adminEmail 
   );
