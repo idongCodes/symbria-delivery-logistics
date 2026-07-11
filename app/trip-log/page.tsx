@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -1181,7 +1181,13 @@ export default function Dashboard() {
       </header>
 
       {userProfile && ( // Only show tabs if user is authenticated
-        <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
+        <>
+          <div className="flex justify-end mb-2 px-2">
+            <button className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors border border-gray-200 shadow-sm" aria-label="Menu">
+              <Bars3Icon className="h-5 w-5 md:h-6 md:w-6" />
+            </button>
+          </div>
+          <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
           <button onClick={() => { setActiveTab('new');
             setEditingLog(null); setVisibleCount(5); 
           }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}>
@@ -1216,6 +1222,7 @@ export default function Dashboard() {
             My Info
           </button>
         </div>
+        </>
       )}
       
       {activeTab === 'my-info' && userProfile && (
