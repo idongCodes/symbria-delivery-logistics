@@ -1178,9 +1178,9 @@ export default function Dashboard() {
             message: result.error || 'Failed to add route',
             type: 'error'
           });
-        } else {
+        } else if (result.route) {
           // Update local state to reflect new route
-          setRouteOptions(prev => [...prev, { id: result.route.id, name: result.route.name }]);
+          setRouteOptions(prev => [...prev, { id: result.route!.id, name: result.route!.name }]);
           showModal({
             title: 'Route Added',
             message: `Successfully added the route "${name}".`,
