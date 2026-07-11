@@ -155,6 +155,7 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1182,10 +1183,21 @@ export default function Dashboard() {
 
       {userProfile && ( // Only show tabs if user is authenticated
         <>
-          <div className="flex justify-end mb-2 px-2 md:hidden">
-            <button className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors border border-gray-200 shadow-sm" aria-label="Menu">
+          <div className="flex justify-end mb-2 px-2 md:hidden relative">
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors border border-gray-200 shadow-sm" aria-label="Menu">
               <Bars3Icon className="h-5 w-5 md:h-6 md:w-6" />
             </button>
+            
+            {isMobileMenuOpen && (
+              <div className="absolute top-full right-2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-4 text-sm text-gray-600 text-center flex flex-col gap-2">
+                  <p className="font-semibold text-gray-800">Mobile Menu</p>
+                  <p>Custom modal content goes here.</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
           <button onClick={() => { setActiveTab('new');
