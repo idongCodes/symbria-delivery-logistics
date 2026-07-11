@@ -63,3 +63,14 @@ model Route {
   @@map("routes")
 }
 
+// 5. Facilities
+model Facility {
+  id      Int     @id @default(autoincrement())
+  name    String  @unique
+  address String?
+  phone   String?
+  active  Boolean @default(true)
+
+  @@map("facilities")
+}
+

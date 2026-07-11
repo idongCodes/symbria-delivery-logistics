@@ -104,9 +104,16 @@ type UserProfile = {
 };
 
 // Shape for Dynamic Routes
-type RouteOption = {
+interface RouteOption {
   id: number;
   name: string;
+}
+
+interface FacilityOption {
+  id: number;
+  name: string;
+  address: string | null;
+  phone: string | null;
 };
 
 type ModalConfig = {
@@ -155,6 +162,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
+  const [facilityOptions, setFacilityOptions] = useState<FacilityOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
@@ -162,6 +170,8 @@ export default function Dashboard() {
   const [editingRouteName, setEditingRouteName] = useState("");
   const [isAddingRoute, setIsAddingRoute] = useState(false);
   const [newRouteName, setNewRouteName] = useState("");
+  const [routeSearch, setRouteSearch] = useState("");
+  const [facilitySearch, setFacilitySearch] = useState("");
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -176,6 +186,7 @@ export default function Dashboard() {
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleFacilityCount, setVisibleFacilityCount] = useState(5);
   const [activeTooltipLogId, setActiveTooltipLogId] = useState<number | null>(null);
 
   // Filtering State
@@ -793,6 +804,15 @@ export default function Dashboard() {
       if (routeError) console.error("Route Error:", routeError);
       if (routeData) setRouteOptions(routeData);
 
+      const { data: facilityData, error: facilityError } = await supabase
+        .from('facilities')
+        .select('id, name, address, phone')
+        .eq('active', true)
+        .order('name');
+        
+      if (facilityError) console.error("Facility Error:", facilityError);
+      if (facilityData) setFacilityOptions(facilityData);
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { 
         setLoading(false); // Ensure loading state is reset even without a session
@@ -1249,6 +1269,15 @@ export default function Dashboard() {
     });
   };
 
+  const filteredRoutes = routeOptions.filter(route => 
+    route.name.toLowerCase().includes(routeSearch.toLowerCase())
+  );
+
+  const filteredFacilities = facilityOptions.filter(facility => 
+    facility.name.toLowerCase().includes(facilitySearch.toLowerCase()) || 
+    (facility.address && facility.address.toLowerCase().includes(facilitySearch.toLowerCase()))
+  );
+
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
 
 
@@ -1443,9 +1472,23 @@ export default function Dashboard() {
                 Add Route
               </button>
             </div>
-            {routeOptions.length > 0 ? (
+            
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search routes..."
+                value={routeSearch}
+                onChange={(e) => setRouteSearch(e.target.value)}
+                className="w-full p-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+
+            {filteredRoutes.length > 0 ? (
               <div className="space-y-3">
-                {routeOptions.map((route) => (
+                {filteredRoutes.map((route) => (
                   <div key={route.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                     <div 
                       role="button"
@@ -1552,6 +1595,74 @@ export default function Dashboard() {
               </div>
             ) : (
               <p className="text-gray-500 italic">No routes currently available.</p>
+            )}
+          </div>
+
+          {/* --- AVAILABLE FACILITIES SECTION --- */}
+          <div className="mt-10 space-y-4 pt-8 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-800">Available Facilities</h3>
+              <button 
+                onClick={() => {}}
+                className="flex items-center gap-1.5 bg-purple-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors shadow-sm"
+              >
+                <PlusIcon className="w-4 h-4 stroke-2" />
+                Add Facility
+              </button>
+            </div>
+            <div className="relative mt-4">
+              <input
+                type="text"
+                placeholder="Search facilities (name, city, state)..."
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                className="w-full p-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            
+            <div className="space-y-3">
+              {filteredFacilities.length > 0 ? (
+                filteredFacilities.slice(0, visibleFacilityCount).map(facility => (
+                  <div key={facility.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+                    <div>
+                      <span className="font-semibold text-gray-800 block">{facility.name}</span>
+                      <span className="text-sm text-gray-500 block">{facility.address || 'No address provided'}</span>
+                      <span className="text-xs text-blue-600 block mt-0.5">{facility.phone || 'No phone provided'}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded transition-colors">
+                        <PencilSquareIcon className="w-4 h-4" />
+                      </button>
+                      <button className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded transition-colors">
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="border border-dashed border-gray-300 rounded-lg bg-gray-50 p-8 text-center">
+                  <p className="text-gray-500 font-medium">No facilities found.</p>
+                  <p className="text-gray-400 text-sm mt-1">Try adjusting your search criteria.</p>
+                </div>
+              )}
+            </div>
+
+            {(filteredFacilities.length > visibleFacilityCount || visibleFacilityCount > 5) && (
+              <div className="text-center mt-6 flex justify-center gap-4">
+                {visibleFacilityCount > 5 && (
+                  <button onClick={() => setVisibleFacilityCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
+                    Show Less
+                  </button>
+                )}
+                {filteredFacilities.length > visibleFacilityCount && (
+                  <button onClick={() => setVisibleFacilityCount(prev => prev + 5)} className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full transition">
+                    Load More
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
