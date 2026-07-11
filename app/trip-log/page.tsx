@@ -1157,7 +1157,9 @@ export default function Dashboard() {
     <div className="p-4 md:p-8 max-w-6xl mx-auto bg-gray-50  min-h-screen transition-colors">
       <header className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 ">Pre/Post-Trip Log</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 ">
+            {userProfile ? 'Dashboard' : 'Pre/Post-Trip Log'}
+          </h1>
           {userProfile && (
             <p className="text-gray-500  mt-1">Welcome back, {userProfile.firstName}</p>
           )}
