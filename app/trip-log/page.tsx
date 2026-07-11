@@ -773,7 +773,7 @@ export default function Dashboard() {
     }
     setChecklistData(answers);
     setChecklistComments(comments);
-    setActiveTab('new');
+    setActiveTabs(['new']);
   };
 
   const fetchData = useCallback(async () => {
@@ -1037,9 +1037,9 @@ export default function Dashboard() {
         resetForm();
         fetchData();
         if (userProfile?.role === 'Admin') {
-          setActiveTab('all');
+          setActiveTabs(['all']);
         } else {
-          setActiveTab('history');
+          setActiveTabs(['history']);
         }
   
       } else {
@@ -1828,7 +1828,7 @@ export default function Dashboard() {
               {editingLog && (
                 <button 
                   type="button" 
-                  onClick={() => { setEditingLog(null); resetForm(); setActiveTab('history'); }} 
+                  onClick={() => { setEditingLog(null); resetForm(); setActiveTabs(['history']); }} 
                   disabled={submitting} 
                   className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200    transition-all"
                 >
@@ -3045,7 +3045,7 @@ export default function Dashboard() {
               {editingLog && (
                 <button 
                   type="button" 
-                  onClick={() => { setEditingLog(null); resetForm(); setActiveTab('history'); }} 
+                  onClick={() => { setEditingLog(null); resetForm(); setActiveTabs(['history']); }} 
                   disabled={submitting} 
                   className="font-bold py-3 px-6 rounded bg-red-100 text-red-700 hover:bg-red-200    transition-all"
                 >
