@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
-import { deleteRoute } from "@/app/actions/route-actions";
+import { deleteRoute, updateRoute } from "@/app/actions/route-actions";
 import imageCompression from "browser-image-compression";
 import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
@@ -158,6 +158,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
+  const [editingRouteId, setEditingRouteId] = useState<number | null>(null);
+  const [editingRouteName, setEditingRouteName] = useState("");
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1154,6 +1156,25 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
+  const handleUpdateRoute = async (routeId: number) => {
+    if (!editingRouteName.trim()) return;
+    
+    // Optimistic UI update
+    const previousRoutes = [...routeOptions];
+    setRouteOptions(routeOptions.map(r => r.id === routeId ? { ...r, name: editingRouteName.trim() } : r));
+    setEditingRouteId(null);
+    
+    const result = await updateRoute(routeId, editingRouteName.trim());
+    if (!result.success) {
+      showModal({
+        title: 'Error',
+        message: result.error || 'Failed to update route',
+        type: 'error'
+      });
+      setRouteOptions(previousRoutes); // Revert optimistic update
+    }
+  };
+
   const handleDeleteRoute = (routeId: number) => {
     showModal({
       title: 'Delete Route',
@@ -1377,7 +1398,18 @@ export default function Dashboard() {
                       onClick={() => setExpandedRouteId(expandedRouteId === route.id ? null : route.id)}
                       className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
-                      <span className="font-semibold text-gray-800">{route.name}</span>
+                      {editingRouteId === route.id ? (
+                        <input 
+                          type="text" 
+                          value={editingRouteName}
+                          onChange={(e) => setEditingRouteName(e.target.value)}
+                          onClick={(e) => e.stopPropagation()} // Prevent accordion toggle
+                          className="font-semibold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 w-full max-w-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="font-semibold text-gray-800">{route.name}</span>
+                      )}
                       <ChevronDownIcon className={`w-5 h-5 text-gray-500 transition-transform ${expandedRouteId === route.id ? 'rotate-180' : ''}`} />
                     </button>
                     
@@ -1386,9 +1418,24 @@ export default function Dashboard() {
                         <button className="flex-1 py-2 px-3 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
                           <UserPlusIcon className="w-4 h-4" /> Assign
                         </button>
-                        <button className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
-                          <PencilSquareIcon className="w-4 h-4" /> Edit
-                        </button>
+                        {editingRouteId === route.id ? (
+                          <button 
+                            onClick={() => handleUpdateRoute(route.id)}
+                            className="flex-1 py-2 px-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                            <CheckCircleIcon className="w-4 h-4" /> Save
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => {
+                              setEditingRouteId(route.id);
+                              setEditingRouteName(route.name);
+                            }}
+                            className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                            <PencilSquareIcon className="w-4 h-4" /> Edit
+                          </button>
+                        )}
                         <button 
                           onClick={() => handleDeleteRoute(route.id)}
                           className="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
