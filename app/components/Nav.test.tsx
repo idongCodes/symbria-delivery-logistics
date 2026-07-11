@@ -56,8 +56,8 @@ describe('Nav Component', () => {
       expect(screen.queryByRole('link', { name: /Complete Pre\/Post-Trip/i })).not.toBeInTheDocument()
     })
     
-    // Should NOT show Trip Log link (from desktop authenticated view)
-    expect(screen.queryByRole('link', { name: /Trip Log/i, hidden: false })).not.toBeInTheDocument()
+    // Should NOT show Dashboard link (from desktop authenticated view)
+    expect(screen.queryByRole('link', { name: /Dashboard/i, hidden: false })).not.toBeInTheDocument()
     
     // Should NOT show Contacts link directly (it's inside the menu)
     expect(screen.queryByRole('link', { name: /Contacts/i, hidden: false })).not.toBeInTheDocument()
@@ -81,7 +81,7 @@ describe('Nav Component', () => {
     
     await waitFor(() => {
       // There is now only one of each link since desktop inline and mobile bottom are gone
-      const dashboardLink = screen.getByRole('link', { name: /Trip Log/i })
+      const dashboardLink = screen.getByRole('link', { name: /Dashboard/i })
       expect(dashboardLink).toBeInTheDocument()
 
       const medCartsLink = screen.getByRole('link', { name: /Med Carts/i })
