@@ -1182,7 +1182,7 @@ export default function Dashboard() {
 
       {userProfile && ( // Only show tabs if user is authenticated
         <>
-          <div className="flex justify-end mb-2 px-2">
+          <div className="flex justify-end mb-2 px-2 md:hidden">
             <button className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors border border-gray-200 shadow-sm" aria-label="Menu">
               <Bars3Icon className="h-5 w-5 md:h-6 md:w-6" />
             </button>
