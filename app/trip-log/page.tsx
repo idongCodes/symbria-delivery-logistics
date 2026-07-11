@@ -1035,7 +1035,7 @@ export default function Dashboard() {
 
         resetForm();
         fetchData();
-        if (userProfile?.role === 'Admin') {
+        if (userProfile?.role === 'Admin' || userProfile?.role === 'Management') {
           setActiveTab('all');
         } else {
           setActiveTab('history');
@@ -1211,7 +1211,7 @@ export default function Dashboard() {
                       All Logs
                     </button>
                     
-                    {userProfile?.role === 'Admin' && (
+                    {(userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
                       <>
                         <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'med-carts' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
                           Med Carts
@@ -1247,7 +1247,7 @@ export default function Dashboard() {
             All Logs
           </button>
           
-          {userProfile?.role === 'Admin' && (
+          {(userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
             <>
               <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
                 Med Carts
@@ -1318,21 +1318,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      {activeTab === 'med-carts' && userProfile?.role === 'Admin' && (
+      {activeTab === 'med-carts' && (userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Med Carts Management</h2>
           <p className="text-gray-500 ">Med Carts management interface is under development.</p>
         </div>
       )}
 
-      {activeTab === 'driver-management' && userProfile?.role === 'Admin' && (
+      {activeTab === 'driver-management' && (userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Driver Management</h2>
           <p className="text-gray-500 ">Driver management interface is under development.</p>
         </div>
       )}
 
-      {activeTab === 'route-management' && userProfile?.role === 'Admin' && (
+      {activeTab === 'route-management' && (userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Route/Location Management</h2>
           <p className="text-gray-500 ">Route and Location management interface is under development.</p>
