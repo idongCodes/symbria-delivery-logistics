@@ -1335,7 +1335,18 @@ export default function Dashboard() {
       {activeTab === 'route-management' && (userProfile?.role === 'Admin' || userProfile?.role === 'Management') && (
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Route/Location Management</h2>
-          <p className="text-gray-500 ">Route and Location management interface is under development.</p>
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-800">Available Routes</h3>
+            {routeOptions.length > 0 ? (
+              <ul className="list-disc list-inside space-y-2 text-gray-600">
+                {routeOptions.map((route) => (
+                  <li key={route.id} className="py-1">{route.name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 italic">No routes currently available.</p>
+            )}
+          </div>
         </div>
       )}
 
