@@ -37,7 +37,7 @@ export default function LoginPage() {
       setLoading(false);
     } else {
       setMessage("Success! Logging you in...");
-      router.push("/trip-log");
+      router.push("/dashboard");
       router.refresh();
     }
   };

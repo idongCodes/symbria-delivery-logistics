@@ -36,16 +36,21 @@ export async function middleware(request: NextRequest) {
   // --- 🔒 PROTECTED ROUTES ---
   // Only protect specific routes. The landing page "/" is public by default.
   if (
-    (request.nextUrl.pathname.startsWith('/admin')) 
+    (request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/dashboard')) 
     && !user
   ) {
     // Redirect unauthenticated users to the Login page, NOT the landing page
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Redirect authenticated users trying to access the public driver trip-log to the admin dashboard
+  if (request.nextUrl.pathname === '/trip-log' && user) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
   return response
 }
 
 export const config = {
-  matcher: ['/trip-log/:path*', '/admin/:path*', '/login', '/share/:path*'],
+  matcher: ['/trip-log/:path*', '/dashboard/:path*', '/admin/:path*', '/login', '/share/:path*'],
 }

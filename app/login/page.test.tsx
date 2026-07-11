@@ -57,7 +57,7 @@ describe('LoginPage', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Success! Logging you in...')).toBeInTheDocument();
-      expect(pushMock).toHaveBeenCalledWith('/trip-log');
+      expect(pushMock).toHaveBeenCalledWith('/dashboard');
     });
   });
 
