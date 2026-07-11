@@ -170,6 +170,8 @@ export default function Dashboard() {
   const [editingRouteName, setEditingRouteName] = useState("");
   const [isAddingRoute, setIsAddingRoute] = useState(false);
   const [newRouteName, setNewRouteName] = useState("");
+  const [routeSearch, setRouteSearch] = useState("");
+  const [facilitySearch, setFacilitySearch] = useState("");
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1267,6 +1269,15 @@ export default function Dashboard() {
     });
   };
 
+  const filteredRoutes = routeOptions.filter(route => 
+    route.name.toLowerCase().includes(routeSearch.toLowerCase())
+  );
+
+  const filteredFacilities = facilityOptions.filter(facility => 
+    facility.name.toLowerCase().includes(facilitySearch.toLowerCase()) || 
+    (facility.address && facility.address.toLowerCase().includes(facilitySearch.toLowerCase()))
+  );
+
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
 
 
@@ -1461,9 +1472,23 @@ export default function Dashboard() {
                 Add Route
               </button>
             </div>
-            {routeOptions.length > 0 ? (
+            
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search routes..."
+                value={routeSearch}
+                onChange={(e) => setRouteSearch(e.target.value)}
+                className="w-full p-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+
+            {filteredRoutes.length > 0 ? (
               <div className="space-y-3">
-                {routeOptions.map((route) => (
+                {filteredRoutes.map((route) => (
                   <div key={route.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
                     <div 
                       role="button"
@@ -1585,10 +1610,22 @@ export default function Dashboard() {
                 Add Facility
               </button>
             </div>
+            <div className="relative mt-4">
+              <input
+                type="text"
+                placeholder="Search facilities (name, city, state)..."
+                value={facilitySearch}
+                onChange={(e) => setFacilitySearch(e.target.value)}
+                className="w-full p-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
             
             <div className="space-y-3">
-              {facilityOptions.length > 0 ? (
-                facilityOptions.slice(0, visibleFacilityCount).map(facility => (
+              {filteredFacilities.length > 0 ? (
+                filteredFacilities.slice(0, visibleFacilityCount).map(facility => (
                   <div key={facility.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div>
                       <span className="font-semibold text-gray-800 block">{facility.name}</span>
@@ -1607,20 +1644,20 @@ export default function Dashboard() {
                 ))
               ) : (
                 <div className="border border-dashed border-gray-300 rounded-lg bg-gray-50 p-8 text-center">
-                  <p className="text-gray-500 font-medium">No facilities available yet.</p>
-                  <p className="text-gray-400 text-sm mt-1">Tap 'Add Facility' to create your first facility.</p>
+                  <p className="text-gray-500 font-medium">No facilities found.</p>
+                  <p className="text-gray-400 text-sm mt-1">Try adjusting your search criteria.</p>
                 </div>
               )}
             </div>
 
-            {(facilityOptions.length > visibleFacilityCount || visibleFacilityCount > 5) && (
+            {(filteredFacilities.length > visibleFacilityCount || visibleFacilityCount > 5) && (
               <div className="text-center mt-6 flex justify-center gap-4">
                 {visibleFacilityCount > 5 && (
                   <button onClick={() => setVisibleFacilityCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
                     Show Less
                   </button>
                 )}
-                {facilityOptions.length > visibleFacilityCount && (
+                {filteredFacilities.length > visibleFacilityCount && (
                   <button onClick={() => setVisibleFacilityCount(prev => prev + 5)} className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full transition">
                     Load More
                   </button>
