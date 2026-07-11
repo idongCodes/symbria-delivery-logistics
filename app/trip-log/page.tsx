@@ -1154,17 +1154,28 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-  const handleDeleteRoute = async (routeId: number) => {
-    if (!confirm('Are you sure you want to completely delete and purge this route? This action cannot be undone.')) return;
-    
-    // Optimistic UI update
-    setRouteOptions(routeOptions.filter(route => route.id !== routeId));
-    
-    const result = await deleteRoute(routeId);
-    if (!result.success) {
-      alert(result.error);
-      fetchData(); // Refetch to revert optimistic update
-    }
+  const handleDeleteRoute = (routeId: number) => {
+    showModal({
+      title: 'Delete Route',
+      message: 'Are you sure you want to completely delete and purge this route? This action cannot be undone.',
+      type: 'confirm',
+      confirmText: 'Delete Route',
+      onConfirm: async () => {
+        // Optimistic UI update
+        const previousRoutes = [...routeOptions];
+        setRouteOptions(routeOptions.filter(route => route.id !== routeId));
+        
+        const result = await deleteRoute(routeId);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to delete route',
+            type: 'error'
+          });
+          setRouteOptions(previousRoutes); // Revert optimistic update
+        }
+      }
+    });
   };
 
   if (loading) return <div className="p-8 text-center text-gray-500 ">Loading...</div>;
