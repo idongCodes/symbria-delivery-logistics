@@ -6,7 +6,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION ---
 const PRE_TRIP_QUESTIONS = [
-  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Interior clean of debris, bins/bags organised in trunk",
   "Fuel Tank Full",
   "Gas card in binder",
   "Dashboard warning lights on",
@@ -28,7 +28,7 @@ const PRE_TRIP_QUESTIONS = [
 
 const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
-  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Interior clean of debris, bins/bags organised in trunk",
   "Any new damage to vehicle?"
 ];
 
