@@ -6,7 +6,7 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 
 // --- CONFIGURATION ---
 const PRE_TRIP_QUESTIONS = [
-  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Interior clean of debris, bins/bags organised in trunk",
   "Fuel Tank Full",
   "Gas card in binder",
   "Dashboard warning lights on",
@@ -28,7 +28,7 @@ const PRE_TRIP_QUESTIONS = [
 
 const POST_TRIP_QUESTIONS = [
   "Fuel Tank Full",
-  "Interior clean of debris, bins organised in trunk, up to 3 yellow bags on passenger seat",
+  "Interior clean of debris, bins/bags organised in trunk",
   "Any new damage to vehicle?"
 ];
 
@@ -197,33 +197,35 @@ export default function LogViewer({ log }: { log: LogData }) {
       {log.trip_type === 'Post-Trip' && (
         <div className="animate-in fade-in slide-in-from-top-4">
           <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Scanner</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 ">
-                <tr>
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="w-full text-sm block md:table">
+              <thead className="bg-gray-50 hidden md:table-header-group">
+                <tr className="md:table-row">
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Item</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-600  w-24">Status</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Notes / Defects</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 ">
+              <tbody className="block md:table-row-group divide-y divide-gray-100">
                 {SCANNER_QUESTIONS.map((q, i) => {
                   const val = (checklist[q] as string) || "-";
                   const comment = checklist[`${q}_COMMENT`] as string | undefined;
                   const isBad = val === "No";
 
                   return (
-                    <tr key={i} className="hover:bg-gray-50 ">
-                      <td className="px-4 py-3 text-gray-800 ">{q}</td>
-                      <td className="px-4 py-3 text-center">
+                    <tr key={i} className="block md:table-row hover:bg-gray-50 p-4 md:p-0">
+                      <td className="block md:table-cell px-2 md:px-4 py-2 md:py-3 text-gray-900 font-bold md:font-medium text-[15px] md:text-sm mb-3 md:mb-0 bg-gray-100/70 md:bg-transparent rounded-md md:rounded-none border-b border-gray-200 md:border-none shadow-sm md:shadow-none">{q}</td>
+                      <td className="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-left md:text-center mb-2 md:mb-0">
+                        <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-2">Status:</span>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           isBad ? 'bg-red-100 text-red-800  ' : 'bg-green-100 text-green-800  '
                         }`}>
                           {isBad ? 'ISSUE' : 'OK'}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        {comment ? <span className="text-red-600  font-medium text-xs bg-red-50  px-2 py-1 rounded block w-fit">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
+                      <td className="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+                        <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-2 block mb-1">Notes/Defects:</span>
+                        {comment ? <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-2 rounded block md:w-fit break-words whitespace-normal">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
                       </td>
                     </tr>
                   );
@@ -238,33 +240,35 @@ export default function LogViewer({ log }: { log: LogData }) {
       {log.trip_type === 'Post-Trip' && (
         <div className="animate-in fade-in slide-in-from-top-4">
           <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Keys</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 ">
-                <tr>
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="w-full text-sm block md:table">
+              <thead className="bg-gray-50 hidden md:table-header-group">
+                <tr className="md:table-row">
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Item</th>
                   <th className="px-4 py-3 text-center font-semibold text-gray-600  w-24">Status</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Notes / Defects</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 ">
+              <tbody className="block md:table-row-group divide-y divide-gray-100">
                 {KEY_QUESTIONS.map((q, i) => {
                   const val = (checklist[q] as string) || "-";
                   const comment = checklist[`${q}_COMMENT`] as string | undefined;
                   const isBad = val === "No";
 
                   return (
-                    <tr key={i} className="hover:bg-gray-50 ">
-                      <td className="px-4 py-3 text-gray-800 ">{q}</td>
-                      <td className="px-4 py-3 text-center">
+                    <tr key={i} className="block md:table-row hover:bg-gray-50 p-4 md:p-0">
+                      <td className="block md:table-cell px-2 md:px-4 py-2 md:py-3 text-gray-900 font-bold md:font-medium text-[15px] md:text-sm mb-3 md:mb-0 bg-gray-100/70 md:bg-transparent rounded-md md:rounded-none border-b border-gray-200 md:border-none shadow-sm md:shadow-none">{q}</td>
+                      <td className="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-left md:text-center mb-2 md:mb-0">
+                        <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-2">Status:</span>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           isBad ? 'bg-red-100 text-red-800  ' : 'bg-green-100 text-green-800  '
                         }`}>
                           {isBad ? 'ISSUE' : 'OK'}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        {comment ? <span className="text-red-600  font-medium text-xs bg-red-50  px-2 py-1 rounded block w-fit">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
+                      <td className="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+                        <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-2 block mb-1">Notes/Defects:</span>
+                        {comment ? <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-2 rounded block md:w-fit break-words whitespace-normal">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
                       </td>
                     </tr>
                   );
@@ -391,33 +395,35 @@ export default function LogViewer({ log }: { log: LogData }) {
       {/* CHECKLIST */}
       <div>
         <h3 className="text-lg font-bold text-gray-800  mb-4 border-b  pb-2">Inspection Checklist</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 ">
-              <tr>
+        <div className="overflow-hidden rounded-lg border border-gray-200">
+          <table className="w-full text-sm block md:table">
+            <thead className="bg-gray-50 hidden md:table-header-group">
+              <tr className="md:table-row">
                 <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Item</th>
                 <th className="px-4 py-3 text-center font-semibold text-gray-600  w-24">Status</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-600 ">Notes / Defects</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 ">
+            <tbody className="block md:table-row-group divide-y divide-gray-100">
               {relevantQuestions.map((q, i) => {
                 const val = (checklist[q] as string) || "-";
                 const comment = checklist[`${q}_COMMENT`] as string | undefined;
                 const isBad = DAMAGE_QUESTIONS.includes(q) ? (val === "Yes") : (val === "No");
 
                 return (
-                  <tr key={i} className="hover:bg-gray-50 ">
-                    <td className="px-4 py-3 text-gray-800 ">{q}</td>
-                    <td className="px-4 py-3 text-center">
+                  <tr key={i} className="block md:table-row hover:bg-gray-50 p-4 md:p-0 border-b md:border-0 border-gray-100">
+                    <td className="block md:table-cell px-2 md:px-4 py-2 md:py-3 text-gray-900 font-bold md:font-medium text-[15px] md:text-sm mb-3 md:mb-0 bg-gray-100/70 md:bg-transparent rounded-md md:rounded-none border-b border-gray-200 md:border-none shadow-sm md:shadow-none">{q}</td>
+                    <td className="block md:table-cell px-0 md:px-4 py-1 md:py-3 text-left md:text-center mb-2 md:mb-0">
+                      <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-2">Status:</span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         isBad ? 'bg-red-100 text-red-800  ' : 'bg-green-100 text-green-800  '
                       }`}>
                         {isBad ? 'ISSUE' : 'OK'}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      {comment ? <span className="text-red-600  font-medium text-xs bg-red-50  px-2 py-1 rounded block w-fit">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
+                    <td className="block md:table-cell px-0 md:px-4 py-1 md:py-3">
+                      <span className="md:hidden text-xs font-bold text-gray-500 uppercase mr-2 block mb-1">Notes/Defects:</span>
+                      {comment ? <span className="text-red-600 font-medium text-xs bg-red-50 px-2 py-2 rounded block md:w-fit break-words whitespace-normal">⚠️ {comment}</span> : <span className="text-gray-400">-</span>}
                     </td>
                   </tr>
                 );
@@ -458,25 +464,25 @@ export default function LogViewer({ log }: { log: LogData }) {
                     {new Date(edit.edited_at).toLocaleString()}
                   </span>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full text-xs text-left">
-                    <thead className="text-purple-800 bg-purple-50">
-                      <tr>
-                        <th className="px-2 py-1 border-b border-purple-100">Field</th>
-                        <th className="px-2 py-1 border-b border-purple-100">Old Value</th>
-                        <th className="px-2 py-1 border-b border-purple-100">New Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.isArray(edit.changes) && edit.changes.map((c: any, cIdx: number) => (
-                        <tr key={cIdx} className="border-b border-gray-50 last:border-0">
-                          <td className="px-2 py-1 font-medium">{c.field}</td>
-                          <td className="px-2 py-1 text-red-600 bg-red-50/50">{String(c.old || 'N/A')}</td>
-                          <td className="px-2 py-1 text-green-700 bg-green-50/50">{String(c.new || 'N/A')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="flex flex-col gap-2 mt-2">
+                  {Array.isArray(edit.changes) && edit.changes.map((c: any, cIdx: number) => (
+                    <div key={cIdx} className="border border-purple-100 rounded-md bg-purple-50/30 p-2 text-xs">
+                      <div className="font-bold text-purple-900 mb-1">{c.field}</div>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <div className="text-red-700 bg-red-50/80 px-2 py-1.5 rounded flex-1 line-through break-words border border-red-100">
+                          {String(c.old || 'N/A')}
+                        </div>
+                        <div className="hidden sm:flex text-purple-300 justify-center items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                            <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div className="text-green-800 bg-green-50/80 px-2 py-1.5 rounded flex-1 break-words border border-green-100">
+                          {String(c.new || 'N/A')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
