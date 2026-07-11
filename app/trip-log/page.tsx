@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import { deleteRoute, updateRoute, createRoute } from "@/app/actions/route-actions";
+import { deleteFacility, updateFacility, createFacility } from "@/app/actions/facility-actions";
 import imageCompression from "browser-image-compression";
 import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
@@ -172,6 +173,12 @@ export default function Dashboard() {
   const [newRouteName, setNewRouteName] = useState("");
   const [routeSearch, setRouteSearch] = useState("");
   const [facilitySearch, setFacilitySearch] = useState("");
+
+  const [expandedFacilityId, setExpandedFacilityId] = useState<number | null>(null);
+  const [editingFacilityId, setEditingFacilityId] = useState<number | null>(null);
+  const [editingFacilityData, setEditingFacilityData] = useState<{name: string, address: string, phone: string}>({ name: "", address: "", phone: "" });
+  const [isAddingFacility, setIsAddingFacility] = useState(false);
+  const [newFacilityData, setNewFacilityData] = useState<{name: string, address: string, phone: string}>({ name: "", address: "", phone: "" });
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1269,6 +1276,102 @@ export default function Dashboard() {
     });
   };
 
+  const handleAddFacility = () => {
+    if (!newFacilityData.name.trim()) return;
+    
+    showModal({
+      title: 'Add New Facility',
+      message: 'Are you sure you want to add this new facility to the database?',
+      type: 'confirm',
+      confirmText: 'Add Facility',
+      onConfirm: async () => {
+        const data = {
+          name: newFacilityData.name.trim(),
+          address: newFacilityData.address.trim(),
+          phone: newFacilityData.phone.trim(),
+        };
+        setIsAddingFacility(false);
+        setNewFacilityData({ name: "", address: "", phone: "" });
+        
+        const result = await createFacility(data);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to add facility',
+            type: 'error'
+          });
+        } else if (result.facility) {
+          setFacilityOptions(prev => [...prev, result.facility as any]);
+          showModal({
+            title: 'Facility Added',
+            message: `Successfully added the facility "${data.name}".`,
+            type: 'success'
+          });
+        }
+      }
+    });
+  };
+
+  const handleUpdateFacility = (facilityId: number) => {
+    if (!editingFacilityData.name.trim()) return;
+    
+    showModal({
+      title: 'Update Facility Details',
+      message: 'Are you sure you want to update this facility?',
+      type: 'confirm',
+      confirmText: 'Save Changes',
+      onConfirm: async () => {
+        const previousFacilities = [...facilityOptions];
+        const newData = {
+          name: editingFacilityData.name.trim(),
+          address: editingFacilityData.address.trim(),
+          phone: editingFacilityData.phone.trim(),
+        };
+        setFacilityOptions(facilityOptions.map(f => f.id === facilityId ? { ...f, ...newData } : f));
+        setEditingFacilityId(null);
+        
+        const result = await updateFacility(facilityId, newData);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to update facility',
+            type: 'error'
+          });
+          setFacilityOptions(previousFacilities);
+        } else {
+          showModal({
+            title: 'Facility Updated',
+            message: `Successfully updated facility details.`,
+            type: 'success'
+          });
+        }
+      }
+    });
+  };
+
+  const handleDeleteFacility = (facilityId: number) => {
+    showModal({
+      title: 'Delete Facility',
+      message: 'Are you sure you want to completely delete this facility? This action cannot be undone.',
+      type: 'confirm',
+      confirmText: 'Delete Facility',
+      onConfirm: async () => {
+        const previousFacilities = [...facilityOptions];
+        setFacilityOptions(facilityOptions.filter(f => f.id !== facilityId));
+        
+        const result = await deleteFacility(facilityId);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to delete facility',
+            type: 'error'
+          });
+          setFacilityOptions(previousFacilities);
+        }
+      }
+    });
+  };
+
   const filteredRoutes = routeOptions.filter(route => 
     route.name.toLowerCase().includes(routeSearch.toLowerCase())
   );
@@ -1603,7 +1706,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-800">Available Facilities</h3>
               <button 
-                onClick={() => {}}
+                onClick={() => { setIsAddingFacility(true); setExpandedFacilityId(null); setEditingFacilityId(null); }}
                 className="flex items-center gap-1.5 bg-purple-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-purple-700 transition-colors shadow-sm"
               >
                 <PlusIcon className="w-4 h-4 stroke-2" />
@@ -1625,23 +1728,142 @@ export default function Dashboard() {
             
             <div className="space-y-3">
               {filteredFacilities.length > 0 ? (
-                filteredFacilities.slice(0, visibleFacilityCount).map(facility => (
-                  <div key={facility.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-                    <div>
-                      <span className="font-semibold text-gray-800 block">{facility.name}</span>
-                      <span className="text-sm text-gray-500 block">{facility.address || 'No address provided'}</span>
-                      <span className="text-xs text-blue-600 block mt-0.5">{facility.phone || 'No phone provided'}</span>
+                <>
+                  {filteredFacilities.slice(0, visibleFacilityCount).map(facility => (
+                  <div key={facility.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                    <div 
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setExpandedFacilityId(expandedFacilityId === facility.id ? null : facility.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setExpandedFacilityId(expandedFacilityId === facility.id ? null : facility.id);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-500 relative"
+                    >
+                      {editingFacilityId === facility.id ? (
+                        <div className="flex flex-col gap-2 w-full max-w-md pr-8" onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="text" 
+                            value={editingFacilityData.name}
+                            onChange={(e) => setEditingFacilityData({ ...editingFacilityData, name: e.target.value })}
+                            placeholder="Facility Name"
+                            className="font-semibold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            autoFocus
+                          />
+                          <input 
+                            type="text" 
+                            value={editingFacilityData.address}
+                            onChange={(e) => setEditingFacilityData({ ...editingFacilityData, address: e.target.value })}
+                            placeholder="Address"
+                            className="text-sm text-gray-600 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                          <input 
+                            type="text" 
+                            value={editingFacilityData.phone}
+                            onChange={(e) => setEditingFacilityData({ ...editingFacilityData, phone: e.target.value })}
+                            placeholder="Phone Number"
+                            className="text-sm text-gray-600 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                          <button 
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setEditingFacilityId(null); }}
+                            className="absolute right-4 top-4 text-gray-400 hover:text-red-500 transition-colors"
+                            aria-label="Cancel edit"
+                          >
+                            <XCircleIcon className="w-5 h-5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <span className="font-semibold text-gray-800 block">{facility.name}</span>
+                          <span className="text-sm text-gray-500 block">{facility.address || 'No address provided'}</span>
+                          <span className="text-xs text-blue-600 block mt-0.5">{facility.phone || 'No phone provided'}</span>
+                        </div>
+                      )}
+                      <ChevronDownIcon className={`w-5 h-5 text-gray-500 transition-transform ${expandedFacilityId === facility.id ? 'rotate-180' : ''}`} />
                     </div>
-                    <div className="flex gap-2">
-                      <button className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 rounded transition-colors">
-                        <PencilSquareIcon className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 hover:bg-red-50 rounded transition-colors">
-                        <TrashIcon className="w-4 h-4" />
+                    
+                    {expandedFacilityId === facility.id && (
+                      <div className="p-4 bg-white border-t border-gray-200 flex gap-3 animate-in slide-in-from-top-2">
+                        {editingFacilityId === facility.id ? (
+                          <button 
+                            onClick={() => handleUpdateFacility(facility.id)}
+                            className="flex-1 py-2 px-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                            <CheckCircleIcon className="w-4 h-4" /> Save
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => {
+                              setEditingFacilityId(facility.id);
+                              setEditingFacilityData({ name: facility.name, address: facility.address || '', phone: facility.phone || '' });
+                            }}
+                            className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                          >
+                            <PencilSquareIcon className="w-4 h-4" /> Edit
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleDeleteFacility(facility.id)}
+                          className="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                        >
+                          <TrashIcon className="w-4 h-4" /> Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isAddingFacility && (
+                  <div className="border border-purple-200 rounded-lg overflow-hidden bg-purple-50 shadow-sm animate-in fade-in slide-in-from-top-2">
+                    <div className="w-full flex items-start justify-between p-4 bg-white border-b border-purple-100 relative">
+                      <div className="flex flex-col gap-2 w-full max-w-md pr-8">
+                        <input 
+                          type="text" 
+                          value={newFacilityData.name}
+                          onChange={(e) => setNewFacilityData({ ...newFacilityData, name: e.target.value })}
+                          placeholder="Enter facility name..."
+                          className="font-semibold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          autoFocus
+                        />
+                        <input 
+                          type="text" 
+                          value={newFacilityData.address}
+                          onChange={(e) => setNewFacilityData({ ...newFacilityData, address: e.target.value })}
+                          placeholder="Enter address..."
+                          className="text-sm text-gray-600 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        <input 
+                          type="text" 
+                          value={newFacilityData.phone}
+                          onChange={(e) => setNewFacilityData({ ...newFacilityData, phone: e.target.value })}
+                          placeholder="Enter phone number..."
+                          className="text-sm text-gray-600 bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => { setIsAddingFacility(false); setNewFacilityData({ name: "", address: "", phone: "" }); }}
+                          className="absolute right-4 top-4 text-gray-400 hover:text-red-500 transition-colors"
+                          aria-label="Cancel add"
+                        >
+                          <XCircleIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white flex gap-3">
+                      <button 
+                        onClick={handleAddFacility}
+                        className="flex-1 py-2 px-3 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                      >
+                        <CheckCircleIcon className="w-4 h-4" /> Save Facility
                       </button>
                     </div>
                   </div>
-                ))
+                )}
+                </>
               ) : (
                 <div className="border border-dashed border-gray-300 rounded-lg bg-gray-50 p-8 text-center">
                   <p className="text-gray-500 font-medium">No facilities found.</p>
