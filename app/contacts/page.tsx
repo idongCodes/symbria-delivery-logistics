@@ -4,7 +4,22 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 // --- CONFIGURATION: ROUTE DATA ---
-const ROUTE_DATA = [
+type Stop = {
+  name: string;
+  address: string;
+  phone: string;
+};
+
+type RouteData = {
+  id: string;
+  region: string;
+  regionColor: string;
+  scannerPhone: string;
+  duration: string;
+  stops: Stop[];
+};
+
+const ROUTE_DATA: RouteData[] = [
   {
     id: "001",
     region: "North East (NE)",
