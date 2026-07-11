@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link"; 
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
-import { deleteRoute, updateRoute } from "@/app/actions/route-actions";
+import { deleteRoute, updateRoute, createRoute } from "@/app/actions/route-actions";
 import imageCompression from "browser-image-compression";
 import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
@@ -160,6 +160,8 @@ export default function Dashboard() {
   const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
   const [editingRouteId, setEditingRouteId] = useState<number | null>(null);
   const [editingRouteName, setEditingRouteName] = useState("");
+  const [isAddingRoute, setIsAddingRoute] = useState(false);
+  const [newRouteName, setNewRouteName] = useState("");
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1156,6 +1158,39 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
+  const handleAddRoute = () => {
+    if (!newRouteName.trim()) return;
+    
+    showModal({
+      title: 'Add New Route',
+      message: 'Are you sure you want to add this new route to the database?',
+      type: 'confirm',
+      confirmText: 'Add Route',
+      onConfirm: async () => {
+        const name = newRouteName.trim();
+        setIsAddingRoute(false);
+        setNewRouteName("");
+        
+        const result = await createRoute(name);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to add route',
+            type: 'error'
+          });
+        } else {
+          // Update local state to reflect new route
+          setRouteOptions(prev => [...prev, { id: result.route.id, name: result.route.name }]);
+          showModal({
+            title: 'Route Added',
+            message: `Successfully added the route "${name}".`,
+            type: 'success'
+          });
+        }
+      }
+    });
+  };
+
   const handleUpdateRoute = (routeId: number) => {
     if (!editingRouteName.trim()) return;
     
@@ -1400,7 +1435,10 @@ export default function Dashboard() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-800">Available Routes</h3>
-              <button className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+              <button 
+                onClick={() => { setIsAddingRoute(true); setExpandedRouteId(null); setEditingRouteId(null); }}
+                className="flex items-center gap-1.5 bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+              >
                 <PlusIcon className="w-4 h-4 stroke-2" />
                 Add Route
               </button>
@@ -1478,6 +1516,39 @@ export default function Dashboard() {
                     )}
                   </div>
                 ))}
+                
+                {isAddingRoute && (
+                  <div className="border border-blue-200 rounded-lg overflow-hidden bg-blue-50 shadow-sm animate-in fade-in slide-in-from-top-2">
+                    <div className="w-full flex items-center justify-between p-4 bg-white border-b border-blue-100">
+                      <div className="relative w-full max-w-xs">
+                        <input 
+                          type="text" 
+                          value={newRouteName}
+                          onChange={(e) => setNewRouteName(e.target.value)}
+                          placeholder="Enter new route name..."
+                          className="font-semibold text-gray-800 bg-white border border-gray-300 rounded px-2 py-1 pr-8 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          autoFocus
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => { setIsAddingRoute(false); setNewRouteName(""); }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+                          aria-label="Cancel add"
+                        >
+                          <XCircleIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-white flex gap-3">
+                      <button 
+                        onClick={handleAddRoute}
+                        className="flex-1 py-2 px-3 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+                      >
+                        <CheckCircleIcon className="w-4 h-4" /> Save New Route
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <p className="text-gray-500 italic">No routes currently available.</p>

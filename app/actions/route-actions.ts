@@ -49,3 +49,18 @@ export async function updateRoute(routeId: number, name: string) {
     return { success: false, error: 'Failed to update route' };
   }
 }
+
+export async function createRoute(name: string) {
+  try {
+    const route = await prisma.route.create({
+      data: { name }
+    });
+    
+    revalidatePath('/trip-log');
+    revalidatePath('/contacts'); // Just in case contacts page needs revalidation
+    return { success: true, route };
+  } catch (error) {
+    console.error(`Failed to create route:`, error);
+    return { success: false, error: 'Failed to create route' };
+  }
+}
