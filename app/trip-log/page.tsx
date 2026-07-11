@@ -1394,9 +1394,17 @@ export default function Dashboard() {
               <div className="space-y-3">
                 {routeOptions.map((route) => (
                   <div key={route.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-                    <button 
+                    <div 
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setExpandedRouteId(expandedRouteId === route.id ? null : route.id)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setExpandedRouteId(expandedRouteId === route.id ? null : route.id);
+                        }
+                      }}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer text-left focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                     >
                       {editingRouteId === route.id ? (
                         <div className="relative w-full max-w-xs" onClick={(e) => e.stopPropagation()}>
@@ -1420,7 +1428,7 @@ export default function Dashboard() {
                         <span className="font-semibold text-gray-800">{route.name}</span>
                       )}
                       <ChevronDownIcon className={`w-5 h-5 text-gray-500 transition-transform ${expandedRouteId === route.id ? 'rotate-180' : ''}`} />
-                    </button>
+                    </div>
                     
                     {expandedRouteId === route.id && (
                       <div className="p-4 bg-white border-t border-gray-200 flex gap-3 animate-in slide-in-from-top-2">
