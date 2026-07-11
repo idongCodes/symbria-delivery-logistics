@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -154,7 +154,8 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1181,7 +1182,33 @@ export default function Dashboard() {
       </header>
 
       {userProfile && ( // Only show tabs if user is authenticated
-        <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
+        <>
+          <div className="flex justify-end mb-2 px-2 md:hidden relative">
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 text-gray-500 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors border border-gray-200 shadow-sm" aria-label="Menu">
+              <Bars3Icon className="h-5 w-5 md:h-6 md:w-6" />
+            </button>
+            
+            {isMobileMenuOpen && (
+              <>
+                {/* Invisible overlay to detect outside clicks */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                
+                {/* Modal Menu */}
+                <div className="absolute top-full right-2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-4 text-sm text-gray-600 text-center flex flex-col gap-2 relative z-50">
+                    <p className="font-semibold text-gray-800">Mobile Menu</p>
+                    <p>Custom modal content goes here.</p>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
           <button onClick={() => { setActiveTab('new');
             setEditingLog(null); setVisibleCount(5); 
           }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'new' ? 'text-blue-600  border-b-2 border-blue-600 ' : 'text-gray-500 '}`}>
@@ -1196,9 +1223,17 @@ export default function Dashboard() {
           </button>
           
           {userProfile?.role === 'Admin' && (
-            <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
-              Med Carts
-            </button>
+            <>
+              <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+                Med Carts
+              </button>
+              <button onClick={() => { setActiveTab('driver-management'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'driver-management' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+                Driver Management
+              </button>
+              <button onClick={() => { setActiveTab('route-management'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'route-management' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+                Route/Location Management
+              </button>
+            </>
           )}
 
           <button 
@@ -1208,6 +1243,7 @@ export default function Dashboard() {
             My Info
           </button>
         </div>
+        </>
       )}
       
       {activeTab === 'my-info' && userProfile && (
@@ -1261,6 +1297,20 @@ export default function Dashboard() {
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Med Carts Management</h2>
           <p className="text-gray-500 ">Med Carts management interface is under development.</p>
+        </div>
+      )}
+
+      {activeTab === 'driver-management' && userProfile?.role === 'Admin' && (
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900  mb-4">Driver Management</h2>
+          <p className="text-gray-500 ">Driver management interface is under development.</p>
+        </div>
+      )}
+
+      {activeTab === 'route-management' && userProfile?.role === 'Admin' && (
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900  mb-4">Route/Location Management</h2>
+          <p className="text-gray-500 ">Route and Location management interface is under development.</p>
         </div>
       )}
 
