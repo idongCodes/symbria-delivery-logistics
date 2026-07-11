@@ -1191,12 +1191,21 @@ export default function Dashboard() {
             </button>
             
             {isMobileMenuOpen && (
-              <div className="absolute top-full right-2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-4 text-sm text-gray-600 text-center flex flex-col gap-2">
-                  <p className="font-semibold text-gray-800">Mobile Menu</p>
-                  <p>Custom modal content goes here.</p>
+              <>
+                {/* Invisible overlay to detect outside clicks */}
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+                
+                {/* Modal Menu */}
+                <div className="absolute top-full right-2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-50 animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-4 text-sm text-gray-600 text-center flex flex-col gap-2 relative z-50">
+                    <p className="font-semibold text-gray-800">Mobile Menu</p>
+                    <p>Custom modal content goes here.</p>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
           <div className="flex border-b border-gray-300  mb-6 overflow-x-auto whitespace-nowrap pb-1">
