@@ -1125,8 +1125,10 @@ export default function Dashboard() {
     let match = true;
 
     if (activeTab === 'history') {
-      // Only show logs for the current user
-      if (log.user_id !== userProfile?.id) return false;
+      // Only show logs that match the authenticated user's name (case-insensitive)
+      const profileName = `${userProfile?.firstName || ''} ${userProfile?.lastName || ''}`.trim().toLowerCase();
+      const driverName = (log.driver_name || '').trim().toLowerCase();
+      if (profileName !== driverName) return false;
     } else if (activeTab === 'all') {
       // Apply admin filters only if activeTab is 'all'
       if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
