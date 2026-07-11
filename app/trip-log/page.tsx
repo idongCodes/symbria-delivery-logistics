@@ -170,7 +170,9 @@ export default function Dashboard() {
   const showModal = (config: Omit<ModalConfig, 'isOpen'>) => setModalConfig({ ...config, isOpen: true });
 
   // Pagination State
-  const [visibleCount, setVisibleCount] = useState(5);
+  
+  const [myVisibleCount, setMyVisibleCount] = useState(5);
+  const [allVisibleCount, setAllVisibleCount] = useState(5);
   const [activeTooltipLogId, setActiveTooltipLogId] = useState<number | null>(null);
 
   // Filtering State
@@ -1123,28 +1125,20 @@ export default function Dashboard() {
     }
   }
 
-  const visibleLogs = logs.filter(log => {
+  const myVisibleLogs = logs.filter(log => log.user_id === userProfile?.id);
+  
+  const allVisibleLogs = logs.filter(log => {
     let match = true;
-
-    if (activeTabs.includes('history')) {
-      // Only show logs for the current user
-      if (log.user_id !== userProfile?.id) return false;
-    } else if (activeTabs.includes('all')) {
-      // Apply admin filters only if activeTab is 'all'
-      if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
-      if (filterRoute && log.route_id !== filterRoute) match = false;
-      if (filterType && log.trip_type !== filterType) match = false;
-      if (filterDate) {
-        const logDate = new Date(log.created_at).toISOString().split('T')[0];
-        if (logDate !== filterDate) match = false;
-      }
-      if (filterIssuesOnly) {
-        const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
-        if (!hasIssue) match = false;
-      }
-    } else {
-      // If activeTab is 'new' or 'my-info', no logs should be displayed in this table context
-      return false;
+    if (filterDriver && log.driver_name && !log.driver_name.toLowerCase().includes(filterDriver.toLowerCase())) match = false;
+    if (filterRoute && log.route_id !== filterRoute) match = false;
+    if (filterType && log.trip_type !== filterType) match = false;
+    if (filterDate) {
+      const logDate = new Date(log.created_at).toISOString().split('T')[0];
+      if (logDate !== filterDate) match = false;
+    }
+    if (filterIssuesOnly) {
+      const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
+      if (!hasIssue) match = false;
     }
     return match;
   });
@@ -1200,7 +1194,7 @@ export default function Dashboard() {
           {/* 1. NEW FORM */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <button 
-              onClick={() => { toggleTab('new'); setEditingLog(null); setVisibleCount(5); }}
+              onClick={() => { toggleTab('new'); setEditingLog(null);  }}
               className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2">
@@ -1907,7 +1901,7 @@ export default function Dashboard() {
           {/* 2. MY LOGS */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <button 
-              onClick={() => { toggleTab('history'); setEditingLog(null); setVisibleCount(5); }}
+              onClick={() => { toggleTab('history'); setEditingLog(null); setMyVisibleCount(5); }}
               className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2">
@@ -1919,7 +1913,7 @@ export default function Dashboard() {
               <div className="p-4 border-t border-gray-100 bg-gray-50/50">
                 {true && (
         <div className="flex flex-col gap-4">
-          {activeTabs.includes('all') && (
+          {false && (
             <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100  flex flex-wrap gap-4 items-end mb-2">
               <div className="flex-1 min-w-[150px]">
                 <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Driver Name</label>
@@ -1982,7 +1976,7 @@ export default function Dashboard() {
                     <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Date / Time
                     </th>
-                    {activeTabs.includes('all') && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                    {false && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Driver
                     </th>}
                     <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
@@ -2000,12 +1994,12 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-transparent md:bg-white md: divide-y divide-transparent md:divide-gray-200  block md:table-row-group">
-                  {visibleLogs.length === 0 && (
+                  {myVisibleLogs.length === 0 && (
                     <tr className="block md:table-row bg-white  rounded-lg shadow-sm md:shadow-none border border-gray-100  md:border-0 p-4">
-                      <td colSpan={activeTabs.includes('all') ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
+                      <td colSpan={false ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
                     </tr>
                   )}
-                  {visibleLogs.slice(0, visibleCount).map((log) => {
+                  {myVisibleLogs.slice(0, myVisibleCount).map((log) => {
                     const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
                     return (
                       <tr key={log.id} className={`hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border ${hasIssue ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-100 '} md:border-0 mb-4 md:mb-0 relative`}>
@@ -2016,7 +2010,7 @@ export default function Dashboard() {
                             <ClientDate timestamp={log.created_at} />
                           </div>
                         </td>
-                        {activeTabs.includes('all') && (
+                        {false && (
                         <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
                           <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
                           <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
@@ -2098,15 +2092,15 @@ export default function Dashboard() {
               </table>
             </div>
             
-            {(visibleLogs.length > visibleCount || visibleCount > 5) && (
+            {(myVisibleLogs.length > myVisibleCount || myVisibleCount > 5) && (
               <div className="text-center mt-6 flex justify-center gap-4">
-                {visibleCount > 5 && (
-                  <button onClick={() => setVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
+                {myVisibleCount > 5 && (
+                  <button onClick={() => setMyVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
                     Show Less
                   </button>
                 )}
-                {visibleLogs.length > visibleCount && (
-                  <button onClick={() => setVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
+                {myVisibleLogs.length > myVisibleCount && (
+                  <button onClick={() => setMyVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
                     Load More
                   </button>
                 )}
@@ -2123,19 +2117,19 @@ export default function Dashboard() {
           {/* 3. ALL LOGS */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <button 
-              onClick={() => { toggleTab('all'); setEditingLog(null); setVisibleCount(5); }}
+              onClick={() => { toggleTab('all'); setEditingLog(null); setAllVisibleCount(5); }}
               className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <span className="text-purple-600">🌍</span> All Logs
               </div>
-              <span className="text-gray-400">{activeTabs.includes('all') ? '▼' : '▶'}</span>
+              <span className="text-gray-400">{true ? '▼' : '▶'}</span>
             </button>
-            {activeTabs.includes('all') && (
+            {true && (
               <div className="p-4 border-t border-gray-100 bg-gray-50/50">
                 {true && (
         <div className="flex flex-col gap-4">
-          {activeTabs.includes('all') && (
+          {true && (
             <div className="bg-white  p-4 rounded-xl shadow-sm border border-gray-100  flex flex-wrap gap-4 items-end mb-2">
               <div className="flex-1 min-w-[150px]">
                 <label className="block text-xs font-bold text-gray-500  uppercase tracking-wide mb-1">Driver Name</label>
@@ -2198,7 +2192,7 @@ export default function Dashboard() {
                     <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Date / Time
                     </th>
-                    {activeTabs.includes('all') && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
+                    {true && <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
                       Driver
                     </th>}
                     <th scope="col" className="p-4 text-left text-xs font-medium text-gray-500  uppercase tracking-wider">
@@ -2216,12 +2210,12 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-transparent md:bg-white md: divide-y divide-transparent md:divide-gray-200  block md:table-row-group">
-                  {visibleLogs.length === 0 && (
+                  {allVisibleLogs.length === 0 && (
                     <tr className="block md:table-row bg-white  rounded-lg shadow-sm md:shadow-none border border-gray-100  md:border-0 p-4">
-                      <td colSpan={activeTabs.includes('all') ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
+                      <td colSpan={true ? 6 : 5} className="block md:table-cell p-4 text-center text-gray-500 ">No logs found.</td>
                     </tr>
                   )}
-                  {visibleLogs.slice(0, visibleCount).map((log) => {
+                  {allVisibleLogs.slice(0, allVisibleCount).map((log) => {
                     const hasIssue = log.notes || (log.checklist && Object.keys(log.checklist).some(k => k.endsWith('_COMMENT')));
                     return (
                       <tr key={log.id} className={`hover:bg-gray-50  transition-colors flex flex-col md:table-row bg-white md:bg-transparent rounded-lg md:rounded-none shadow-sm md:shadow-none border ${hasIssue ? 'border-red-500 ring-1 ring-red-500' : 'border-gray-100 '} md:border-0 mb-4 md:mb-0 relative`}>
@@ -2232,7 +2226,7 @@ export default function Dashboard() {
                             <ClientDate timestamp={log.created_at} />
                           </div>
                         </td>
-                        {activeTabs.includes('all') && (
+                        {true && (
                         <td className="p-4 block md:table-cell border-b md:border-0 border-gray-100 ">
                           <div className="flex md:hidden text-xs font-bold text-gray-500  uppercase mb-1">Driver</div>
                           <div className="font-medium text-gray-900  whitespace-nowrap">{log.driver_name}</div>
@@ -2314,15 +2308,15 @@ export default function Dashboard() {
               </table>
             </div>
             
-            {(visibleLogs.length > visibleCount || visibleCount > 5) && (
+            {(allVisibleLogs.length > allVisibleCount || allVisibleCount > 5) && (
               <div className="text-center mt-6 flex justify-center gap-4">
-                {visibleCount > 5 && (
-                  <button onClick={() => setVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
+                {allVisibleCount > 5 && (
+                  <button onClick={() => setAllVisibleCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
                     Show Less
                   </button>
                 )}
-                {visibleLogs.length > visibleCount && (
-                  <button onClick={() => setVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
+                {allVisibleLogs.length > allVisibleCount && (
+                  <button onClick={() => setAllVisibleCount(prev => prev + 5)} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full transition">
                     Load More
                   </button>
                 )}
@@ -2340,7 +2334,7 @@ export default function Dashboard() {
           {userProfile?.role === 'Admin' && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               <button 
-                onClick={() => { toggleTab('med-carts'); setEditingLog(null); setVisibleCount(5); }}
+                onClick={() => { toggleTab('med-carts'); setEditingLog(null);  }}
                 className="w-full flex justify-between items-center p-4 md:p-5 font-bold text-gray-800 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-2">
