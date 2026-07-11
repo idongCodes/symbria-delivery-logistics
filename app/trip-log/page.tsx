@@ -1156,23 +1156,38 @@ export default function Dashboard() {
 
   const currentQuestions = tripType === 'Post-Trip' ? POST_TRIP_QUESTIONS : PRE_TRIP_QUESTIONS;
 
-  const handleUpdateRoute = async (routeId: number) => {
+  const handleUpdateRoute = (routeId: number) => {
     if (!editingRouteName.trim()) return;
     
-    // Optimistic UI update
-    const previousRoutes = [...routeOptions];
-    setRouteOptions(routeOptions.map(r => r.id === routeId ? { ...r, name: editingRouteName.trim() } : r));
-    setEditingRouteId(null);
-    
-    const result = await updateRoute(routeId, editingRouteName.trim());
-    if (!result.success) {
-      showModal({
-        title: 'Error',
-        message: result.error || 'Failed to update route',
-        type: 'error'
-      });
-      setRouteOptions(previousRoutes); // Revert optimistic update
-    }
+    showModal({
+      title: 'Update Route Name',
+      message: 'Are you sure you want to rename this route? This will automatically update all historical trip logs that used the old name.',
+      type: 'confirm',
+      confirmText: 'Save Changes',
+      onConfirm: async () => {
+        // Optimistic UI update
+        const previousRoutes = [...routeOptions];
+        const newName = editingRouteName.trim();
+        setRouteOptions(routeOptions.map(r => r.id === routeId ? { ...r, name: newName } : r));
+        setEditingRouteId(null);
+        
+        const result = await updateRoute(routeId, newName);
+        if (!result.success) {
+          showModal({
+            title: 'Error',
+            message: result.error || 'Failed to update route',
+            type: 'error'
+          });
+          setRouteOptions(previousRoutes); // Revert optimistic update
+        } else {
+          showModal({
+            title: 'Route Updated',
+            message: `Successfully renamed the route to "${newName}".`,
+            type: 'success'
+          });
+        }
+      }
+    });
   };
 
   const handleDeleteRoute = (routeId: number) => {
