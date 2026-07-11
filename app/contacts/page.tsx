@@ -120,6 +120,8 @@ export default function ContactsPage() {
     const [links, setLinks] = useState({ google: '', apple: '', waze: '' });
 
     useEffect(() => {
+      if (!stops || stops.length === 0) return;
+
       const origin = encodeURIComponent("Midstate Dr, Auburn, MA");
       const destination = encodeURIComponent("Midstate Dr, Auburn, MA");
       const waypoints = encodeURIComponent(stops.map(s => s.address).join('|'));
@@ -321,7 +323,7 @@ export default function ContactsPage() {
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs text-gray-500  font-semibold uppercase">Locations ({route.stops.length})</span>
-                    <NavDropdownMenu stops={route.stops} isDesktop={false} />
+                    {route.stops.length > 0 && <NavDropdownMenu stops={route.stops} isDesktop={false} />}
                   </div>
                   <div className="space-y-3 bg-gray-50  p-3 rounded-lg border border-gray-100 ">
                     {route.stops.map((stop, idx) => (
@@ -363,7 +365,7 @@ export default function ContactsPage() {
                     </td>
                     <td className="p-4 text-gray-600 ">
                       <div className="mb-4">
-                        <NavDropdownMenu stops={route.stops} isDesktop={true} />
+                        {route.stops.length > 0 && <NavDropdownMenu stops={route.stops} isDesktop={true} />}
                       </div>
                       <div className="space-y-4">
                         {route.stops.map((stop, idx) => (
