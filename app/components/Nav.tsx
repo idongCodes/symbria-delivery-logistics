@@ -91,7 +91,7 @@ export default function Nav() {
                 {loggedIn ? (
                   <>
                     <Link 
-                      href="/trip-log" 
+                      href="/dashboard" 
                       onClick={() => setMenuOpen(false)}
                       className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
                     >
