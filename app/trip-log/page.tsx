@@ -11,6 +11,7 @@ import { deleteProfile, updateProfile, createProfile } from "@/app/actions/profi
 import imageCompression from "browser-image-compression";
 import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon, PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
+import FeedbackTab from "@/app/components/FeedbackTab";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
 // --- CONFIGURATION: QUESTIONS LISTS ---
@@ -165,7 +166,7 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [facilityOptions, setFacilityOptions] = useState<FacilityOption[]>([]);
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management' | 'feedback'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedRouteId, setExpandedRouteId] = useState<number | null>(null);
   const [editingRouteId, setEditingRouteId] = useState<number | null>(null);
@@ -1546,10 +1547,17 @@ export default function Dashboard() {
                         <button onClick={() => { setActiveTab('driver-management'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'driver-management' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
                           Driver Management
                         </button>
+                        
                         <button onClick={() => { setActiveTab('route-management'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors ${activeTab === 'route-management' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
                           Route/Location Management
                         </button>
                       </>
+                    )}
+
+                    {userProfile?.role === 'Admin' && (
+                      <button onClick={() => { setActiveTab('feedback'); setEditingLog(null); setVisibleCount(5); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors border-t border-gray-100 mt-1 ${activeTab === 'feedback' ? 'text-green-600 bg-green-50/50' : 'text-gray-700'}`}>
+                        Feedback
+                      </button>
                     )}
 
                     <button onClick={() => { setActiveTab('my-info'); setEditingLog(null); setIsMobileMenuOpen(false); }} className={`px-4 py-3 text-left text-sm font-medium hover:bg-gray-50 transition-colors border-t border-gray-100 mt-1 ${activeTab === 'my-info' ? 'text-blue-600 bg-blue-50/50' : 'text-gray-700'}`}>
@@ -1582,10 +1590,20 @@ export default function Dashboard() {
               <button onClick={() => { setActiveTab('driver-management'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'driver-management' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
                 Driver Management
               </button>
+              
               <button onClick={() => { setActiveTab('route-management'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'route-management' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
                 Route/Location Management
               </button>
             </>
+          )}
+
+          {userProfile?.role === 'Admin' && (
+            <button 
+              onClick={() => { setActiveTab('feedback'); setEditingLog(null); setVisibleCount(5); }} 
+              className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'feedback' ? 'text-green-600 border-b-2 border-green-600 ' : 'text-gray-500 '}`}
+            >
+              Feedback
+            </button>
           )}
 
           <button 
