@@ -184,6 +184,7 @@ export default function Dashboard() {
 
   // Pagination State
   const [visibleCount, setVisibleCount] = useState(5);
+  const [visibleFacilityCount, setVisibleFacilityCount] = useState(5);
   const [activeTooltipLogId, setActiveTooltipLogId] = useState<number | null>(null);
 
   // Filtering State
@@ -1587,7 +1588,7 @@ export default function Dashboard() {
             
             <div className="space-y-3">
               {facilityOptions.length > 0 ? (
-                facilityOptions.map(facility => (
+                facilityOptions.slice(0, visibleFacilityCount).map(facility => (
                   <div key={facility.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div>
                       <span className="font-semibold text-gray-800 block">{facility.name}</span>
@@ -1611,6 +1612,21 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+
+            {(facilityOptions.length > visibleFacilityCount || visibleFacilityCount > 5) && (
+              <div className="text-center mt-6 flex justify-center gap-4">
+                {visibleFacilityCount > 5 && (
+                  <button onClick={() => setVisibleFacilityCount(prev => Math.max(5, prev - 5))} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-full transition">
+                    Show Less
+                  </button>
+                )}
+                {facilityOptions.length > visibleFacilityCount && (
+                  <button onClick={() => setVisibleFacilityCount(prev => prev + 5)} className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full transition">
+                    Load More
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
