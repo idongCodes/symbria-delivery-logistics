@@ -154,7 +154,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<TripLog[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
-  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts'>('new');
+  const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1196,9 +1196,17 @@ export default function Dashboard() {
           </button>
           
           {userProfile?.role === 'Admin' && (
-            <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
-              Med Carts
-            </button>
+            <>
+              <button onClick={() => { setActiveTab('med-carts'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'med-carts' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+                Med Carts
+              </button>
+              <button onClick={() => { setActiveTab('driver-management'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'driver-management' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+                Driver Management
+              </button>
+              <button onClick={() => { setActiveTab('route-management'); setEditingLog(null); setVisibleCount(5); }} className={`px-4 md:px-6 py-3 font-medium text-sm md:text-base ${activeTab === 'route-management' ? 'text-green-600  border-b-2 border-green-600 ' : 'text-gray-500 '}`}>
+                Route/Location Management
+              </button>
+            </>
           )}
 
           <button 
@@ -1261,6 +1269,20 @@ export default function Dashboard() {
         <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
           <h2 className="text-xl font-bold text-gray-900  mb-4">Med Carts Management</h2>
           <p className="text-gray-500 ">Med Carts management interface is under development.</p>
+        </div>
+      )}
+
+      {activeTab === 'driver-management' && userProfile?.role === 'Admin' && (
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900  mb-4">Driver Management</h2>
+          <p className="text-gray-500 ">Driver management interface is under development.</p>
+        </div>
+      )}
+
+      {activeTab === 'route-management' && userProfile?.role === 'Admin' && (
+        <div className="bg-white  p-6 md:p-8 rounded-xl shadow-sm border border-gray-100  animate-in fade-in slide-in-from-top-4">
+          <h2 className="text-xl font-bold text-gray-900  mb-4">Route/Location Management</h2>
+          <p className="text-gray-500 ">Route and Location management interface is under development.</p>
         </div>
       )}
 
