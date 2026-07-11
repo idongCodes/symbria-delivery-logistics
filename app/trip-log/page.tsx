@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { generateShareToken } from "@/app/actions/log-actions";
 import imageCompression from "browser-image-compression";
-import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import { EyeIcon, PencilSquareIcon, TrashIcon, DocumentArrowDownIcon, PrinterIcon, CheckCircleIcon, ExclamationTriangleIcon, InformationCircleIcon, XCircleIcon, ArrowUpTrayIcon, Bars3Icon, UserPlusIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import ClientDate from "@/app/components/ClientDate";
 import ImageUploadInput from "@/app/components/ImageUploadInput";
 
@@ -156,6 +156,7 @@ export default function Dashboard() {
   const [routeOptions, setRouteOptions] = useState<RouteOption[]>([]);
   const [activeTab, setActiveTab] = useState<'new' | 'history' | 'all' | 'my-info' | 'med-carts' | 'driver-management' | 'route-management'>('new');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
 
   // Modal State
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
@@ -1338,11 +1339,33 @@ export default function Dashboard() {
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-800">Available Routes</h3>
             {routeOptions.length > 0 ? (
-              <ul className="list-disc list-inside space-y-2 text-gray-600">
+              <div className="space-y-3">
                 {routeOptions.map((route) => (
-                  <li key={route.id} className="py-1">{route.name}</li>
+                  <div key={route.id} className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                    <button 
+                      onClick={() => setExpandedRouteId(expandedRouteId === route.id ? null : route.id)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <span className="font-semibold text-gray-800">{route.name}</span>
+                      <ChevronDownIcon className={`w-5 h-5 text-gray-500 transition-transform ${expandedRouteId === route.id ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {expandedRouteId === route.id && (
+                      <div className="p-4 bg-white border-t border-gray-200 flex gap-3 animate-in slide-in-from-top-2">
+                        <button className="flex-1 py-2 px-3 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <UserPlusIcon className="w-4 h-4" /> Assign
+                        </button>
+                        <button className="flex-1 py-2 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <PencilSquareIcon className="w-4 h-4" /> Edit
+                        </button>
+                        <button className="flex-1 py-2 px-3 bg-red-50 text-red-600 rounded-md hover:bg-red-100 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+                          <TrashIcon className="w-4 h-4" /> Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p className="text-gray-500 italic">No routes currently available.</p>
             )}
