@@ -40,7 +40,6 @@ async function sendFacilityNotification(action: 'Added' | 'Edited' | 'Deleted', 
     await transporter.sendMail({
       from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
       to: 'idongesit_essien@ymail.com', // Admin email
-      cc: 'lesterholden@icloud.com', // Management email
       subject: `System Alert: Facility ${action}`,
       html: emailHtml,
     });
