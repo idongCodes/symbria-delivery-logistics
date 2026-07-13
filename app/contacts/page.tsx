@@ -19,32 +19,7 @@ type RouteData = {
   stops: Stop[];
 };
 
-const ROUTE_DATA: RouteData[] = [
-  {
-    id: "001",
-    region: "North East (NE)",
-    regionColor: "text-blue-600 ",
-    scannerPhone: "331-219-9534",
-    duration: "10.5 Hrs", // Updated: 5h Drive + 4h30m Stops + 1h Break
-    stops: []
-  },
-  {
-    id: "002",
-    region: "South West (SW)",
-    regionColor: "text-purple-600 ",
-    scannerPhone: "331-329-2166",
-    duration: "9.0 Hrs", // Updated: 4.5h Drive + 3.5h Stops + 1h Break
-    stops: []
-  },
-  {
-    id: "003",
-    region: "South East (SE)",
-    regionColor: "text-green-600 ",
-    scannerPhone: "847-269-4380",
-    duration: "7.5 Hrs", // Updated: 3.5h Drive + 3h Stops + 1h Break
-    stops: []
-  }
-];
+const ROUTE_DATA: RouteData[] = [];
 
 export default function ContactsPage() {
   const supabase = createClient();
@@ -93,8 +68,8 @@ export default function ContactsPage() {
     useEffect(() => {
       if (!stops || stops.length === 0) return;
 
-      const origin = encodeURIComponent("Midstate Dr, Auburn, MA");
-      const destination = encodeURIComponent("Midstate Dr, Auburn, MA");
+      const origin = encodeURIComponent("");
+      const destination = encodeURIComponent("");
       const waypoints = encodeURIComponent(stops.map(s => s.address).join('|'));
       
       const google = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
