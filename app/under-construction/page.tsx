@@ -53,13 +53,37 @@ export default function UnderConstructionPage() {
           </h1>
           
           {/* Description */}
-          <p className="text-gray-600 mb-6 leading-relaxed">
-            The page you are trying to access is currently undergoing scheduled maintenance or is under construction. Please check back later.
+          <p className="text-gray-600 mb-3 leading-relaxed">
+            The page you are trying to access is currently undergoing scheduled maintenance or is under construction.
           </p>
 
-          {/* Visual progress loader */}
-          <div className="w-full bg-gray-100 rounded-full h-2 mb-6 overflow-hidden">
-            <div className="bg-indigo-600 h-2 rounded-full animate-pulse" style={{ width: '60%' }}></div>
+          <p className="text-sm text-gray-500 mb-6 italic">
+            We apologize for any inconvenience this may cause.
+          </p>
+
+          {/* MS Forms Links */}
+          <div className="bg-indigo-50/50 border border-indigo-100/50 rounded-xl p-5 mb-6 text-left space-y-3">
+            <h3 className="text-sm font-semibold text-indigo-900 mb-1">
+              📋 Temporary Replacement Forms:
+            </h3>
+            <a 
+              href="https://forms.office.com/r/r99SMXKAtJ" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-between w-full bg-white hover:bg-indigo-50 border border-indigo-200 px-4 py-3 rounded-lg text-sm font-medium text-indigo-700 hover:text-indigo-800 transition-all duration-200 shadow-sm"
+            >
+              <span>Pre-Trip Microsoft Form</span>
+              <span className="text-xs">↗️</span>
+            </a>
+            <a 
+              href="https://forms.office.com/r/Dxr65cDWLN" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center justify-between w-full bg-white hover:bg-indigo-50 border border-indigo-200 px-4 py-3 rounded-lg text-sm font-medium text-indigo-700 hover:text-indigo-800 transition-all duration-200 shadow-sm"
+            >
+              <span>Post-Trip Microsoft Form</span>
+              <span className="text-xs">↗️</span>
+            </a>
           </div>
 
           {/* Footer Info */}
