@@ -30,7 +30,7 @@ export default function Nav() {
     // Listen for auth changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setLoggedIn(!!session);
-      if (event === 'SIGNED_OUT' || !session) {
+      if (event === 'SIGNED_OUT') {
         router.push("/");
         router.refresh();
       }
