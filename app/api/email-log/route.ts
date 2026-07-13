@@ -87,7 +87,7 @@ export async function POST(req: Request) {
       });
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@symbria.com>',
+        from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
         to: 'idongesit_essien@ymail.com',
         subject: `UPDATE: Trip Log - ${driver_name} - ${trip_type}`,
         html: emailHtml,
@@ -418,7 +418,7 @@ export async function POST(req: Request) {
 
     // Send Main Confirmation Email
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Rx Delivery Logistics" <no-reply@symbria.com>',
+      from: process.env.SMTP_FROM || '"Rx Delivery Logistics" <no-reply@rxdeliverylogistics.com>',
       to: 'idongesit_essien@ymail.com',
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
@@ -476,7 +476,7 @@ export async function POST(req: Request) {
       `;
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@symbria.com>',
+        from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
         to: 'idongesit_essien@ymail.com',
         subject: `Alert 🚨: Driver Submitted Issue - ${driver_name}`,
         html: alertHtml,
