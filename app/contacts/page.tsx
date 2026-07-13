@@ -198,16 +198,7 @@ export default function ContactsPage() {
             
             <div className="space-y-3">
               
-              {/* --- STATIC DISPATCH PLACEHOLDER --- */}
-              <div className="flex justify-between items-center p-3 bg-yellow-50  border border-yellow-100  rounded-lg">
-                <span className="font-bold text-gray-800 ">Driver Dispatch</span>
-                <div className="flex flex-col items-end gap-1">
-                  <a href="tel:6309818000" className="text-sm bg-white  border border-yellow-200  px-3 py-1 rounded text-blue-600  font-semibold hover:bg-blue-50  transition">
-                    Call Dispatch
-                  </a>
-                  <span className="text-[10px] text-gray-600  font-medium">press option 6</span>
-                </div>
-              </div>
+
 
               {/* Dynamic Driver List */}
               {drivers.length === 0 ? (
