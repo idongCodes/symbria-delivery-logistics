@@ -34,11 +34,6 @@ export default function UnderConstructionPage() {
                     strokeLinejoin="round"
                     d="M11.42 15.17L17.25 21A1.24 1.24 0 1115.5 22.75l-5.83-5.83A7.4 7.4 0 013 11.5 7.4 7.4 0 0110.5 4a7.4 7.4 0 016.17 3.33L22.5 1.5 24 3l-5.83 5.83A7.4 7.4 0 0111.42 15.17z"
                   />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
                 </svg>
               </div>
             </div>
