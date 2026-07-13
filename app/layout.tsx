@@ -5,6 +5,7 @@ import Nav from "./components/Nav";
 import Footer from "./components/Footer";
 import AutoLogout from "./components/AutoLogout";
 import BackToTop from "./components/BackToTop";
+import { headers } from "next/headers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -13,21 +14,24 @@ export const metadata: Metadata = {
   description: "Delivery and Trip Logging System",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const isUnderConstruction = headersList.get("x-under-construction") === "true";
+
   return (
     <html lang="en">
       <body className={`${inter.className} flex flex-col min-h-screen bg-gray-50 text-gray-900`}>
-        <AutoLogout />
-        <Nav />
+        {!isUnderConstruction && <AutoLogout />}
+        {!isUnderConstruction && <Nav />}
         <main className="flex-grow w-full">
           {children}
         </main>
-        <BackToTop />
-        <Footer />
+        {!isUnderConstruction && <BackToTop />}
+        {!isUnderConstruction && <Footer />}
       </body>
     </html>
   );

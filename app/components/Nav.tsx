@@ -58,19 +58,23 @@ export default function Nav() {
     clearImagesFromDB();
     await supabase.auth.signOut();
     setLoggedIn(false);
-    router.push("/");
+    router.push("/admin/login");
     router.refresh();
   };
+
+  if (!pathname || !pathname.startsWith("/admin")) {
+    return null;
+  }
 
   return (
     <>
       {/* --- TOP NAVIGATION BAR --- */}
-      <nav className="bg-blue-800  text-white shadow-md relative z-50 transition-colors">
+      <nav className="bg-blue-800 text-white shadow-md relative z-50 transition-colors">
         <div className="max-w-6xl mx-auto p-4 flex justify-between items-center">
           
           {/* LOGO */}
           <Link 
-            href="/" 
+            href="/admin" 
             className="font-bold text-xl tracking-tight hover:text-blue-200 transition" 
           >
             Symbria RX Logistics
@@ -87,34 +91,26 @@ export default function Nav() {
             </button>
             
             {menuOpen && (
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white  rounded-lg shadow-xl border border-gray-200  flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                 {loggedIn ? (
                   <>
                     <Link 
-                      href="/dashboard" 
+                      href="/admin" 
                       onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
+                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
                     >
                       Dashboard
                     </Link>
                     <Link 
-                      href="/med-carts" 
+                      href="/admin/contacts" 
                       onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
-                    >
-                      Med Carts
-                    </Link>
-
-                    <Link 
-                      href="/contacts" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
+                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
                     >
                       Contacts
                     </Link>
                     <button 
                       onClick={() => { setMenuOpen(false); handleLogout(); }}
-                      className="px-4 py-3 text-left text-sm font-medium text-red-600  hover:bg-red-50  transition w-full"
+                      className="px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition w-full"
                     >
                       Logout
                     </button>
@@ -122,32 +118,11 @@ export default function Nav() {
                 ) : (
                   <>
                     <Link 
-                      href="/trip-log" 
+                      href="/admin/login" 
                       onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
-                    >
-                      Complete Pre/Post-Trip
-                    </Link>
-                    <Link 
-                      href="/med-carts" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
-                    >
-                      Med Carts
-                    </Link>
-                    <Link 
-                      href="/login" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
+                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
                     >
                       Admin Login
-                    </Link>
-                    <Link 
-                      href="/contacts" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700  hover:bg-gray-100  transition"
-                    >
-                      Contacts
                     </Link>
                   </>
                 )}
