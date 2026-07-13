@@ -48,9 +48,9 @@ export default function Home() {
     setLoading(true);
     setErrorMsg(""); // Clear previous errors
 
-    // --- VALIDATION: Check for @symbria.com ---
-    if (!formData.email.toLowerCase().endsWith('@symbria.com')) {
-      setErrorMsg("Please use a valid @symbria.com company email address.");
+    // --- VALIDATION: Check for @rxdeliverylogistics.com ---
+    if (!formData.email.toLowerCase().endsWith('@rxdeliverylogistics.com')) {
+      setErrorMsg("Please use a valid @rxdeliverylogistics.com company email address.");
       setLoading(false);
       return; 
     }
@@ -232,7 +232,7 @@ export default function Home() {
       <section id="contact" className="w-[90%] mx-auto bg-white mt-16 rounded-3xl shadow-xl py-16 px-6 mb-20 relative z-20 transition-colors">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-800  mb-4">We Value Your Feedback</h2>
-          <p className="text-gray-500  mb-8">Help us improve the Symbria RX Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
+          <p className="text-gray-500  mb-8">Help us improve the Rx Delivery Logistics experience. Let us know if you encounter any issues or have suggestions.</p>
           
           <form onSubmit={handleFeedbackSubmit} className="space-y-4 text-left">
             
@@ -262,7 +262,7 @@ export default function Home() {
                 className={`w-full border p-3 rounded-lg focus:ring-2 outline-none bg-white  text-black  ${
                   errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300  focus:ring-blue-500'
                 }`}
-                placeholder="name@symbria.com"
+                placeholder="name@rxdeliverylogistics.com"
                 required
               />
               {errorMsg && (

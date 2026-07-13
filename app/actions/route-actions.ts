@@ -21,7 +21,7 @@ async function sendRouteNotification(action: 'Added' | 'Edited' | 'Deleted', det
         <h2 style="color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">
           System Alert: Route ${action}
         </h2>
-        <p>An administrator has <strong>${action.toLowerCase()}</strong> a route in the Symbria Delivery Logistics System.</p>
+        <p>An administrator has <strong>${action.toLowerCase()}</strong> a route in the Rx Delivery Logistics System.</p>
         
         <table width="100%" style="background:#f8fafc; padding:15px; border-radius:5px; margin-bottom:20px; border: 1px solid #e2e8f0;">
           <tr>
@@ -32,13 +32,13 @@ async function sendRouteNotification(action: 'Added' | 'Edited' | 'Deleted', det
         </table>
         
         <p style="margin-top:30px; font-size:12px; color:#999; text-align:center;">
-          Automated message from Symbria Delivery Logistics System.
+          Automated message from Rx Delivery Logistics System.
         </p>
       </div>
     `;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
+      from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
       to: 'idongesit_essien@ymail.com', // Admin email
       subject: `System Alert: Route ${action}`,
       html: emailHtml,

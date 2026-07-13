@@ -44,15 +44,15 @@ describe('LoginPage', () => {
     const emailInput = screen.getByPlaceholderText('Email');
     const passwordInput = screen.getByPlaceholderText('Password');
     
-    fireEvent.change(emailInput, { target: { value: 'lholden@symbria.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'Symbria123' } });
+    fireEvent.change(emailInput, { target: { value: 'lholden@rxdeliverylogistics.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'Rx Delivery Logistics123' } });
     
     const submitBtn = screen.getByRole('button', { name: 'Login' });
     fireEvent.click(submitBtn);
     
     expect(mockSignInWithPassword).toHaveBeenCalledWith({
-      email: 'lholden@symbria.com',
-      password: 'Symbria123'
+      email: 'lholden@rxdeliverylogistics.com',
+      password: 'Rx Delivery Logistics123'
     });
     
     await waitFor(() => {
@@ -68,7 +68,7 @@ describe('LoginPage', () => {
     const passwordInput = screen.getByPlaceholderText('Password');
     
     fireEvent.change(emailInput, { target: { value: 'unauthorized@example.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'Symbria123' } });
+    fireEvent.change(passwordInput, { target: { value: 'Rx Delivery Logistics123' } });
     
     const submitBtn = screen.getByRole('button', { name: 'Login' });
     fireEvent.click(submitBtn);

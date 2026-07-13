@@ -349,7 +349,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
         </head>
         <body>
           <h1>
-            <span>Symbria RX Logistics</span>
+            <span>Rx Delivery Logistics</span>
             <span style="font-size:14px; color:#64748b; font-weight:normal;">Trip Log #${log.id}</span>
           </h1>
           
@@ -406,7 +406,7 @@ export default function LogDownloadButton({ log }: { log: any }) {
 
           <div style="margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 10px;">
             <p>Certified by ${log.driver_name} on ${new Date(log.created_at).toLocaleDateString()}</p>
-            Symbria RX Logistics Digital Dashboard
+            Rx Delivery Logistics Digital Dashboard
           </div>
 
           <script>

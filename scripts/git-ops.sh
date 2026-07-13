@@ -11,7 +11,7 @@ get_current_branch() {
   git branch --show-current
 }
 
-echo -e "${BLUE}=== Symbria Git Helper ===${NC}"
+echo -e "${BLUE}=== Rx Delivery Logistics Git Helper ===${NC}"
 echo "1. Save & Push (git add . + commit + push)"
 echo "2. Create New Branch (git checkout -b)"
 echo "3. Exit"

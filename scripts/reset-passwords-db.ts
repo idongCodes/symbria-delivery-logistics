@@ -3,8 +3,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const TARGET_EMAILS = [
-  'lholden@symbria.com',
-  'ressien1@symbria.com',
+  'lholden@rxdeliverylogistics.com',
+  'ressien1@rxdeliverylogistics.com',
   'idongesit_essien@ymail.com'
 ];
 

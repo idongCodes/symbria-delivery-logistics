@@ -1,8 +1,8 @@
-# Symbria Delivery Logistics
+# Rx Delivery Logistics
 
 ## Project Overview
 
-Symbria Delivery Logistics is a digital fleet management and inspection platform web application. Built for drivers to submit pre-trip and post-trip logs, capture photo evidence, and track vehicle conditions, it replaces traditional paper logs. The platform also provides administrators with real-time dashboard visibility, role-based access control, and robust reporting/sharing features.
+Rx Delivery Logistics is a digital fleet management and inspection platform web application. Built for drivers to submit pre-trip and post-trip logs, capture photo evidence, and track vehicle conditions, it replaces traditional paper logs. The platform also provides administrators with real-time dashboard visibility, role-based access control, and robust reporting/sharing features.
 
 **Tech Stack:**
 - **Framework:** Next.js 15 (App Router)

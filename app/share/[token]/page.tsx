@@ -45,7 +45,7 @@ export default async function PublicLogPage({
         <LogViewer log={serializableLog} />
         
         <div className="bg-gray-50  p-4 text-center text-xs text-gray-500">
-          Symbria RX Logistics • Public Record
+          Rx Delivery Logistics • Public Record
         </div>
       </div>
     </div>

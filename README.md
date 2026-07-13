@@ -1,4 +1,4 @@
-# Symbria Delivery Logistics
+# Rx Delivery Logistics
 
 **A Digital Fleet Management & Inspection Platform.**
 

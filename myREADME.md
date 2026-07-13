@@ -6,7 +6,7 @@ I'm a dedicated developer with a strong foundation in modern web technologies, f
 
 -----
 
-## 💻 My Current Focus: Symbria Delivery Logistics
+## 💻 My Current Focus: Rx Delivery Logistics
 
 My recent work is centered on building a digital transformation platform for logistics, moving away from legacy paper systems toward a high-performance, real-time web solution.
 
@@ -16,7 +16,7 @@ My recent work is centered on building a digital transformation platform for log
 | **The Vision** | To create a modern, "alive" tool that drivers find easy to use in the field and admins find indispensable for reporting and fleet health. |
 | **Experience** | Deep diving into **Next.js 15**, **Server Actions**, and **Supabase** to manage complex state and real-time data synchronization. |
 
-### 💡 Featured Project: Symbria Delivery Logistics
+### 💡 Featured Project: Rx Delivery Logistics
 
 This project is a comprehensive fleet management and inspection platform designed for real-world reliability.
 
@@ -28,7 +28,7 @@ This project is a comprehensive fleet management and inspection platform designe
 
 > **The Hurdle:** One major challenge was handling hydration mismatches between server-rendered UTC time and client-side local time. I solved this by building a custom `<ClientDate />` component to ensure UI consistency across timezones.
 
-➡️ **GitHub Repo:** [Symbria Delivery Logistics](https://github.com/idongCodes/symbria-delivery-logistics)
+➡️ **GitHub Repo:** [Rx Delivery Logistics](https://github.com/idongCodes/rx-delivery-logistics)
 
 -----
 

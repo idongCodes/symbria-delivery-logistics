@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "404 - Under Construction | Symbria Logistics",
+  title: "404 - Under Construction | Rx Delivery Logistics",
   description: "The page you are looking for is currently under construction.",
 };
 
@@ -64,7 +64,7 @@ export default function UnderConstructionPage() {
 
           {/* Footer Info */}
           <div className="border-t border-gray-100 pt-6 text-xs text-gray-400 flex flex-col gap-2">
-            <p>Symbria Delivery Logistics System</p>
+            <p>Rx Delivery Logistics System</p>
             <p>
               Need immediate assistance? Contact support at{" "}
               <a href="mailto:idongesit_essien@ymail.com" className="text-indigo-600 hover:underline">

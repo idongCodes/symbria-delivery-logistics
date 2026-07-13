@@ -10,7 +10,7 @@ import { headers } from "next/headers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Symbria Delivery Logistics",
+  title: "Rx Delivery Logistics",
   description: "Delivery and Trip Logging System",
 };
 

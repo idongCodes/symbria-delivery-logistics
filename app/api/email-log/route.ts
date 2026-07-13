@@ -71,7 +71,7 @@ export async function POST(req: Request) {
           </div>
           
           <p style="margin-top:30px; font-size:12px; color:#999; text-align:center;">
-            Automated message from Symbria Delivery Logistics System.
+            Automated message from Rx Delivery Logistics System.
           </p>
         </div>
       `;
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
       });
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
+        from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
         to: 'idongesit_essien@ymail.com',
         subject: `UPDATE: Trip Log - ${driver_name} - ${trip_type}`,
         html: emailHtml,
@@ -398,7 +398,7 @@ export async function POST(req: Request) {
         ` : ''}
         
         <p style="margin-top:30px; font-size:12px; color:#999; text-align:center;">
-          Automated message from Symbria Delivery Logistics System.
+          Automated message from Rx Delivery Logistics System.
         </p>
       </div>
     `;
@@ -418,7 +418,7 @@ export async function POST(req: Request) {
 
     // Send Main Confirmation Email
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Symbria Logistics" <no-reply@symbria.com>',
+      from: process.env.SMTP_FROM || '"Rx Delivery Logistics" <no-reply@rxdeliverylogistics.com>',
       to: 'idongesit_essien@ymail.com',
       subject: `Trip Log: ${driver_name} - ${trip_type} - ${new Date(created_at).toLocaleDateString()}`,
       html: emailHtml,
@@ -470,13 +470,13 @@ export async function POST(req: Request) {
           </div>
 
           <p style="margin-top:30px; font-size:12px; color:#999; text-align:center; border-top: 1px solid #eee; padding-top: 15px;">
-            This is an automated priority alert from Symbria Delivery Logistics System.
+            This is an automated priority alert from Rx Delivery Logistics System.
           </p>
         </div>
       `;
 
       await transporter.sendMail({
-        from: process.env.SMTP_FROM || '"Symbria Logistics Alerts" <no-reply@symbria.com>',
+        from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
         to: 'idongesit_essien@ymail.com',
         subject: `Alert 🚨: Driver Submitted Issue - ${driver_name}`,
         html: alertHtml,
