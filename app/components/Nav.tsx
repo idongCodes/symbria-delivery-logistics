@@ -28,8 +28,12 @@ export default function Nav() {
     checkUser();
 
     // Listen for auth changes (sign in, sign out, token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setLoggedIn(!!session);
+      if (event === 'SIGNED_OUT' || !session) {
+        router.push("/");
+        router.refresh();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -58,7 +62,7 @@ export default function Nav() {
     clearImagesFromDB();
     await supabase.auth.signOut();
     setLoggedIn(false);
-    router.push("/login");
+    router.push("/");
     router.refresh();
   };
 
