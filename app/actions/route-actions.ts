@@ -38,7 +38,7 @@ async function sendRouteNotification(action: 'Added' | 'Edited' | 'Deleted', det
     `;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
+      from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@symbria.com>',
       to: 'idongesit_essien@ymail.com', // Admin email
       subject: `System Alert: Route ${action}`,
       html: emailHtml,

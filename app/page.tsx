@@ -48,9 +48,9 @@ export default function Home() {
     setLoading(true);
     setErrorMsg(""); // Clear previous errors
 
-    // --- VALIDATION: Check for @rxdeliverylogistics.com ---
-    if (!formData.email.toLowerCase().endsWith('@rxdeliverylogistics.com')) {
-      setErrorMsg("Please use a valid @rxdeliverylogistics.com company email address.");
+    // --- VALIDATION: Check for @symbria.com ---
+    if (!formData.email.toLowerCase().endsWith('@symbria.com')) {
+      setErrorMsg("Please use a valid @symbria.com company email address.");
       setLoading(false);
       return; 
     }
@@ -262,7 +262,7 @@ export default function Home() {
                 className={`w-full border p-3 rounded-lg focus:ring-2 outline-none bg-white  text-black  ${
                   errorMsg ? 'border-red-500 focus:ring-red-200' : 'border-gray-300  focus:ring-blue-500'
                 }`}
-                placeholder="name@rxdeliverylogistics.com"
+                placeholder="name@symbria.com"
                 required
               />
               {errorMsg && (

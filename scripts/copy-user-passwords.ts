@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Syncing passwords for lholden@rxdeliverylogistics.com and ressien1@rxdeliverylogistics.com to match idongesit_essien@ymail.com...");
+  console.log("Syncing passwords for lholden@symbria.com and ressien1@symbria.com to match idongesit_essien@ymail.com...");
 
   // 1. Fetch the encrypted password hash for idongesit_essien@ymail.com
   const sourceUser = await prisma.$queryRaw<Array<{ encrypted_password: string }>>`
@@ -25,7 +25,7 @@ async function main() {
     SET 
       encrypted_password = ${hash},
       updated_at = NOW()
-    WHERE email IN ('lholden@rxdeliverylogistics.com', 'ressien1@rxdeliverylogistics.com');
+    WHERE email IN ('lholden@symbria.com', 'ressien1@symbria.com');
   `;
 
   console.log(`Successfully synced password for ${updatedCount} user(s).`);

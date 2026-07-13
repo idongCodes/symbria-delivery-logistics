@@ -3,12 +3,12 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Updating database user email domains from @symbria.com to @rxdeliverylogistics.com...");
+  console.log("Updating database user email domains from @symbria.com to @symbria.com...");
 
   // 1. Update public.profiles table (Prisma model Profile)
   const updatedProfiles = await prisma.$executeRaw`
     UPDATE public.profiles
-    SET email = REPLACE(email, '@symbria.com', '@rxdeliverylogistics.com')
+    SET email = REPLACE(email, '@symbria.com', '@symbria.com')
     WHERE email LIKE '%@symbria.com';
   `;
   console.log(`Updated ${updatedProfiles} profiles in public.profiles table.`);
@@ -17,8 +17,8 @@ async function main() {
   const updatedUsers = await prisma.$executeRaw`
     UPDATE auth.users
     SET 
-      email = REPLACE(email, '@symbria.com', '@rxdeliverylogistics.com'),
-      raw_user_meta_data = raw_user_meta_data || jsonb_build_object('email', REPLACE(email, '@symbria.com', '@rxdeliverylogistics.com'))
+      email = REPLACE(email, '@symbria.com', '@symbria.com'),
+      raw_user_meta_data = raw_user_meta_data || jsonb_build_object('email', REPLACE(email, '@symbria.com', '@symbria.com'))
     WHERE email LIKE '%@symbria.com';
   `;
   console.log(`Updated ${updatedUsers} users in auth.users table.`);
