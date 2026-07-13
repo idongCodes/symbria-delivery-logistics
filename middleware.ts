@@ -55,24 +55,20 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Handle "/admin" routes
-  if (pathname.startsWith('/admin')) {
-    if (pathname === '/admin/login') {
-      if (user) {
-        // Logged in admin visiting login -> redirect to admin dashboard
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-      return response;
-    }
-
-    // Protect all other admin routes
-    if (!user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+  // Handle explicit "/login" path
+  if (pathname === '/login') {
+    if (user) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return response;
   }
 
-  // 4. Hide all other routes (/, /dashboard, /trip-log, /login, /contacts, etc.) behind Under Construction
+  // If the user is successfully logged in, they have access to the entire app
+  if (user) {
+    return response;
+  }
+
+  // If not logged in, rewrite ALL other routes (including /, /dashboard, /contacts, /trip-log, etc.) to Under Construction
   requestHeaders.set('x-under-construction', 'true');
   return NextResponse.rewrite(new URL('/under-construction', request.url), {
     request: {

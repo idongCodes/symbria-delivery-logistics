@@ -58,11 +58,11 @@ export default function Nav() {
     clearImagesFromDB();
     await supabase.auth.signOut();
     setLoggedIn(false);
-    router.push("/admin/login");
+    router.push("/login");
     router.refresh();
   };
 
-  if (!pathname || !pathname.startsWith("/admin")) {
+  if (!loggedIn) {
     return null;
   }
 
@@ -74,7 +74,7 @@ export default function Nav() {
           
           {/* LOGO */}
           <Link 
-            href="/admin" 
+            href="/dashboard" 
             className="font-bold text-xl tracking-tight hover:text-blue-200 transition" 
           >
             Rx Delivery Logistics
@@ -92,40 +92,26 @@ export default function Nav() {
             
             {menuOpen && (
               <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col py-2 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
-                {loggedIn ? (
-                  <>
-                    <Link 
-                      href="/admin" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-                    >
-                      Dashboard
-                    </Link>
-                    <Link 
-                      href="/admin/contacts" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-                    >
-                      Contacts
-                    </Link>
-                    <button 
-                      onClick={() => { setMenuOpen(false); handleLogout(); }}
-                      className="px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition w-full"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link 
-                      href="/admin/login" 
-                      onClick={() => setMenuOpen(false)}
-                      className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-                    >
-                      Admin Login
-                    </Link>
-                  </>
-                )}
+                <Link 
+                  href="/dashboard" 
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+                >
+                  Dashboard
+                </Link>
+                <Link 
+                  href="/contacts" 
+                  onClick={() => setMenuOpen(false)}
+                  className="px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+                >
+                  Contacts
+                </Link>
+                <button 
+                  onClick={() => { setMenuOpen(false); handleLogout(); }}
+                  className="px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50 transition w-full"
+                >
+                  Logout
+                </button>
               </div>
             )}
           </div>
