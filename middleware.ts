@@ -55,24 +55,24 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Handle "/admin" routes
-  if (pathname.startsWith('/admin')) {
-    if (pathname === '/admin/login') {
-      if (user) {
-        // Logged in admin visiting login -> redirect to admin dashboard
-        return NextResponse.redirect(new URL('/admin', request.url));
-      }
-      return response;
-    }
-
-    // Protect all other admin routes
-    if (!user) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+  // Handle allowed exceptions: /login, /dashboard, /contacts
+  if (pathname === '/login') {
+    if (user) {
+      // Logged in user visiting login -> redirect to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url));
     }
     return response;
   }
 
-  // 4. Hide all other routes (/, /dashboard, /trip-log, /login, /contacts, etc.) behind Under Construction
+  if (pathname === '/dashboard' || pathname === '/contacts') {
+    if (!user) {
+      // Unauthenticated user trying to access app -> redirect to login
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return response;
+  }
+
+  // 4. Hide all other routes (/, /trip-log, /share, /admin, etc.) behind Under Construction
   requestHeaders.set('x-under-construction', 'true');
   return NextResponse.rewrite(new URL('/under-construction', request.url), {
     request: {
