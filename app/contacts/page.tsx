@@ -82,7 +82,7 @@ export default function ContactsPage() {
   const finalRoutes = displayRoutes.length > 0 ? displayRoutes : ROUTE_DATA;
 
   // --- FILTERING LOGIC ---
-  const adminEmail = "ressien1@rxdeliverylogistics.com";        // This Admin SHOULD show up
+  const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
   const hiddenEmail = "idongesit_essien@ymail.com"; // This Admin should remain HIDDEN
 
   // Helper Component for Navigation Dropdown
@@ -172,8 +172,8 @@ export default function ContactsPage() {
             <h4 className="text-xl font-bold text-gray-900 ">Richard Essien</h4>
             <p className="text-blue-600  font-medium mb-3">Developer / Admin / Driver</p>
             <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600 ">
-              <a href="mailto:ressien1@rxdeliverylogistics.com" className="flex items-center gap-2 hover:text-blue-600  transition">
-                <span className="bg-gray-100  p-1.5 rounded">✉️</span> ressien1@rxdeliverylogistics.com
+              <a href="mailto:ressien1@symbria.com" className="flex items-center gap-2 hover:text-blue-600  transition">
+                <span className="bg-gray-100  p-1.5 rounded">✉️</span> ressien1@symbria.com
               </a>
               <a href="tel:+17743126471" className="flex items-center gap-2 hover:text-blue-600  transition">
                 <span className="bg-gray-100  p-1.5 rounded">📞</span> +1 (774) 312-6471

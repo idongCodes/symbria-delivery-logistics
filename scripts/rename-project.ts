@@ -40,7 +40,7 @@ function replaceContentInFiles() {
     const content = fs.readFileSync(filePath, 'utf8');
     
     // We want to be precise:
-    // 1. "rxdeliverylogistics.com" (case-insensitive) -> "rxdeliverylogistics.com"
+    // 1. "symbria.com" (case-insensitive) -> "symbria.com"
     // 2. "Rx Delivery Logistics" (case-insensitive) -> "Rx Delivery Logistics"
     // 3. "Rx Delivery Logistics" (case-insensitive) -> "Rx Delivery Logistics"
     // 4. "Rx Delivery Logistics" (case-insensitive) -> "Rx Delivery Logistics"
@@ -51,8 +51,8 @@ function replaceContentInFiles() {
     // Replace rx-delivery-logistics first to avoid partial matches
     newContent = newContent.replace(/rx-delivery-logistics/gi, 'rx-delivery-logistics');
     
-    // Replace rxdeliverylogistics.com
-    newContent = newContent.replace(/Rx Delivery Logistics\.com/gi, 'rxdeliverylogistics.com');
+    // Replace symbria.com
+    newContent = newContent.replace(/Rx Delivery Logistics\.com/gi, 'symbria.com');
     
     // Replace Rx Delivery Logistics / Rx Delivery Logistics / Rx Delivery Logistics
     newContent = newContent.replace(/Rx Delivery Logistics\s+RX\s+Logistics/gi, 'Rx Delivery Logistics');

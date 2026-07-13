@@ -9,9 +9,9 @@ export async function POST(req: Request) {
     const { name, email, message } = body;
 
     // 1. Validation
-    if (!email || !email.endsWith('@rxdeliverylogistics.com')) {
+    if (!email || !email.endsWith('@symbria.com')) {
       return NextResponse.json(
-        { error: 'Unauthorized: Only @rxdeliverylogistics.com emails are allowed.' }, 
+        { error: 'Unauthorized: Only @symbria.com emails are allowed.' }, 
         { status: 400 }
       );
     }
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     });
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Rx Delivery Logistics" <no-reply@rxdeliverylogistics.com>',
+      from: process.env.SMTP_FROM || '"Rx Delivery Logistics" <no-reply@symbria.com>',
       to: 'idongesit_essien@ymail.com', 
       subject: `New Feedback from ${name}`,
       html: `
