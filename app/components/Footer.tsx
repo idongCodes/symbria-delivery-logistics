@@ -48,8 +48,8 @@ export default function Footer() {
             <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-100">
               <div className="flex flex-col">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Email</span>
-                <a href="mailto:ressien1@rxdeliverylogistics.com" className="text-blue-600 font-medium hover:underline">
-                  ressien1@rxdeliverylogistics.com
+                <a href="mailto:idongesit_essien@ymail.com" className="text-blue-600 font-medium hover:underline">
+                  idongesit_essien@ymail.com
                 </a>
               </div>
               
