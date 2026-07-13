@@ -77,7 +77,7 @@ export default function Nav() {
             href="/admin" 
             className="font-bold text-xl tracking-tight hover:text-blue-200 transition" 
           >
-            Symbria RX Logistics
+            Rx Delivery Logistics
           </Link>
           
           {/* UNIFIED MENU (Visible for both states) */}

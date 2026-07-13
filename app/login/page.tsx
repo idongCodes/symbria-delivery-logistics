@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
-    const allowedEmails = ["lholden@symbria.com", "ressien1@symbria.com", "idongesit_essien@ymail.com"];
+    const allowedEmails = ["lholden@rxdeliverylogistics.com", "ressien1@rxdeliverylogistics.com", "idongesit_essien@ymail.com"];
     if (!allowedEmails.includes(email.toLowerCase().trim())) {
       setMessage("Error: Unauthorized email. Please use the public dashboard access.");
       setLoading(false);
