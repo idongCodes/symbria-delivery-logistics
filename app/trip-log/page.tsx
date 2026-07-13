@@ -63,21 +63,7 @@ const DAMAGE_QUESTIONS = [
   "Any new damage to vehicle?"
 ];
 
-const ROUTE_STOPS: Record<string, string[]> = {
-  "North East (NE)": [
-    "Beaumont at Northborough", "Beaumont at Westborough", "Whitney Place at Natick", 
-    "Lasell Village", "Campion", "Newbury Court", "Edgewood at the Meadows", 
-    "Sherrill House", "South Cove", "Dwyer Home"
-  ],
-  "South West (SW)": [
-    "The Overlook", "Livewell", "Health Center at the Willows", 
-    "Holy Trinity", "Dodge Park", "Oasis at Dodge Park", "Knollwood"
-  ],
-  "South East (SE)": [
-    "Madonna Manor", "Marian Manor", "Catholic Memorial", 
-    "Summit ElderCare", "Sacred Heart", "Our Lady's Haven"
-  ]
-};
+const ROUTE_STOPS: Record<string, string[]> = {};
 
 // Define Trip Log Shape
 type TripLog = {

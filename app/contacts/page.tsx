@@ -19,32 +19,7 @@ type RouteData = {
   stops: Stop[];
 };
 
-const ROUTE_DATA: RouteData[] = [
-  {
-    id: "001",
-    region: "North East (NE)",
-    regionColor: "text-blue-600 ",
-    scannerPhone: "331-219-9534",
-    duration: "10.5 Hrs", // Updated: 5h Drive + 4h30m Stops + 1h Break
-    stops: []
-  },
-  {
-    id: "002",
-    region: "South West (SW)",
-    regionColor: "text-purple-600 ",
-    scannerPhone: "331-329-2166",
-    duration: "9.0 Hrs", // Updated: 4.5h Drive + 3.5h Stops + 1h Break
-    stops: []
-  },
-  {
-    id: "003",
-    region: "South East (SE)",
-    regionColor: "text-green-600 ",
-    scannerPhone: "847-269-4380",
-    duration: "7.5 Hrs", // Updated: 3.5h Drive + 3h Stops + 1h Break
-    stops: []
-  }
-];
+const ROUTE_DATA: RouteData[] = [];
 
 export default function ContactsPage() {
   const supabase = createClient();
@@ -81,9 +56,7 @@ export default function ContactsPage() {
 
   const finalRoutes = displayRoutes.length > 0 ? displayRoutes : ROUTE_DATA;
 
-  // --- FILTERING LOGIC ---
-  const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
-  const hiddenEmail = "idongesit_essien@ymail.com"; // This Admin should remain HIDDEN
+
 
   // Helper Component for Navigation Dropdown
   const NavDropdownMenu = ({ stops, isDesktop }: { stops: { address: string }[], isDesktop?: boolean }) => {
@@ -93,8 +66,8 @@ export default function ContactsPage() {
     useEffect(() => {
       if (!stops || stops.length === 0) return;
 
-      const origin = encodeURIComponent("Midstate Dr, Auburn, MA");
-      const destination = encodeURIComponent("Midstate Dr, Auburn, MA");
+      const origin = encodeURIComponent("");
+      const destination = encodeURIComponent("");
       const waypoints = encodeURIComponent(stops.map(s => s.address).join('|'));
       
       const google = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}`;
@@ -139,20 +112,18 @@ export default function ContactsPage() {
 
   // 1. Drivers List
   const drivers = profiles.filter(p => 
-    p.email !== hiddenEmail && 
+    p.email !== "idongesit_essien@ymail.com" && 
     (
       p.job_title === "Delivery Driver" || 
-      p.role === "Driver" || 
-      p.email === adminEmail 
+      p.role === "Driver"
     )
   );
 
   // 2. Management List
   const managers = profiles.filter(p => 
-    p.email !== hiddenEmail && 
+    p.email !== "idongesit_essien@ymail.com" && 
     p.email !== "idong.essien@comcast.net" &&
-    (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
-    p.email !== adminEmail 
+    (p.job_title !== "Delivery Driver" && p.role !== "Driver")
   );
 
   return (
@@ -169,11 +140,11 @@ export default function ContactsPage() {
             <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl shadow-sm">👨‍💻</div>
           </div>
           <div className="flex-grow">
-            <h4 className="text-xl font-bold text-gray-900 ">Richard Essien</h4>
-            <p className="text-blue-600  font-medium mb-3">Developer / Admin / Driver</p>
+            <h4 className="text-xl font-bold text-gray-900 ">Idongesit Essien</h4>
+            <p className="text-blue-600  font-medium mb-3">Developer / Admin</p>
             <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600 ">
-              <a href="mailto:ressien1@symbria.com" className="flex items-center gap-2 hover:text-blue-600  transition">
-                <span className="bg-gray-100  p-1.5 rounded">✉️</span> ressien1@symbria.com
+              <a href="mailto:idongesit_essien@ymail.com" className="flex items-center gap-2 hover:text-blue-600  transition">
+                <span className="bg-gray-100  p-1.5 rounded">✉️</span> idongesit_essien@ymail.com
               </a>
               <a href="tel:+17743126471" className="flex items-center gap-2 hover:text-blue-600  transition">
                 <span className="bg-gray-100  p-1.5 rounded">📞</span> +1 (774) 312-6471
