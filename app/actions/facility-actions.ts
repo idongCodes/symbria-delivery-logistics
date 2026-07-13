@@ -38,7 +38,7 @@ async function sendFacilityNotification(action: 'Added' | 'Edited' | 'Deleted', 
     `;
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@symbria.com>',
+      from: process.env.SMTP_FROM || '"Rx Delivery Logistics Alerts" <no-reply@rxdeliverylogistics.com>',
       to: 'idongesit_essien@ymail.com', // Admin email
       subject: `System Alert: Facility ${action}`,
       html: emailHtml,

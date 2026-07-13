@@ -44,14 +44,14 @@ describe('LoginPage', () => {
     const emailInput = screen.getByPlaceholderText('Email');
     const passwordInput = screen.getByPlaceholderText('Password');
     
-    fireEvent.change(emailInput, { target: { value: 'lholden@symbria.com' } });
+    fireEvent.change(emailInput, { target: { value: 'idongesit_essien@ymail.com' } });
     fireEvent.change(passwordInput, { target: { value: 'Rx Delivery Logistics123' } });
     
     const submitBtn = screen.getByRole('button', { name: 'Login' });
     fireEvent.click(submitBtn);
     
     expect(mockSignInWithPassword).toHaveBeenCalledWith({
-      email: 'lholden@symbria.com',
+      email: 'idongesit_essien@ymail.com',
       password: 'Rx Delivery Logistics123'
     });
     
