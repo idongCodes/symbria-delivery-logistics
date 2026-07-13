@@ -56,9 +56,7 @@ export default function ContactsPage() {
 
   const finalRoutes = displayRoutes.length > 0 ? displayRoutes : ROUTE_DATA;
 
-  // --- FILTERING LOGIC ---
-  const adminEmail = "ressien1@symbria.com";        // This Admin SHOULD show up
-  const hiddenEmail = "idongesit_essien@ymail.com"; // This Admin should remain HIDDEN
+
 
   // Helper Component for Navigation Dropdown
   const NavDropdownMenu = ({ stops, isDesktop }: { stops: { address: string }[], isDesktop?: boolean }) => {
@@ -114,20 +112,18 @@ export default function ContactsPage() {
 
   // 1. Drivers List
   const drivers = profiles.filter(p => 
-    p.email !== hiddenEmail && 
+    p.email !== "idongesit_essien@ymail.com" && 
     (
       p.job_title === "Delivery Driver" || 
-      p.role === "Driver" || 
-      p.email === adminEmail 
+      p.role === "Driver"
     )
   );
 
   // 2. Management List
   const managers = profiles.filter(p => 
-    p.email !== hiddenEmail && 
+    p.email !== "idongesit_essien@ymail.com" && 
     p.email !== "idong.essien@comcast.net" &&
-    (p.job_title !== "Delivery Driver" && p.role !== "Driver") &&
-    p.email !== adminEmail 
+    (p.job_title !== "Delivery Driver" && p.role !== "Driver")
   );
 
   return (
@@ -144,11 +140,11 @@ export default function ContactsPage() {
             <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-3xl shadow-sm">👨‍💻</div>
           </div>
           <div className="flex-grow">
-            <h4 className="text-xl font-bold text-gray-900 ">Richard Essien</h4>
-            <p className="text-blue-600  font-medium mb-3">Developer / Admin / Driver</p>
+            <h4 className="text-xl font-bold text-gray-900 ">Idongesit Essien</h4>
+            <p className="text-blue-600  font-medium mb-3">Developer / Admin</p>
             <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-600 ">
-              <a href="mailto:ressien1@symbria.com" className="flex items-center gap-2 hover:text-blue-600  transition">
-                <span className="bg-gray-100  p-1.5 rounded">✉️</span> ressien1@symbria.com
+              <a href="mailto:idongesit_essien@ymail.com" className="flex items-center gap-2 hover:text-blue-600  transition">
+                <span className="bg-gray-100  p-1.5 rounded">✉️</span> idongesit_essien@ymail.com
               </a>
               <a href="tel:+17743126471" className="flex items-center gap-2 hover:text-blue-600  transition">
                 <span className="bg-gray-100  p-1.5 rounded">📞</span> +1 (774) 312-6471
